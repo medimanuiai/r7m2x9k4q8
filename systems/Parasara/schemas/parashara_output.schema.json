@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Parashara Output",
+  "type": "object",
+  "required": ["engine", "diagnostics", "domains"],
+  "properties": {
+    "engine": {
+      "type": "object",
+      "required": ["name","engine_version","rule_set_family","rule_set_version"]
+    },
+    "diagnostics": { "type": "object" },
+    "domains": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["summary","score","confidence"]
+      }
+    },
+    "dasha_timeline": { "type": "array" },
+    "transits": { "type": "array" },
+    "explainability": { "type": "object" }
+  }
+}

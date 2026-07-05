@@ -1,0 +1,7 @@
+# macros.yaml - placeholder for macro definitions
+# Example:
+# - name: ANY_KENDRA_BENEFIC
+#   params: [planet_set]
+#   expr: |
+#     ANY(count(in_kendra(planet) AND is_benefic_for_lagna(planet)) >= 1)
+

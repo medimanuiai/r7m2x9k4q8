@@ -1,0 +1,11 @@
+{
+  "engine": { "name": "jyothishyam-parashara", "engine_version": "0.1.0", "rule_set_family": "parashara", "rule_set_version": "v1" },
+  "diagnostics": { "lagna_summary": {}, "planet_strengths": {}, "yogas": [] },
+  "domains": {
+    "career": { "summary": "", "score": 0.5, "confidence": 0.5, "components": [], "indicators": [] },
+    "wealth": { "summary": "", "score": 0.5, "confidence": 0.5, "components": [], "indicators": [] }
+  },
+  "dasha_timeline": [],
+  "transits": [],
+  "explainability": { "indicators_legend": {}, "scoring_formula": {}, "conflict_resolution_policy": {} }
+}

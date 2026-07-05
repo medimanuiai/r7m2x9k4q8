@@ -1,0 +1,11 @@
+pytest
+pytest-mock
+pytest-cov
+freezegun
+# srtm is optional for integration tests
+# srtm
+pytest
+pytest-mock
+pytest-cov
+freezegun
+srtm

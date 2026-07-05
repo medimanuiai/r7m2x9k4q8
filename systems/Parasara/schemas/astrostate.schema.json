@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AstroState Graph",
+  "type": "object",
+  "required": ["nodes","edges"],
+  "properties": {
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "type": { "type": "string", "enum": ["LagnaNode","PlanetNode","HouseNode","VargaNode","NakshatraNode","DashaNode","TransitNode"] },
+          "attributes": { "type": "object" }
+        },
+        "required": ["id","type"]
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "type": { "type": "string", "enum": ["ASPECTS","CONJUNCTION","EXCHANGE","OCCUPIES"] },
+          "metadata": { "type": "object" }
+        },
+        "required": ["from","to","type"]
+      }
+    }
+  }
+}

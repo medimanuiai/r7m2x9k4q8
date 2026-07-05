@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register — Jyothishyam</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/tokens.css" />
+  <link rel="stylesheet" href="/css/auth.css" />
+</head>
+<body class="auth-page">
+
+  <%- include('partials/_loginBackground') %>
+
+  <main class="auth-main" role="main">
+    <div class="auth-card" role="region" aria-labelledby="page-title">
+
+      <div class="auth-logo" aria-hidden="true">🌟</div>
+      <h1 class="auth-title" id="page-title">Create Account</h1>
+
+      <% if (error) { %>
+        <div class="alert alert-error" role="alert" aria-live="polite"><%= error %></div>
+      <% } %>
+      <% if (success) { %>
+        <div class="alert alert-success" role="alert" aria-live="polite"><%= success %></div>
+      <% } %>
+
+      <form method="POST" action="/register" class="auth-form" id="register-form" novalidate
+            aria-label="Registration form">
+
+        <!-- Name -->
+        <div class="field-group">
+          <label for="name" class="field-label">Full Name</label>
+          <div class="field-input-wrap">
+            <span class="field-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </span>
+            <input type="text" id="name" name="name" class="field-input"
+              placeholder="Your full name"
+              value="<%= fields.name || '' %>"
+              autocomplete="name" required aria-required="true"
+              aria-describedby="name-error" minlength="2" maxlength="100" />
+          </div>
+          <span class="field-error" id="name-error" role="alert" aria-live="polite"></span>
+        </div>
+
+        <!-- Email -->
+        <div class="field-group">
+          <label for="email" class="field-label">Email</label>
+          <div class="field-input-wrap">
+            <span class="field-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+            </span>
+            <input type="email" id="email" name="email" class="field-input"
+              placeholder="you@example.com"
+              value="<%= fields.email || '' %>"
+              autocomplete="email" required aria-required="true"
+              aria-describedby="email-error" />
+          </div>
+          <span class="field-error" id="email-error" role="alert" aria-live="polite"></span>
+        </div>
+
+        <!-- Password -->
+        <div class="field-group">
+          <label for="password" class="field-label">Password</label>
+          <div class="field-input-wrap">
+            <span class="field-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </span>
+            <input type="password" id="password" name="password" class="field-input"
+              placeholder="Min 8 characters"
+              autocomplete="new-password" required aria-required="true"
+              aria-describedby="password-error password-hint"
+              minlength="8" />
+          </div>
+          <span class="field-error" id="password-error" role="alert" aria-live="polite"></span>
+          <span id="password-hint" style="font-size:0.72rem;color:var(--text-placeholder)">
+            Use 8+ chars with uppercase, number &amp; symbol for a strong password.
+          </span>
+        </div>
+
+        <!-- Confirm password -->
+        <div class="field-group">
+          <label for="confirmPassword" class="field-label">Confirm Password</label>
+          <div class="field-input-wrap">
+            <span class="field-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </span>
+            <input type="password" id="confirmPassword" name="confirmPassword" class="field-input"
+              placeholder="Repeat your password"
+              autocomplete="new-password" required aria-required="true"
+              aria-describedby="confirmPassword-error" />
+          </div>
+          <span class="field-error" id="confirmPassword-error" role="alert" aria-live="polite"></span>
+        </div>
+
+        <button type="submit" class="btn-primary" id="register-submit">
+          <span class="btn-label">CREATE ACCOUNT</span>
+          <span class="btn-spinner" hidden aria-hidden="true"></span>
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        <span>Already have an account?</span>
+        <a href="/login" class="auth-footer-link">LOG IN</a>
+      </div>
+
+    </div>
+  </main>
+
+  <button class="dark-toggle" id="dark-toggle" aria-label="Toggle dark mode"
+          aria-pressed="false">🌙</button>
+  <script src="/js/auth.js"></script>
+</body>
+</html>

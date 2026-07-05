@@ -1,0 +1,8 @@
+# yogas.yaml - placeholder for yoga detection rules
+# Example rule structure (YAML):
+# - id: raja_yoga_001
+#   version: 1
+#   status: draft
+#   domains: ["career"]
+#   condition: { "type": "AND", "children": [ ... ] }
+

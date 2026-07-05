@@ -1,0 +1,20 @@
+{
+  "metadata": {
+    "birth_datetime_utc": "1990-01-01T12:00:00Z",
+    "birth_location": { "latitude": 12.9716, "longitude": 77.5946, "timezone_offset_minutes": 330 },
+    "ayanamsa": "lahiri",
+    "house_system": "whole_sign",
+    "sidereal": true
+  },
+  "lagna": { "sign": "Aries", "degree": 5.12 },
+  "planets": [
+    { "name": "Sun", "sign": "Sagittarius", "degree": 10.5, "house": 9, "nakshatra": { "name": "Mula", "pada": 2, "index": 19 }, "motion": {"retrograde": false}, "flags": {"combust": false,"exalted": false,"debilitated": false} },
+    { "name": "Moon", "sign": "Cancer", "degree": 15.3, "house": 4, "nakshatra": { "name": "Pushya", "pada": 1, "index": 8 }, "motion": {"retrograde": false}, "flags": {"combust": false,"exalted": false,"debilitated": false} },
+    { "name": "Mars", "sign": "Aries", "degree": 3.2, "house": 1, "nakshatra": { "name": "Bharani", "pada": 3, "index": 3 }, "motion": {"retrograde": false}, "flags": {"combust": false,"exalted": false,"debilitated": false} }
+  ],
+  "houses": [
+    { "number": 1, "sign": "Aries", "cusp_degree": 5.12, "lord": "Mars" },
+    { "number": 4, "sign": "Cancer", "cusp_degree": 15.3, "lord": "Moon" }
+  ],
+  "aspects": []
+}

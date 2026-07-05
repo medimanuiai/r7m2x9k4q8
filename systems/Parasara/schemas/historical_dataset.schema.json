@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Historical Dataset - Pilot Candidates",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "name", "metadata"],
+    "properties": {
+      "id": { "type": "string" },
+      "name": { "type": "string" },
+      "metadata": {
+        "type": "object",
+        "required": ["birth_location"],
+        "properties": {
+          "birth_datetime_utc": { "type": ["string","null"], "format": "date-time" },
+          "birth_datetime_local": { "type": "string" },
+          "time_confidence": { "type": "string", "enum": ["exact","widely_cited","commonly_cited","unconfirmed","officially_released"] },
+          "birth_location": {
+            "type": "object",
+            "required": ["place","latitude","longitude","timezone_offset_minutes"],
+            "properties": {
+              "place": { "type": "string" },
+              "latitude": { "type": "number" },
+              "longitude": { "type": "number" },
+              "timezone_offset_minutes": { "type": "integer" }
+            }
+          },
+          "public_figure": { "type": "boolean" },
+          "consent_obtained": { "type": "boolean" }
+        }
+      },
+      "labels": { "type": "object" },
+      "provenance": { "type": "object" },
+      "license": { "type": "string" }
+    }
+  }
+}
