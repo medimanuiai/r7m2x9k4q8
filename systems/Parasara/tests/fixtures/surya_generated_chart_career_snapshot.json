@@ -1,0 +1,46 @@
+{
+  "components": [
+    {
+      "house": 7,
+      "planet": "Sun",
+      "type": "planet",
+      "weight": -0.04
+    },
+    {
+      "house": 7,
+      "planet": "Mercury",
+      "type": "planet",
+      "weight": -0.04
+    },
+    {
+      "house": 1,
+      "planet": "Jupiter",
+      "type": "planet",
+      "weight": 0.01
+    },
+    {
+      "house": 7,
+      "planet": "Saturn",
+      "type": "planet",
+      "weight": 0.21
+    },
+    {
+      "house": 10,
+      "occupants": [],
+      "type": "house",
+      "weight": 0.0
+    }
+  ],
+  "confidence": 0.3,
+  "evidence": [],
+  "indicators": [],
+  "score": 0.535,
+  "scoring": {
+    "base_score": 0.535,
+    "final_score": 0.535,
+    "formula": "final = min(1.0, base_score + sum(contributions))",
+    "total_contribution": 0.0
+  },
+  "summary": "Career score 0.535 (confidence 0.3)",
+  "trace_id": "career_001"
+}

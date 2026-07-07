@@ -1,0 +1,427 @@
+{
+  "dasha_timeline": [],
+  "diagnostics": {
+    "aspects": [],
+    "houses": [
+      {
+        "aspected_by": [],
+        "benefic_pressure": 0.0,
+        "house_score": 0.5,
+        "lord": "Moon",
+        "lord_strength": 0.51,
+        "malefic_pressure": 0.0,
+        "number": 1,
+        "occupants": [
+          "Jupiter"
+        ],
+        "sign": "Cancer"
+      },
+      {
+        "aspected_by": [],
+        "benefic_pressure": 0.0,
+        "house_score": 0.5,
+        "lord": "Sun",
+        "lord_strength": 0.46,
+        "malefic_pressure": 0.0,
+        "number": 2,
+        "occupants": [
+          "Ketu"
+        ],
+        "sign": "Leo"
+      },
+      {
+        "aspected_by": [],
+        "benefic_pressure": 0.0,
+        "house_score": 0.5,
+        "lord": "Mercury",
+        "lord_strength": 0.46,
+        "malefic_pressure": 0.0,
+        "number": 3,
+        "occupants": [],
+        "sign": "Virgo"
+      },
+      {
+        "aspected_by": [],
+        "benefic_pressure": 0.0,
+        "house_score": 0.5,
+        "lord": "Venus",
+        "lord_strength": 0.46,
+        "malefic_pressure": 0.0,
+        "number": 4,
+        "occupants": [],
+        "sign": "Libra"
+      },
+      {
+        "aspected_by": [],
+        "benefic_pressure": 0.0,
+        "house_score": 0.5,
+        "lord": "Mars",
+        "lord_strength": 0.46,
+        "malefic_pressure": 0.0,
+        "number": 5,
+        "occupants": [],
+        "sign": "Scorpio"
+      },
+      {
+        "aspected_by": [],
+        "benefic_pressure": 0.455,
+        "house_score": 0.728,
+        "lord": "Jupiter",
+        "lord_strength": 0.51,
+        "malefic_pressure": 0.0,
+        "number": 6,
+        "occupants": [
+          "Mars"
+        ],
+        "sign": "Sagittarius"
+      },
+      {
+        "aspected_by": [],
+        "benefic_pressure": 0.0,
+        "house_score": 0.426,
+        "lord": "Saturn",
+        "lord_strength": 0.71,
+        "malefic_pressure": 0.148,
+        "number": 7,
+        "occupants": [
+          "Sun",
+          "Mercury",
+          "Saturn"
+        ],
+        "sign": "Capricorn"
+      },
+      {
+        "aspected_by": [],
+        "benefic_pressure": 0.0,
+        "house_score": 0.5,
+        "lord": "Saturn",
+        "lord_strength": 0.71,
+        "malefic_pressure": 0.0,
+        "number": 8,
+        "occupants": [
+          "Venus",
+          "Rahu"
+        ],
+        "sign": "Aquarius"
+      },
+      {
+        "aspected_by": [],
+        "benefic_pressure": 0.408,
+        "house_score": 0.704,
+        "lord": "Jupiter",
+        "lord_strength": 0.51,
+        "malefic_pressure": 0.0,
+        "number": 9,
+        "occupants": [
+          "Moon"
+        ],
+        "sign": "Pisces"
+      },
+      {
+        "aspected_by": [],
+        "benefic_pressure": 0.0,
+        "house_score": 0.5,
+        "lord": "Mars",
+        "lord_strength": 0.46,
+        "malefic_pressure": 0.0,
+        "number": 10,
+        "occupants": [],
+        "sign": "Aries"
+      },
+      {
+        "aspected_by": [],
+        "benefic_pressure": 0.0,
+        "house_score": 0.5,
+        "lord": "Venus",
+        "lord_strength": 0.46,
+        "malefic_pressure": 0.0,
+        "number": 11,
+        "occupants": [],
+        "sign": "Taurus"
+      },
+      {
+        "aspected_by": [],
+        "benefic_pressure": 0.0,
+        "house_score": 0.5,
+        "lord": "Mercury",
+        "lord_strength": 0.46,
+        "malefic_pressure": 0.0,
+        "number": 12,
+        "occupants": [],
+        "sign": "Gemini"
+      }
+    ],
+    "lagna_summary": {
+      "degree": 3.844,
+      "element": "Water",
+      "lord": "Moon",
+      "modality": "Movable",
+      "sign": "Cancer"
+    },
+    "planet_strengths": {
+      "Jupiter": {
+        "combust": false,
+        "dignity": "neutral",
+        "functional_role": "functional_neutral",
+        "functional_score": 0.56,
+        "natural_role": "natural_benefic",
+        "owns_houses": [
+          6,
+          9
+        ],
+        "planet": "Jupiter",
+        "retrograde": false,
+        "strength": 0.51,
+        "strength_components": {
+          "combust_penalty": 0.0,
+          "dignity_bonus": 0.0,
+          "retro_bonus": 0.0,
+          "temp_friend_bonus": 0.05,
+          "varga_bonus": 0.06
+        },
+        "temporary_friendship": "Friend"
+      },
+      "Ketu": {
+        "combust": false,
+        "dignity": "neutral",
+        "functional_role": "functional_neutral",
+        "functional_score": 0.5,
+        "natural_role": "natural_malefic",
+        "owns_houses": [],
+        "planet": "Ketu",
+        "retrograde": false,
+        "strength": 0.46,
+        "strength_components": {
+          "combust_penalty": 0.0,
+          "dignity_bonus": 0.0,
+          "retro_bonus": 0.0,
+          "temp_friend_bonus": 0.0,
+          "varga_bonus": 0.06
+        },
+        "temporary_friendship": "Neutral"
+      },
+      "Mars": {
+        "combust": false,
+        "dignity": "neutral",
+        "functional_role": "yogakaraka",
+        "functional_score": 0.99,
+        "natural_role": "natural_malefic",
+        "owns_houses": [
+          5,
+          10
+        ],
+        "planet": "Mars",
+        "retrograde": false,
+        "strength": 0.46,
+        "strength_components": {
+          "combust_penalty": 0.0,
+          "dignity_bonus": 0.0,
+          "retro_bonus": 0.0,
+          "temp_friend_bonus": 0.0,
+          "varga_bonus": 0.06
+        },
+        "temporary_friendship": "Neutral",
+        "yoga_role": "yogakaraka"
+      },
+      "Mercury": {
+        "combust": false,
+        "dignity": "neutral",
+        "functional_role": "functional_malefic",
+        "functional_score": 0.38,
+        "natural_role": "natural_benefic",
+        "owns_houses": [
+          3,
+          12
+        ],
+        "planet": "Mercury",
+        "retrograde": false,
+        "strength": 0.46,
+        "strength_components": {
+          "combust_penalty": 0.0,
+          "dignity_bonus": 0.0,
+          "retro_bonus": 0.0,
+          "temp_friend_bonus": 0.0,
+          "varga_bonus": 0.06
+        },
+        "temporary_friendship": "Neutral"
+      },
+      "Moon": {
+        "combust": false,
+        "dignity": "neutral",
+        "functional_role": "functional_benefic",
+        "functional_score": 0.8,
+        "natural_role": "natural_benefic",
+        "owns_houses": [
+          1
+        ],
+        "planet": "Moon",
+        "retrograde": false,
+        "strength": 0.51,
+        "strength_components": {
+          "combust_penalty": 0.0,
+          "dignity_bonus": 0.0,
+          "retro_bonus": 0.0,
+          "temp_friend_bonus": 0.05,
+          "varga_bonus": 0.06
+        },
+        "temporary_friendship": "Friend"
+      },
+      "Rahu": {
+        "combust": false,
+        "dignity": "neutral",
+        "functional_role": "functional_neutral",
+        "functional_score": 0.5,
+        "natural_role": "natural_malefic",
+        "owns_houses": [],
+        "planet": "Rahu",
+        "retrograde": false,
+        "strength": 0.46,
+        "strength_components": {
+          "combust_penalty": 0.0,
+          "dignity_bonus": 0.0,
+          "retro_bonus": 0.0,
+          "temp_friend_bonus": 0.0,
+          "varga_bonus": 0.06
+        },
+        "temporary_friendship": "Neutral"
+      },
+      "Saturn": {
+        "combust": false,
+        "dignity": "own_sign",
+        "functional_role": "functional_malefic",
+        "functional_score": 0.38,
+        "natural_role": "natural_malefic",
+        "owns_houses": [
+          7,
+          8
+        ],
+        "planet": "Saturn",
+        "retrograde": false,
+        "strength": 0.71,
+        "strength_components": {
+          "combust_penalty": 0.0,
+          "dignity_bonus": 0.25,
+          "retro_bonus": 0.0,
+          "temp_friend_bonus": 0.0,
+          "varga_bonus": 0.06
+        },
+        "temporary_friendship": "Neutral"
+      },
+      "Sun": {
+        "combust": false,
+        "dignity": "neutral",
+        "functional_role": "functional_neutral",
+        "functional_score": 0.53,
+        "natural_role": "natural_malefic",
+        "owns_houses": [
+          2
+        ],
+        "planet": "Sun",
+        "retrograde": false,
+        "strength": 0.46,
+        "strength_components": {
+          "combust_penalty": 0.0,
+          "dignity_bonus": 0.0,
+          "retro_bonus": 0.0,
+          "temp_friend_bonus": 0.0,
+          "varga_bonus": 0.06
+        },
+        "temporary_friendship": "Neutral"
+      },
+      "Venus": {
+        "combust": false,
+        "dignity": "neutral",
+        "functional_role": "functional_neutral",
+        "functional_score": 0.59,
+        "natural_role": "natural_benefic",
+        "owns_houses": [
+          4,
+          11
+        ],
+        "planet": "Venus",
+        "retrograde": false,
+        "strength": 0.46,
+        "strength_components": {
+          "combust_penalty": 0.0,
+          "dignity_bonus": 0.0,
+          "retro_bonus": 0.0,
+          "temp_friend_bonus": 0.0,
+          "varga_bonus": 0.06
+        },
+        "temporary_friendship": "Neutral"
+      }
+    },
+    "yogas": []
+  },
+  "domains": {
+    "career": {
+      "components": [
+        {
+          "house": 7,
+          "planet": "Sun",
+          "type": "planet",
+          "weight": -0.04
+        },
+        {
+          "house": 7,
+          "planet": "Mercury",
+          "type": "planet",
+          "weight": -0.04
+        },
+        {
+          "house": 1,
+          "planet": "Jupiter",
+          "type": "planet",
+          "weight": 0.01
+        },
+        {
+          "house": 7,
+          "planet": "Saturn",
+          "type": "planet",
+          "weight": 0.21
+        },
+        {
+          "house": 10,
+          "occupants": [],
+          "type": "house",
+          "weight": 0.0
+        }
+      ],
+      "confidence": 0.3,
+      "evidence": [],
+      "indicators": [],
+      "score": 0.535,
+      "scoring": {
+        "base_score": 0.535,
+        "final_score": 0.535,
+        "formula": "final = min(1.0, base_score + sum(contributions))",
+        "total_contribution": 0.0
+      },
+      "summary": "Career score 0.535 (confidence 0.3)",
+      "trace_id": "career_001"
+    },
+    "wealth": {
+      "components": [],
+      "confidence": 0.5,
+      "indicators": [],
+      "score": 0.5,
+      "summary": ""
+    }
+  },
+  "engine": {
+    "engine_version": "0.1.0",
+    "name": "jyothishyam-parashara",
+    "rule_set_family": "parashara",
+    "rule_set_version": "v1"
+  },
+  "explainability": {
+    "conflict_resolution_policy": {},
+    "indicators_legend": {},
+    "scoring_formula": {}
+  },
+  "meta": {
+    "engine_version": "jyothishyam-parashara@0.1.0",
+    "generated_at": "2026-07-07T02:18:21.643376+00:00"
+  },
+  "transits": []
+}

@@ -1,0 +1,145 @@
+{
+  "components": [
+    {
+      "house": 1,
+      "planet": "Moon",
+      "type": "planet",
+      "weight": 0.01
+    },
+    {
+      "house": 10,
+      "planet": "Mars",
+      "type": "planet",
+      "weight": -0.04
+    },
+    {
+      "house": 10,
+      "planet": "Venus",
+      "type": "planet",
+      "weight": 0.21
+    },
+    {
+      "house": 1,
+      "planet": "Saturn",
+      "type": "planet",
+      "weight": 0.01
+    },
+    {
+      "house": 10,
+      "occupants": [
+        "Mars",
+        "Venus"
+      ],
+      "type": "house",
+      "weight": 0.085
+    },
+    {
+      "rule_id": "10th_lord_Venus",
+      "type": "rule",
+      "weight": 0.18
+    },
+    {
+      "rule_id": "rajayoga_naive",
+      "type": "rule",
+      "weight": 0.18
+    }
+  ],
+  "confidence": 0.427,
+  "evidence": [
+    {
+      "contribution": 0.18,
+      "evidence": {
+        "dignity": "own_sign",
+        "lord": "Venus"
+      },
+      "match": true,
+      "rule": {
+        "_source_file": "C:\\Users\\mvman\\OneDrive\\Documents\\Projects\\Jyothishyam\\systems\\Parasara\\rules\\parashara\\v1\\m1_rules.yaml",
+        "base_score": 0.18,
+        "description": "The lord of the 10th house is in its own sign or exalted",
+        "family": "parashara",
+        "id": "10th_lord_Venus",
+        "lord": "Venus",
+        "priority": 9,
+        "type": "lord_status",
+        "version": "1.0"
+      },
+      "rule_id": "10th_lord_Venus"
+    },
+    {
+      "contribution": 0.18,
+      "evidence": {
+        "occ1": [
+          "Moon"
+        ],
+        "occ10": [
+          "Venus"
+        ]
+      },
+      "match": true,
+      "rule": {
+        "_source_file": "C:\\Users\\mvman\\OneDrive\\Documents\\Projects\\Jyothishyam\\systems\\Parasara\\rules\\parashara\\v1\\m1_rules.yaml",
+        "base_score": 0.18,
+        "description": "Naive Rajayoga: benefic planets occupy both 1st and 10th houses",
+        "family": "parashara",
+        "id": "rajayoga_naive",
+        "priority": 8,
+        "type": "rajayoga_naive",
+        "version": "1.0"
+      },
+      "rule_id": "rajayoga_naive"
+    }
+  ],
+  "indicators": [
+    {
+      "context": {
+        "_source_file": "C:\\Users\\mvman\\OneDrive\\Documents\\Projects\\Jyothishyam\\systems\\Parasara\\rules\\parashara\\v1\\m1_rules.yaml",
+        "base_score": 0.18,
+        "description": "The lord of the 10th house is in its own sign or exalted",
+        "family": "parashara",
+        "id": "10th_lord_Venus",
+        "lord": "Venus",
+        "priority": 9,
+        "type": "lord_status",
+        "version": "1.0"
+      },
+      "contribution": 0.18,
+      "evidence": {
+        "dignity": "own_sign",
+        "lord": "Venus"
+      },
+      "rule_id": "10th_lord_Venus"
+    },
+    {
+      "context": {
+        "_source_file": "C:\\Users\\mvman\\OneDrive\\Documents\\Projects\\Jyothishyam\\systems\\Parasara\\rules\\parashara\\v1\\m1_rules.yaml",
+        "base_score": 0.18,
+        "description": "Naive Rajayoga: benefic planets occupy both 1st and 10th houses",
+        "family": "parashara",
+        "id": "rajayoga_naive",
+        "priority": 8,
+        "type": "rajayoga_naive",
+        "version": "1.0"
+      },
+      "contribution": 0.18,
+      "evidence": {
+        "occ1": [
+          "Moon"
+        ],
+        "occ10": [
+          "Venus"
+        ]
+      },
+      "rule_id": "rajayoga_naive"
+    }
+  ],
+  "score": 0.907,
+  "scoring": {
+    "base_score": 0.547,
+    "final_score": 0.907,
+    "formula": "final = min(1.0, base_score + sum(contributions))",
+    "total_contribution": 0.36
+  },
+  "summary": "Career score 0.907 (confidence 0.427)",
+  "trace_id": "career_001"
+}

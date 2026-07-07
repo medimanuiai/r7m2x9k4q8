@@ -16,6 +16,10 @@ def test_normalizer_on_golden_fixture():
     assert astro.location is not None
     assert isinstance(astro.planets, list)
     assert astro.diagnostics.get('planet_count', 0) >= 0
+    # enrichments should include planet_strengths and house_summaries
+    assert isinstance(astro.enrichments, dict)
+    assert 'planet_strengths' in astro.enrichments
+    assert 'house_summaries' in astro.enrichments
 
 
 def test_normalizer_on_pilot_candidates():
