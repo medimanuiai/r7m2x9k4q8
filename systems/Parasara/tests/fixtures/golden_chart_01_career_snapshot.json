@@ -1,0 +1,28 @@
+{
+  "components": [
+    {
+      "house": 4,
+      "planet": "Moon",
+      "type": "planet",
+      "weight": 0.21
+    },
+    {
+      "house": 1,
+      "planet": "Mars",
+      "type": "planet",
+      "weight": 0.26
+    }
+  ],
+  "confidence": 0.3,
+  "evidence": [],
+  "indicators": [],
+  "score": 0.735,
+  "scoring": {
+    "base_score": 0.735,
+    "final_score": 0.735,
+    "formula": "final = min(1.0, base_score + sum(contributions))",
+    "total_contribution": 0.0
+  },
+  "summary": "Career score 0.735 (confidence 0.3)",
+  "trace_id": "career_001"
+}

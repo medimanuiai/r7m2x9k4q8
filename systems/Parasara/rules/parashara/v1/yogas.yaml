@@ -1,0 +1,82 @@
+# yogas.yaml - declarative yoga detection rules (Parāśara M1 examples)
+# Each rule is a mapping with required fields documented below.
+
+- id: "rajayoga_naive"
+  name: "Naive Raja Yoga"
+  version: 1
+  category: "rajayoga"
+  provenance: "parashara:m1:seed"
+  sme_approved: false
+  description: "Naive Raja Yoga: benefic planet from 1st aspects 10th (data-driven, example)"
+  conditions:
+    type: AND
+    children:
+      - type: ASPECT
+        params:
+          from_house: 1
+          to_house: 10
+      - type: FUNCTIONAL_ROLE
+        params:
+          role_in: ["functional_benefic", "yogakaraka", "benefic"]
+  weights:
+    base: 1.0
+    evidence_bonus: 0.5
+  evidence_required: 1
+  tests:
+    - fixture: "systems/Parasara/fixtures/golden_chart_01.json"
+      expect:
+        yoga_id: "rajayoga_naive"
+        matched: false
+
+- id: "dhana_naive"
+  name: "Naive Dhana Yoga"
+  version: 1
+  category: "dhana"
+  provenance: "parashara:m1:seed"
+  sme_approved: false
+  description: "Naive Dhana Yoga: combination indicating wealth potentials (example)"
+  conditions:
+    type: OR
+    children:
+      - type: HOUSE_LORDS_COMBINATION
+        params:
+          houses: [2, 11]
+          relation: "mutual"
+      - type: ASPECT
+        params:
+          from_house: 5
+          to_house: 11
+  weights:
+    base: 0.8
+  evidence_required: 1
+  tests:
+    - fixture: "systems/Parasara/fixtures/golden_chart_01.json"
+      expect:
+        yoga_id: "dhana_naive"
+        matched: false
+
+- id: "arishta_naive"
+  name: "Naive Arishta Yoga"
+  version: 1
+  category: "arishta"
+  provenance: "parashara:m1:seed"
+  sme_approved: false
+  description: "Naive Arishta (misfortune) indicators (example)"
+  conditions:
+    type: AND
+    children:
+      - type: HOUSE_OCCUPANT
+        params:
+          house: 8
+          planet: "Saturn"
+      - type: FUNCTIONAL_ROLE
+        params:
+          role_in: ["functional_malefic", "malefic"]
+  weights:
+    base: -1.0
+  evidence_required: 1
+  tests:
+    - fixture: "systems/Parasara/fixtures/golden_chart_01.json"
+      expect:
+        yoga_id: "arishta_naive"
+        matched: false

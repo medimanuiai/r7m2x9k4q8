@@ -1,0 +1,48 @@
+version: 1
+description: Functional role table for Taurus lagna (example values)
+functional_roles:
+  Sun:
+    functional_role: functional_neutral
+    functional_score: 0.5
+    yoga_role: null
+    owns_houses: [12]
+  Moon:
+    functional_role: functional_benefic
+    functional_score: 0.7
+    yoga_role: null
+    owns_houses: [4]
+  Mars:
+    functional_role: functional_malefic
+    functional_score: 0.4
+    yoga_role: null
+    owns_houses: [1]
+  Mercury:
+    functional_role: functional_neutral
+    functional_score: 0.5
+    yoga_role: null
+    owns_houses: [3,6]
+  Jupiter:
+    functional_role: functional_benefic
+    functional_score: 0.85
+    yoga_role: null
+    owns_houses: [9]
+  Venus:
+    functional_role: functional_benefic
+    functional_score: 0.9
+    yoga_role: yogakaraka
+    owns_houses: [2,7]
+  Saturn:
+    functional_role: functional_malefic
+    functional_score: 0.35
+    yoga_role: null
+    owns_houses: [10]
+  Rahu:
+    functional_role: functional_malefic
+    functional_score: 0.3
+    yoga_role: null
+    owns_houses: []
+  Ketu:
+    functional_role: functional_malefic
+    functional_score: 0.3
+    yoga_role: null
+    owns_houses: []

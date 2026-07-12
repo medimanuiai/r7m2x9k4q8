@@ -1,0 +1,95 @@
+@import 'tailwindcss';
+
+/* ── Design token overrides as CSS vars ──────────────────────────── */
+:root {
+  --font-sans       : 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --card-shadow     : 0 24px 64px rgba(0,0,0,0.14);
+  --btn-shadow      : 0 4px 18px rgba(196,113,237,0.4);
+  --input-border    : #e5e7eb;
+  --input-focus     : #7c3aed;
+  --input-error     : #ef4444;
+  --text-placeholder: #9aa4b2;
+  --t-fast          : 120ms ease;
+  --t-base          : 220ms ease;
+}
+[data-theme='dark'] {
+  --input-border    : #334155;
+  --input-focus     : #a78bfa;
+  --text-placeholder: #64748b;
+}
+
+/* ── Body ────────────────────────────────────────────────────────── */
+body { font-family: var(--font-sans); }
+
+/* ── Background geometric shapes ────────────────────────────────── */
+.auth-bg-shape-1 {
+  position: absolute;
+  top: -10%; right: -5%;
+  width: 55%; height: 70%;
+  background: rgba(255,255,255,0.06);
+  clip-path: polygon(20% 0%, 100% 0%, 100% 100%, 0% 80%);
+  transform: rotate(8deg);
+}
+.auth-bg-shape-2 {
+  position: absolute;
+  bottom: -8%; left: -4%;
+  width: 45%; height: 60%;
+  background: rgba(255,255,255,0.05);
+  clip-path: polygon(0% 20%, 80% 0%, 100% 100%, 0% 100%);
+  transform: rotate(-6deg);
+}
+
+/* ── Input underline style (complements Tailwind) ────────────────── */
+.field-underline {
+  border: none;
+  border-bottom: 1.5px solid var(--input-border);
+  border-radius: 0;
+  outline: none;
+  background: transparent;
+  transition: border-color var(--t-fast);
+  padding-left: 28px;
+}
+.field-underline:focus { border-bottom-color: var(--input-focus); }
+.field-underline[aria-invalid='true'] { border-bottom-color: var(--input-error); }
+.field-underline::placeholder { color: var(--text-placeholder); }
+
+/* ── Gradient button ─────────────────────────────────────────────── */
+.btn-grad {
+  background-image: linear-gradient(90deg, #00d2ff, #c471ed);
+  transition: opacity var(--t-fast), transform var(--t-fast), box-shadow var(--t-fast);
+  box-shadow: var(--btn-shadow);
+}
+.btn-grad:hover:not(:disabled) {
+  opacity: 0.91;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(196,113,237,0.5);
+}
+.btn-grad:active:not(:disabled) { transform: translateY(0); }
+.btn-grad:disabled { opacity: 0.65; cursor: not-allowed; }
+
+/* ── Spinner ─────────────────────────────────────────────────────── */
+.btn-spinner {
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Breathe animation for silhouette ────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-breathe { animation: breathe 9s ease-in-out infinite; }
+}
+@keyframes breathe {
+  0%,100% { transform: scale(1) translateY(0); }
+  50%      { transform: scale(1.03) translateY(-8px); }
+}
+
+/* ── Reduced motion global off ───────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

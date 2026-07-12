@@ -1,0 +1,12 @@
+version: 1
+description: Naisargika bala (natural potency) normalized 0..1
+naisargika:
+  Sun: 0.7
+  Moon: 0.85
+  Mars: 0.6
+  Mercury: 0.75
+  Jupiter: 0.9
+  Venus: 0.85
+  Saturn: 0.55
+  Rahu: 0.45
+  Ketu: 0.45

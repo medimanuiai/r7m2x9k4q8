@@ -1,0 +1,7 @@
+pydantic
+pytest
+hypothesis
+fastapi
+uvicorn
+jsonschema
+pip-licenses

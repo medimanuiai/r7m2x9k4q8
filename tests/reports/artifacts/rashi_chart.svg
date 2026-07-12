@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300">
+<rect x="0" y="0" width="150" height="100" fill="white" stroke="black"/>
+<text x="8" y="18" font-size="12">House 1 (Aries)</text>
+<text x="8" y="36" font-size="12">Mars</text>
+<rect x="150" y="0" width="150" height="100" fill="white" stroke="black"/>
+<text x="158" y="18" font-size="12">House 2 (Taurus)</text>
+<rect x="300" y="0" width="150" height="100" fill="white" stroke="black"/>
+<text x="308" y="18" font-size="12">House 3 (Gemini)</text>
+<rect x="450" y="0" width="150" height="100" fill="white" stroke="black"/>
+<text x="458" y="18" font-size="12">House 4 (Cancer)</text>
+<text x="458" y="36" font-size="12">Moon</text>
+<rect x="0" y="100" width="150" height="100" fill="white" stroke="black"/>
+<text x="8" y="118" font-size="12">House 5 (Leo)</text>
+<rect x="150" y="100" width="150" height="100" fill="white" stroke="black"/>
+<text x="158" y="118" font-size="12">House 6 (Virgo)</text>
+<rect x="300" y="100" width="150" height="100" fill="white" stroke="black"/>
+<text x="308" y="118" font-size="12">House 7 (Libra)</text>
+<rect x="450" y="100" width="150" height="100" fill="white" stroke="black"/>
+<text x="458" y="118" font-size="12">House 8 (Scorpio)</text>
+<rect x="0" y="200" width="150" height="100" fill="white" stroke="black"/>
+<text x="8" y="218" font-size="12">House 9 (Sagittarius)</text>
+<text x="8" y="236" font-size="12">Sun</text>
+<rect x="150" y="200" width="150" height="100" fill="white" stroke="black"/>
+<text x="158" y="218" font-size="12">House 10 (Capricorn)</text>
+<rect x="300" y="200" width="150" height="100" fill="white" stroke="black"/>
+<text x="308" y="218" font-size="12">House 11 (Aquarius)</text>
+<rect x="450" y="200" width="150" height="100" fill="white" stroke="black"/>
+<text x="458" y="218" font-size="12">House 12 (Pisces)</text>
+</svg>

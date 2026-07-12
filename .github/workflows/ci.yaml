@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, pilot, '**/pilot-updates-*' ]
+  pull_request:
+    branches: [ main, pilot ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+          pip install -e systems/SuryaSiddhanta
+      - name: Run tests (parallel when available)
+        run: |
+          PYTHONPATH=. python -m pytest -q -n auto || PYTHONPATH=. python -m pytest -q
+      - name: Generate coverage report
+        run: |
+          PYTHONPATH=. python tests/testing_framework/generate_coverage_report.py systems/Parasara/fixtures/golden_chart_01.json tests/reports || true
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: jyothishyam-reports
+          path: tests/reports
+      - name: Create snapshot PR (if snapshots changed)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          python tests/testing_framework/generate_full_report.py || true
+          python tests/testing_framework/create_snapshot_pr_ci.py || true

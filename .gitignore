@@ -1,0 +1,81 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+env/
+venv/
+jyothishyam_env/
+*.egg-info/
+dist/
+build/
+pip-wheel-metadata/
+*.sqlite3
+*.db
+*.log
+
+# Node
+node_modules/
+dist/
+build/
+npm-debug.log
+yarn-error.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+
+# Environment
+.env
+.env.local
+
+# Next.js build output
+frontend/.next/
+
+# Large data (ephemeris)
+systems/SuryaSiddhanta/ndastro_engine/data/ephemeris/
+
+# Also ignore any Next.js output at repo root
+.next/
+
+# Ignore all node_modules folders
+node_modules/
+**/node_modules/
+
+# Other
+*.swp
+*.swo
+*.bak
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+venv/
+jyothishyam_env/
+
+# Node
+node_modules/
+/.next/
+/.parcel-cache/
+/.pnp/
+package-lock.json
+yarn.lock
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tests and snapshots (keep snapshots, but ignore generated ones)
+systems/Parasara/tests/snapshots/generated_*.json
+# Node modules
+frontend/node_modules/

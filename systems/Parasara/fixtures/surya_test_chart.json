@@ -1,0 +1,230 @@
+{
+  "metadata": {
+    "birth_datetime_utc": "1977-06-21T03:45:00+00:00",
+    "birth_location": {
+      "latitude": 16.9891,
+      "longitude": 81.7894,
+      "timezone_offset_minutes": 330
+    },
+    "ayanamsa": "lahiri",
+    "house_system": "whole_sign",
+    "sidereal": true
+  },
+  "lagna": {
+    "sign": "Leo",
+    "degree": 19.5354
+  },
+  "planets": [
+    {
+      "name": "Empty",
+      "sign": "Aries",
+      "degree": 0.0,
+      "house": 1,
+      "nakshatra": {
+        "name": "ASWINNI",
+        "pada": 1,
+        "index": 1
+      },
+      "motion": {
+        "retrograde": false
+      },
+      "flags": {
+        "combust": false,
+        "exalted": false,
+        "debilitated": false
+      }
+    },
+    {
+      "name": "Ascendant",
+      "sign": "Leo",
+      "degree": 19.5354,
+      "house": 5,
+      "nakshatra": {
+        "name": "POORAM",
+        "pada": 2,
+        "index": 11
+      },
+      "motion": {
+        "retrograde": false
+      },
+      "flags": {
+        "combust": false,
+        "exalted": false,
+        "debilitated": false
+      }
+    },
+    {
+      "name": "Sun",
+      "sign": "Gemini",
+      "degree": 29.6628,
+      "house": 3,
+      "nakshatra": {
+        "name": "PUNARPOOSAM",
+        "pada": 3,
+        "index": 7
+      },
+      "motion": {
+        "retrograde": false
+      },
+      "flags": {
+        "combust": false,
+        "exalted": false,
+        "debilitated": false
+      }
+    },
+    {
+      "name": "Moon",
+      "sign": "Leo",
+      "degree": 19.0715,
+      "house": 5,
+      "nakshatra": {
+        "name": "POORAM",
+        "pada": 2,
+        "index": 11
+      },
+      "motion": {
+        "retrograde": false
+      },
+      "flags": {
+        "combust": false,
+        "exalted": false,
+        "debilitated": false
+      }
+    },
+    {
+      "name": "Mars",
+      "sign": "Taurus",
+      "degree": 11.0889,
+      "house": 2,
+      "nakshatra": {
+        "name": "ROGHINI",
+        "pada": 1,
+        "index": 4
+      },
+      "motion": {
+        "retrograde": false
+      },
+      "flags": {
+        "combust": false,
+        "exalted": false,
+        "debilitated": false
+      }
+    },
+    {
+      "name": "Mercury",
+      "sign": "Gemini",
+      "degree": 19.0837,
+      "house": 3,
+      "nakshatra": {
+        "name": "THIRUVAATHIRAI",
+        "pada": 4,
+        "index": 6
+      },
+      "motion": {
+        "retrograde": false
+      },
+      "flags": {
+        "combust": false,
+        "exalted": false,
+        "debilitated": false
+      }
+    },
+    {
+      "name": "Jupiter",
+      "sign": "Gemini",
+      "degree": 17.5258,
+      "house": 3,
+      "nakshatra": {
+        "name": "THIRUVAATHIRAI",
+        "pada": 4,
+        "index": 6
+      },
+      "motion": {
+        "retrograde": false
+      },
+      "flags": {
+        "combust": false,
+        "exalted": false,
+        "debilitated": false
+      }
+    },
+    {
+      "name": "Venus",
+      "sign": "Taurus",
+      "degree": 14.0509,
+      "house": 2,
+      "nakshatra": {
+        "name": "ROGHINI",
+        "pada": 2,
+        "index": 4
+      },
+      "motion": {
+        "retrograde": false
+      },
+      "flags": {
+        "combust": false,
+        "exalted": false,
+        "debilitated": false
+      }
+    },
+    {
+      "name": "Saturn",
+      "sign": "Leo",
+      "degree": 14.0284,
+      "house": 5,
+      "nakshatra": {
+        "name": "POORAM",
+        "pada": 1,
+        "index": 11
+      },
+      "motion": {
+        "retrograde": false
+      },
+      "flags": {
+        "combust": false,
+        "exalted": false,
+        "debilitated": false
+      }
+    },
+    {
+      "name": "Rahu",
+      "sign": "Libra",
+      "degree": 21.5912,
+      "house": 7,
+      "nakshatra": {
+        "name": "VISAAGAM",
+        "pada": 1,
+        "index": 16
+      },
+      "motion": {
+        "retrograde": false
+      },
+      "flags": {
+        "combust": false,
+        "exalted": false,
+        "debilitated": false
+      }
+    },
+    {
+      "name": "Kethu",
+      "sign": "Aries",
+      "degree": 21.5912,
+      "house": 1,
+      "nakshatra": {
+        "name": "BHARANI",
+        "pada": 3,
+        "index": 2
+      },
+      "motion": {
+        "retrograde": false
+      },
+      "flags": {
+        "combust": false,
+        "exalted": false,
+        "debilitated": false
+      }
+    }
+  ],
+  "houses": [],
+  "aspects": []
+}

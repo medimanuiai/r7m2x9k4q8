@@ -1,0 +1,20 @@
+[
+  {
+    "name": "moon_nakshatra_cusp",
+    "datetime_utc": "2026-03-20T04:37:00+00:00",
+    "lat": 13.0827,
+    "lon": 80.2707
+  },
+  {
+    "name": "moon_stationary",
+    "datetime_utc": "2026-05-15T12:00:00+00:00",
+    "lat": 28.6139,
+    "lon": 77.2090
+  },
+  {
+    "name": "sun_rasi_cusp",
+    "datetime_utc": "2026-09-23T00:30:00+00:00",
+    "lat": 19.0760,
+    "lon": 72.8777
+  }
+]

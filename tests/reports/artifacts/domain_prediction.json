@@ -1,0 +1,82 @@
+{
+  "domain": "career",
+  "score": 0.0,
+  "confidence": 0.35,
+  "contributors": [
+    {
+      "rule_id": "lord_status_10th",
+      "matched": false,
+      "evidence": {},
+      "contribution": 0.0
+    },
+    {
+      "rule_id": "rajayoga_naive_01",
+      "matched": false,
+      "evidence": {
+        "occ1": [],
+        "occ10": []
+      },
+      "contribution": 0.0
+    },
+    {
+      "rule_id": "aspect_on_10_jupiter",
+      "matched": false,
+      "evidence": {
+        "planet": "Jupiter",
+        "house": 10,
+        "targets": []
+      },
+      "contribution": 0.0
+    },
+    {
+      "rule_id": "strong_planet_in_10",
+      "matched": false,
+      "evidence": {},
+      "contribution": 0.0
+    },
+    {
+      "rule_id": "tenth_lord_strong",
+      "matched": false,
+      "evidence": {},
+      "contribution": 0.0
+    },
+    {
+      "rule_id": "rajayoga_naive",
+      "matched": false,
+      "evidence": {
+        "occ1": [],
+        "occ10": []
+      },
+      "contribution": 0.0
+    },
+    {
+      "rule_id": "jupiter_aspect_10",
+      "matched": false,
+      "evidence": {
+        "planet": null,
+        "house": null,
+        "targets": []
+      },
+      "contribution": 0.0
+    },
+    {
+      "rule_id": "saturn_afflict_10",
+      "matched": false,
+      "evidence": {
+        "planet": null,
+        "house": null,
+        "targets": []
+      },
+      "contribution": 0.0
+    },
+    {
+      "rule_id": "strong_in_10_mars",
+      "matched": false,
+      "evidence": {},
+      "contribution": 0.0
+    }
+  ],
+  "explainability": {
+    "summary": "0 contributing rules"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "lagnas": [
+    "Aries"
+  ],
+  "houses": [],
+  "signs": [],
+  "planets": [],
+  "dignities": [],
+  "retrograde": [],
+  "combust": [],
+  "friendships": [],
+  "yogas": [],
+  "dashas": [],
+  "transits": [],
+  "vargas": [],
+  "rules": [
+    "aspect_on_10_jupiter",
+    "in_house_mars_1",
+    "in_sign_moon_own",
+    "jupiter_aspect_10",
+    "lord_status_10th",
+    "rajayoga_naive",
+    "rajayoga_naive_01",
+    "saturn_afflict_10",
+    "strong_in_10_mars",
+    "strong_planet_in_10",
+    "tenth_lord_strong"
+  ]
+}

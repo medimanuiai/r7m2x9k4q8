@@ -1,0 +1,298 @@
+[
+  {
+    "rule_id": "lord_status_10th",
+    "rule_version": null,
+    "rule_family": null,
+    "matched": false,
+    "priority": null,
+    "context": {
+      "id": "lord_status_10th",
+      "type": "lord_status",
+      "house": 10,
+      "base_score": 0.18,
+      "_source_file": "systems\\Parasara\\rules\\parashara\\v1\\derived_rules.yml"
+    },
+    "base_score": 0.18,
+    "adjusted_score": 0.0,
+    "confidence": null,
+    "evidence": {},
+    "trace_id": null,
+    "provenance": {
+      "source": "systems\\Parasara\\rules\\parashara\\v1\\derived_rules.yml"
+    },
+    "evaluation_time_ms": null
+  },
+  {
+    "rule_id": "rajayoga_naive_01",
+    "rule_version": null,
+    "rule_family": null,
+    "matched": false,
+    "priority": null,
+    "context": {
+      "id": "rajayoga_naive_01",
+      "type": "rajayoga_naive",
+      "base_score": 0.18,
+      "_source_file": "systems\\Parasara\\rules\\parashara\\v1\\derived_rules.yml"
+    },
+    "base_score": 0.18,
+    "adjusted_score": 0.0,
+    "confidence": null,
+    "evidence": {
+      "occ1": [],
+      "occ10": []
+    },
+    "trace_id": null,
+    "provenance": {
+      "source": "systems\\Parasara\\rules\\parashara\\v1\\derived_rules.yml"
+    },
+    "evaluation_time_ms": null
+  },
+  {
+    "rule_id": "aspect_on_10_jupiter",
+    "rule_version": null,
+    "rule_family": null,
+    "matched": false,
+    "priority": null,
+    "context": {
+      "id": "aspect_on_10_jupiter",
+      "type": "aspect_on_house",
+      "planet": "Jupiter",
+      "house": 10,
+      "base_score": 0.12,
+      "_source_file": "systems\\Parasara\\rules\\parashara\\v1\\derived_rules.yml"
+    },
+    "base_score": 0.12,
+    "adjusted_score": 0.0,
+    "confidence": null,
+    "evidence": {
+      "planet": "Jupiter",
+      "house": 10,
+      "targets": []
+    },
+    "trace_id": null,
+    "provenance": {
+      "source": "systems\\Parasara\\rules\\parashara\\v1\\derived_rules.yml"
+    },
+    "evaluation_time_ms": null
+  },
+  {
+    "rule_id": "strong_planet_in_10",
+    "rule_version": "1.0",
+    "rule_family": "parashara",
+    "matched": false,
+    "priority": 10,
+    "context": {
+      "id": "strong_planet_in_10",
+      "version": "1.0",
+      "family": "parashara",
+      "type": "strong_in_10",
+      "description": "A strong planet (strength >= 0.75) occupies the 10th house",
+      "priority": 10,
+      "base_score": 0.2,
+      "_source_file": "systems\\Parasara\\rules\\parashara\\v1\\m1_rules.yaml"
+    },
+    "base_score": 0.2,
+    "adjusted_score": 0.0,
+    "confidence": null,
+    "evidence": {},
+    "trace_id": null,
+    "provenance": {
+      "source": "systems\\Parasara\\rules\\parashara\\v1\\m1_rules.yaml"
+    },
+    "evaluation_time_ms": null
+  },
+  {
+    "rule_id": "tenth_lord_strong",
+    "rule_version": "1.0",
+    "rule_family": "parashara",
+    "matched": false,
+    "priority": 9,
+    "context": {
+      "id": "tenth_lord_strong",
+      "version": "1.0",
+      "family": "parashara",
+      "type": "lord_status",
+      "description": "The lord of the 10th house is in its own sign or exalted",
+      "priority": 9,
+      "base_score": 0.18,
+      "_source_file": "systems\\Parasara\\rules\\parashara\\v1\\m1_rules.yaml"
+    },
+    "base_score": 0.18,
+    "adjusted_score": 0.0,
+    "confidence": null,
+    "evidence": {},
+    "trace_id": null,
+    "provenance": {
+      "source": "systems\\Parasara\\rules\\parashara\\v1\\m1_rules.yaml"
+    },
+    "evaluation_time_ms": null
+  },
+  {
+    "rule_id": "rajayoga_naive",
+    "rule_version": "1.0",
+    "rule_family": "parashara",
+    "matched": false,
+    "priority": 8,
+    "context": {
+      "id": "rajayoga_naive",
+      "version": "1.0",
+      "family": "parashara",
+      "type": "rajayoga_naive",
+      "description": "Naive Rajayoga: benefic planets occupy both 1st and 10th houses",
+      "priority": 8,
+      "base_score": 0.18,
+      "_source_file": "systems\\Parasara\\rules\\parashara\\v1\\m1_rules.yaml"
+    },
+    "base_score": 0.18,
+    "adjusted_score": 0.0,
+    "confidence": null,
+    "evidence": {
+      "occ1": [],
+      "occ10": []
+    },
+    "trace_id": null,
+    "provenance": {
+      "source": "systems\\Parasara\\rules\\parashara\\v1\\m1_rules.yaml"
+    },
+    "evaluation_time_ms": null
+  },
+  {
+    "rule_id": "jupiter_aspect_10",
+    "rule_version": "1.0",
+    "rule_family": "parashara",
+    "matched": false,
+    "priority": 7,
+    "context": {
+      "id": "jupiter_aspect_10",
+      "version": "1.0",
+      "family": "parashara",
+      "type": "aspect_on_house",
+      "description": "Jupiter aspects the 10th house",
+      "priority": 7,
+      "base_score": 0.12,
+      "_source_file": "systems\\Parasara\\rules\\parashara\\v1\\m1_rules.yaml"
+    },
+    "base_score": 0.12,
+    "adjusted_score": 0.0,
+    "confidence": null,
+    "evidence": {
+      "planet": null,
+      "house": null,
+      "targets": []
+    },
+    "trace_id": null,
+    "provenance": {
+      "source": "systems\\Parasara\\rules\\parashara\\v1\\m1_rules.yaml"
+    },
+    "evaluation_time_ms": null
+  },
+  {
+    "rule_id": "saturn_afflict_10",
+    "rule_version": "1.0",
+    "rule_family": "parashara",
+    "matched": false,
+    "priority": 7,
+    "context": {
+      "id": "saturn_afflict_10",
+      "version": "1.0",
+      "family": "parashara",
+      "type": "afflict_house",
+      "description": "Saturn afflicts the 10th house",
+      "priority": 7,
+      "base_score": -0.08,
+      "_source_file": "systems\\Parasara\\rules\\parashara\\v1\\m1_rules.yaml"
+    },
+    "base_score": -0.08,
+    "adjusted_score": 0.0,
+    "confidence": null,
+    "evidence": {
+      "planet": null,
+      "house": null,
+      "targets": []
+    },
+    "trace_id": null,
+    "provenance": {
+      "source": "systems\\Parasara\\rules\\parashara\\v1\\m1_rules.yaml"
+    },
+    "evaluation_time_ms": null
+  },
+  {
+    "rule_id": "in_house_mars_1",
+    "rule_version": null,
+    "rule_family": null,
+    "matched": true,
+    "priority": null,
+    "context": {
+      "id": "in_house_mars_1",
+      "type": "in_house",
+      "planet": "Mars",
+      "house": 1,
+      "base_score": 0.05,
+      "_source_file": "systems\\Parasara\\rules\\parashara\\v1\\primitives.yml"
+    },
+    "base_score": 0.05,
+    "adjusted_score": 0.05,
+    "confidence": null,
+    "evidence": {
+      "planet": "Mars",
+      "house": 1,
+      "expected_house": 1
+    },
+    "trace_id": null,
+    "provenance": {
+      "source": "systems\\Parasara\\rules\\parashara\\v1\\primitives.yml"
+    },
+    "evaluation_time_ms": null
+  },
+  {
+    "rule_id": "in_sign_moon_own",
+    "rule_version": null,
+    "rule_family": null,
+    "matched": true,
+    "priority": null,
+    "context": {
+      "id": "in_sign_moon_own",
+      "type": "in_sign",
+      "planet": "Moon",
+      "sign": "Cancer",
+      "base_score": 0.05,
+      "_source_file": "systems\\Parasara\\rules\\parashara\\v1\\primitives.yml"
+    },
+    "base_score": 0.05,
+    "adjusted_score": 0.05,
+    "confidence": null,
+    "evidence": {
+      "planet": "Moon",
+      "sign": "Cancer",
+      "expected_sign": "Cancer"
+    },
+    "trace_id": null,
+    "provenance": {
+      "source": "systems\\Parasara\\rules\\parashara\\v1\\primitives.yml"
+    },
+    "evaluation_time_ms": null
+  },
+  {
+    "rule_id": "strong_in_10_mars",
+    "rule_version": null,
+    "rule_family": null,
+    "matched": false,
+    "priority": null,
+    "context": {
+      "id": "strong_in_10_mars",
+      "type": "strong_in_10",
+      "planet": "Mars",
+      "base_score": 0.2,
+      "_source_file": "systems\\Parasara\\rules\\parashara\\v1\\primitives.yml"
+    },
+    "base_score": 0.2,
+    "adjusted_score": 0.0,
+    "confidence": null,
+    "evidence": {},
+    "trace_id": null,
+    "provenance": {
+      "source": "systems\\Parasara\\rules\\parashara\\v1\\primitives.yml"
+    },
+    "evaluation_time_ms": null
+  }
+]

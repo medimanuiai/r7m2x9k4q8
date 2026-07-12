@@ -1,0 +1,131 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Light monochrome theme */
+  --surface: #ffffff; /* page background */
+  --surface-card: #ffffff; /* card background */
+  --surface-border: #e6e6e6; /* subtle border */
+  --primary: #111827; /* primary (buttons) - dark gray */
+  --primary-dark: #000000;
+  --text-primary: #0f1724; /* main text - near-black */
+  --text-muted: #6b7280; /* secondary text - gray */
+}
+
+/* Base typography and background */
+html, body, #__next {
+  height: 100%;
+}
+
+body {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  color: var(--text-primary);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Page layout helpers */
+.site-header {
+  background: rgba(255,255,255,0.02);
+  border-bottom: 1px solid var(--surface-border);
+}
+.site-title { font-weight: 700; color: var(--text-primary); }
+.site-sub { color: var(--text-muted); font-size: 0.9rem; }
+
+.page-container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+
+/* Compatibility helpers used by components (non-Tailwind fallback classes) */
+.text-text-primary { color: var(--text-primary) !important; }
+.text-text-muted { color: var(--text-muted) !important; }
+
+/* Card and form aesthetics */
+.card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(15,23,42,0.06);
+}
+
+/* Hero blue background with subtle mountain silhouette */
+.hero-bg {
+  background: linear-gradient(180deg, #58c1e6 0%, #2fb1d6 45%, #7bd0e8 100%);
+  background-repeat: no-repeat;
+  background-position: center top;
+}
+
+.hero-bg::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 320px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 200'><g fill='rgba(255,255,255,0.06)'><path d='M0 140 L80 90 L160 120 L240 60 L320 120 L400 80 L480 120 L560 70 L640 120 L720 90 L800 140 L800 200 L0 200 Z'/></g></svg>");
+  background-size: cover;
+  background-position: center bottom;
+  pointer-events: none;
+}
+
+/* Pill button and input icon helpers */
+.pill-btn {
+  background: linear-gradient(180deg, #12a4d9, #078bb3);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.8rem 1.2rem;
+  font-weight: 700;
+  border: none;
+}
+
+.input-with-icon { position: relative; }
+.input-with-icon svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: .6; }
+.input-with-icon input { padding-left: 40px; }
+
+/* Auth card helpers for better centering & spacing */
+.hero-bg { position: relative; padding: 80px 0; }
+.auth-card { max-width: 420px; margin: 0 auto; }
+.card { padding: 28px; }
+
+label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; }
+input { height: 44px; font-size: 0.95rem; }
+::placeholder { color: #9aa4b2; }
+
+.pill-btn { height: 44px; display: inline-flex; align-items: center; justify-content: center; width: 100%; border-radius: 999px; box-shadow: 0 6px 18px rgba(3, 102, 214, 0.12); }
+
+@media (max-width: 640px) {
+  .hero-bg { padding: 40px 0; }
+  .auth-card { padding: 0 16px; }
+  .card { padding: 20px; }
+}
+
+
+input, textarea, select {
+  background-color: transparent;
+  border: 1px solid var(--surface-border);
+  color: var(--text-primary);
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(109,40,217,0.12);
+  border-color: var(--primary);
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+  padding: 0.62rem 0.9rem;
+  border-radius: 10px;
+  font-weight: 700;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+.btn-primary:disabled { opacity: 0.6 }
+
+.muted { color: var(--text-muted); }
+

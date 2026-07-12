@@ -1,0 +1,15 @@
+version: 1
+description: Directional strength values by house number
+dig_bala:
+  1: 25.0
+  2: 8.0
+  3: 10.0
+  4: 20.0
+  5: 30.0
+  6: 2.0
+  7: 15.0
+  8: 1.0
+  9: 30.0
+  10: 35.0
+  11: 10.0
+  12: 3.0

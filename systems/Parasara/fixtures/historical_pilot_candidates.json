@@ -1,0 +1,193 @@
+[
+  {
+    "id": "celebrity-001",
+    "name": "Amitabh Bachchan",
+    "metadata": {
+      "birth_datetime_utc": "1942-10-11T10:30:00Z",
+      "birth_datetime_local": "1942-10-11T16:00:00",
+      "time_confidence": "widely_cited",
+      "birth_location": { "place": "Prayagraj, India", "latitude": 25.4358, "longitude": 81.8463, "timezone_offset_minutes": 330 },
+      "public_figure": true,
+      "consent_obtained": false
+    },
+    "labels": {
+      "first_early_job": "Worked as a freight broker/executive in Kolkata before films",
+      "first_big_break": "Zanjeer (1973)",
+      "children_count": 2
+    },
+    "provenance": {
+      "sources": ["https://en.wikipedia.org/wiki/Amitabh_Bachchan"],
+      "curation_notes": "Time widely published as 4:00 PM local; treated as 'widely_cited'"
+    },
+    "license": "public-domain|verify-sources"
+  },
+  {
+    "id": "celebrity-002",
+    "name": "Shah Rukh Khan",
+    "metadata": {
+      "birth_datetime_utc": "1965-11-01T21:00:00Z",
+      "birth_datetime_local": "1965-11-02T02:30:00",
+      "time_confidence": "commonly_cited",
+      "birth_location": { "place": "New Delhi, India", "latitude": 28.6139, "longitude": 77.2090, "timezone_offset_minutes": 330 },
+      "public_figure": true,
+      "consent_obtained": false
+    },
+    "labels": {
+      "first_early_job": "Started with television (Fauji)",
+      "first_big_break": "Deewana (1992)",
+      "children_count": 3
+    },
+    "provenance": { "sources": ["https://en.wikipedia.org/wiki/Shah_Rukh_Khan"] , "curation_notes": "Time commonly cited as 2:30 AM"},
+    "license": "public-domain|verify-sources"
+  },
+  {
+    "id": "celebrity-003",
+    "name": "Aamir Khan",
+    "metadata": {
+      "birth_datetime_utc": "1965-03-14T03:15:00Z",
+      "birth_datetime_local": "1965-03-14T08:45:00",
+      "time_confidence": "commonly_cited",
+      "birth_location": { "place": "Mumbai, India", "latitude": 19.0760, "longitude": 72.8777, "timezone_offset_minutes": 330 },
+      "public_figure": true,
+      "consent_obtained": false
+    },
+    "labels": { "first_early_job": "Child actor", "first_big_break": "Qayamat Se Qayamat Tak", "children_count": 3 },
+    "provenance": { "sources": ["https://en.wikipedia.org/wiki/Aamir_Khan"], "curation_notes": "Time commonly cited ~8:45 AM" },
+    "license": "public-domain|verify-sources"
+  },
+  {
+    "id": "celebrity-004",
+    "name": "Salman Khan",
+    "metadata": {
+      "birth_datetime_utc": "1965-12-27T09:00:00Z",
+      "birth_datetime_local": "1965-12-27T14:30:00",
+      "time_confidence": "commonly_cited",
+      "birth_location": { "place": "Indore, India", "latitude": 22.7196, "longitude": 75.8577, "timezone_offset_minutes": 330 },
+      "public_figure": true,
+      "consent_obtained": false
+    },
+    "labels": { "first_early_job": "Supporting role in Biwi Ho To Aisi", "first_big_break": "Maine Pyar Kiya", "children_count": 0 },
+    "provenance": { "sources": ["https://en.wikipedia.org/wiki/Salman_Khan"], "curation_notes": "Time commonly cited ~2:30 PM" },
+    "license": "public-domain|verify-sources"
+  },
+  {
+    "id": "celebrity-005",
+    "name": "Sachin Tendulkar",
+    "metadata": {
+      "birth_datetime_utc": "1973-04-24T10:55:00Z",
+      "birth_datetime_local": "1973-04-24T16:25:00",
+      "time_confidence": "widely_cited",
+      "birth_location": { "place": "Mumbai, India", "latitude": 19.0760, "longitude": 72.8777, "timezone_offset_minutes": 330 },
+      "public_figure": true,
+      "consent_obtained": false
+    },
+    "labels": { "first_early_job": "School cricket prodigy; international debut at age 16", "children_count": 2 },
+    "provenance": { "sources": ["https://en.wikipedia.org/wiki/Sachin_Tendulkar"] , "curation_notes": "Time widely cited as 4:25 PM"},
+    "license": "public-domain|verify-sources"
+  },
+  {
+    "id": "celebrity-006",
+    "name": "Virat Kohli",
+    "metadata": {
+      "birth_datetime_utc": "1988-11-05T04:58:00Z",
+      "birth_datetime_local": "1988-11-05T10:28:00",
+      "time_confidence": "commonly_cited",
+      "birth_location": { "place": "New Delhi, India", "latitude": 28.6139, "longitude": 77.2090, "timezone_offset_minutes": 330 },
+      "public_figure": true,
+      "consent_obtained": false
+    },
+    "labels": { "first_early_job": "Delhi domestic cricket; U-19 World Cup", "children_count": 2 },
+    "provenance": { "sources": ["https://en.wikipedia.org/wiki/Virat_Kohli"], "curation_notes": "Time commonly cited ~10:28 AM" },
+    "license": "public-domain|verify-sources"
+  },
+  {
+    "id": "celebrity-007",
+    "name": "Narendra Modi",
+    "metadata": {
+      "birth_datetime_utc": "1950-09-17T05:30:00Z",
+      "birth_datetime_local": "1950-09-17T11:00:00",
+      "time_confidence": "officially_released",
+      "birth_location": { "place": "Vadnagar, India", "latitude": 23.7667, "longitude": 72.6333, "timezone_offset_minutes": 330 },
+      "public_figure": true,
+      "consent_obtained": false
+    },
+    "labels": { "first_early_job": "Assisted at family tea stall; entered politics through RSS", "children_count": 0 },
+    "provenance": { "sources": ["https://en.wikipedia.org/wiki/Narendra_Modi"], "curation_notes": "Officially released time 11:00 AM" },
+    "license": "public-domain|verify-sources"
+  },
+  {
+    "id": "celebrity-008",
+    "name": "Elon Musk",
+    "metadata": {
+      "birth_datetime_utc": null,
+      "birth_datetime_local": "1971-06-28",
+      "time_confidence": "unconfirmed",
+      "birth_location": { "place": "Pretoria, South Africa", "latitude": -25.7479, "longitude": 28.2293, "timezone_offset_minutes": 120 },
+      "public_figure": true,
+      "consent_obtained": false
+    },
+    "labels": { "first_early_job": "Co-founded Zip2; first major success selling Zip2", "children_count": 14 },
+    "provenance": { "sources": ["https://en.wikipedia.org/wiki/Elon_Musk"], "curation_notes": "Birth time not reliably confirmed; only date used" },
+    "license": "public-domain|verify-sources"
+  },
+  {
+    "id": "celebrity-009",
+    "name": "Bill Gates",
+    "metadata": {
+      "birth_datetime_utc": null,
+      "birth_datetime_local": "1955-10-28",
+      "time_confidence": "unconfirmed",
+      "birth_location": { "place": "Seattle, USA", "latitude": 47.6062, "longitude": -122.3321, "timezone_offset_minutes": -480 },
+      "public_figure": true,
+      "consent_obtained": false
+    },
+    "labels": { "first_early_job": "Co-founded Microsoft while in early adulthood", "children_count": 3 },
+    "provenance": { "sources": ["https://en.wikipedia.org/wiki/Bill_Gates"], "curation_notes": "Birth time not reliably confirmed; only date used" },
+    "license": "public-domain|verify-sources"
+  },
+  {
+    "id": "celebrity-010",
+    "name": "Steve Jobs",
+    "metadata": {
+      "birth_datetime_utc": "1955-02-25T03:15:00Z",
+      "birth_datetime_local": "1955-02-24T19:15:00",
+      "time_confidence": "commonly_cited",
+      "birth_location": { "place": "San Francisco, USA", "latitude": 37.7749, "longitude": -122.4194, "timezone_offset_minutes": -480 },
+      "public_figure": true,
+      "consent_obtained": false
+    },
+    "labels": { "first_early_job": "Co-founded Apple in a garage", "children_count": 4 },
+    "provenance": { "sources": ["https://en.wikipedia.org/wiki/Steve_Jobs"], "curation_notes": "Time often cited as 7:15 PM local" },
+    "license": "public-domain|verify-sources"
+  },
+  {
+    "id": "celebrity-011",
+    "name": "Taylor Swift",
+    "metadata": {
+      "birth_datetime_utc": "1989-12-13T05:17:00Z",
+      "birth_datetime_local": "1989-12-13T05:17:00",
+      "time_confidence": "widely_cited",
+      "birth_location": { "place": "Reading, UK", "latitude": 51.4543, "longitude": -0.9781, "timezone_offset_minutes": 0 },
+      "public_figure": true,
+      "consent_obtained": false
+    },
+    "labels": { "first_early_job": "Signed by Big Machine Records; breakthrough with debut album", "children_count": 0 },
+    "provenance": { "sources": ["https://en.wikipedia.org/wiki/Taylor_Swift"], "curation_notes": "Time widely circulated but not officially confirmed" },
+    "license": "public-domain|verify-sources"
+  },
+  {
+    "id": "celebrity-012",
+    "name": "Cristiano Ronaldo",
+    "metadata": {
+      "birth_datetime_utc": "1985-02-05T10:20:00Z",
+      "birth_datetime_local": "1985-02-05T10:20:00",
+      "time_confidence": "commonly_cited",
+      "birth_location": { "place": "Funchal, Portugal", "latitude": 32.6669, "longitude": -16.9241, "timezone_offset_minutes": 0 },
+      "public_figure": true,
+      "consent_obtained": false
+    },
+    "labels": { "first_early_job": "Sporting CP academy; breakthrough after joining Manchester United", "children_count": 5 },
+    "provenance": { "sources": ["https://en.wikipedia.org/wiki/Cristiano_Ronaldo"], "curation_notes": "Time commonly cited ~10:20 AM" },
+    "license": "public-domain|verify-sources"
+  }
+]

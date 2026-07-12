@@ -1,0 +1,12 @@
+version: 1
+description: Moolatrikona sign (primary sign or degree ranges)
+moolatrikona:
+  Sun: Leo
+  Moon: Cancer
+  Mars: Aries
+  Mercury: Virgo
+  Jupiter: Sagittarius
+  Venus: Taurus
+  Saturn: Capricorn
+  Rahu: null
+  Ketu: null

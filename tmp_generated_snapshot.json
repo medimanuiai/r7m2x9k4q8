@@ -1,0 +1,58 @@
+{
+  "dasha_timeline": [],
+  "diagnostics": {
+    "lagna_summary": {},
+    "planet_strengths": {
+      "Mars": 0.5,
+      "Moon": 0.5,
+      "Sun": 0.5
+    },
+    "yogas": []
+  },
+  "domains": {
+    "career": {
+      "components": [
+        {
+          "house": 4,
+          "name": "Moon",
+          "strength": 0.5
+        },
+        {
+          "house": 1,
+          "name": "Mars",
+          "strength": 0.5
+        }
+      ],
+      "confidence": 0.5,
+      "evidence": [],
+      "indicators": [],
+      "score": 0.5,
+      "scoring": {
+        "base_score": 0.5,
+        "final_score": 0.5,
+        "formula": "final = min(1.0, base_score + sum(contributions))",
+        "total_contribution": 0.0
+      },
+      "summary": ""
+    },
+    "wealth": {
+      "components": [],
+      "confidence": 0.5,
+      "indicators": [],
+      "score": 0.5,
+      "summary": ""
+    }
+  },
+  "engine": {
+    "engine_version": "0.1.0",
+    "name": "jyothishyam-parashara",
+    "rule_set_family": "parashara",
+    "rule_set_version": "v1"
+  },
+  "explainability": {
+    "conflict_resolution_policy": {},
+    "indicators_legend": {},
+    "scoring_formula": {}
+  },
+  "transits": []
+}

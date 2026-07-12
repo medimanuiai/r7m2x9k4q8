@@ -1,0 +1,12 @@
+version: 1
+description: Planet ownership (own signs)
+ownership:
+  Sun: [Leo]
+  Moon: [Cancer]
+  Mars: [Aries, Scorpio]
+  Mercury: [Gemini, Virgo]
+  Jupiter: [Sagittarius, Pisces]
+  Venus: [Taurus, Libra]
+  Saturn: [Capricorn, Aquarius]
+  Rahu: []
+  Ketu: []

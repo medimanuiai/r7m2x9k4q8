@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      BCRYPT_ROUNDS: "12"
+      # TODO: set a real SESSION_SECRET
+      SESSION_SECRET: CHANGE_ME_IN_PRODUCTION
+      # TODO: uncomment and set your DB URL
+      # MONGODB_URI: mongodb://mongo:27017/jyothishyam
+      # DATABASE_URL: postgresql://postgres:postgres@db:5432/jyothishyam
+    restart: unless-stopped
+    depends_on: []   # add db/mongo service here when ready
+
+  # ── Uncomment for MongoDB ──────────────────────────────────────────────────
+  # mongo:
+  #   image: mongo:7
+  #   volumes:
+  #     - mongo_data:/data/db
+  #   restart: unless-stopped
+
+  # ── Uncomment for Postgres ────────────────────────────────────────────────
+  # db:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_DB: jyothishyam
+  #   volumes:
+  #     - pg_data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+
+volumes:
+  mongo_data:
+  pg_data:

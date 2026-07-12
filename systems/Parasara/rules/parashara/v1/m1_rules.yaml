@@ -1,0 +1,42 @@
+# M1 seeded rule set for Parashara (minimal declarative rules)
+# Each rule provides: id, version, type, description, priority, base_score, and minimal context
+
+- id: strong_planet_in_10
+  version: "1.0"
+  family: parashara
+  type: strong_in_10
+  description: "A strong planet (strength >= 0.75) occupies the 10th house"
+  priority: 10
+  base_score: 0.20
+
+- id: tenth_lord_strong
+  version: "1.0"
+  family: parashara
+  type: lord_status
+  description: "The lord of the 10th house is in its own sign or exalted"
+  priority: 9
+  base_score: 0.18
+
+- id: rajayoga_naive
+  version: "1.0"
+  family: parashara
+  type: rajayoga_naive
+  description: "Naive Rajayoga: benefic planets occupy both 1st and 10th houses"
+  priority: 8
+  base_score: 0.18
+
+- id: jupiter_aspect_10
+  version: "1.0"
+  family: parashara
+  type: aspect_on_house
+  description: "Jupiter aspects the 10th house"
+  priority: 7
+  base_score: 0.12
+
+- id: saturn_afflict_10
+  version: "1.0"
+  family: parashara
+  type: afflict_house
+  description: "Saturn afflicts the 10th house"
+  priority: 7
+  base_score: -0.08

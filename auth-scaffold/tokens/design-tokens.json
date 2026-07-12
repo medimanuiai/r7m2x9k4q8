@@ -1,0 +1,94 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "description": "Jyothishyam design tokens – map to CSS variables in tokens.css and Tailwind config"
+  },
+  "color": {
+    "gradient": {
+      "start":  { "value": "#43e8d8", "comment": "Teal / brand-teal" },
+      "mid":    { "value": "#4e9df5", "comment": "Sky blue" },
+      "end":    { "value": "#c471ed", "comment": "Violet / brand-purple" },
+      "alt":    { "value": "#f064d2", "comment": "Fuchsia pink" }
+    },
+    "button": {
+      "from":   { "value": "#00d2ff", "comment": "Cyan start of button gradient" },
+      "to":     { "value": "#c471ed", "comment": "Violet end of button gradient" }
+    },
+    "surface": {
+      "card":   { "value": "#ffffff",  "dark": "#1e1b2e" },
+      "page":   { "value": "#f8fafc",  "dark": "#0f0e1a" }
+    },
+    "text": {
+      "primary":     { "value": "#1a1a2e", "dark": "#e2e8f0" },
+      "muted":       { "value": "#6b7280", "dark": "#94a3b8" },
+      "placeholder": { "value": "#9aa4b2", "dark": "#64748b" }
+    },
+    "input": {
+      "border":       { "value": "#e5e7eb", "dark": "#334155" },
+      "borderFocus":  { "value": "#7c3aed", "dark": "#a78bfa" },
+      "borderError":  { "value": "#ef4444", "dark": "#f87171" }
+    },
+    "feedback": {
+      "error":   { "value": "#b91c1c", "bg": "#fef2f2", "border": "#fecaca" },
+      "success": { "value": "#166534", "bg": "#f0fdf4", "border": "#bbf7d0" }
+    },
+    "social": {
+      "facebook": "#1877f2",
+      "twitter":  "#1da1f2",
+      "google":   "#ea4335"
+    }
+  },
+  "spacing": {
+    "1":  "0.25rem",
+    "2":  "0.5rem",
+    "3":  "0.75rem",
+    "4":  "1rem",
+    "5":  "1.25rem",
+    "6":  "1.5rem",
+    "8":  "2rem",
+    "10": "2.5rem",
+    "12": "3rem"
+  },
+  "typography": {
+    "fontFamily": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    "fontSize": {
+      "xs":   "0.75rem",
+      "sm":   "0.875rem",
+      "base": "1rem",
+      "lg":   "1.125rem",
+      "2xl":  "1.75rem"
+    },
+    "fontWeight": {
+      "normal":   400,
+      "medium":   500,
+      "semibold": 600,
+      "bold":     700
+    },
+    "letterSpacing": {
+      "normal": "0",
+      "wide":   "0.05em",
+      "wider":  "0.1em"
+    }
+  },
+  "borderRadius": {
+    "sm":   "4px",
+    "md":   "8px",
+    "lg":   "14px",
+    "card": "18px",
+    "full": "9999px"
+  },
+  "shadow": {
+    "card": "0 24px 64px rgba(0,0,0,0.14)",
+    "btn":  "0 4px 18px rgba(196,113,237,0.4)",
+    "sm":   "0 2px 8px rgba(0,0,0,0.08)"
+  },
+  "transition": {
+    "fast":  "120ms ease",
+    "base":  "220ms ease",
+    "slow":  "400ms ease"
+  },
+  "animation": {
+    "breatheDuration": "9s",
+    "spinDuration":    "0.7s"
+  }
+}

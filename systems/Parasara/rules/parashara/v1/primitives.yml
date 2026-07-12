@@ -1,0 +1,16 @@
+- id: in_house_mars_1
+  type: in_house
+  planet: Mars
+  house: 1
+  base_score: 0.05
+
+- id: in_sign_moon_own
+  type: in_sign
+  planet: Moon
+  sign: Cancer
+  base_score: 0.05
+
+- id: strong_in_10_mars
+  type: strong_in_10
+  planet: Mars
+  base_score: 0.2

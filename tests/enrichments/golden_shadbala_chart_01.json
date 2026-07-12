@@ -1,0 +1,8 @@
+{
+  "chart_name": "golden_chart_01",
+  "planets": [
+    { "name": "Sun", "sign": "Sagittarius", "degree": 10.5, "house": 9, "flags": {"exalted": false} },
+    { "name": "Moon", "sign": "Cancer", "degree": 15.3, "house": 4, "flags": {"exalted": false} },
+    { "name": "Mars", "sign": "Aries", "degree": 3.2, "house": 1, "flags": {"exalted": false} }
+  ]
+}

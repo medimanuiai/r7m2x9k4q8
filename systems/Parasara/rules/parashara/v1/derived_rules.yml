@@ -1,0 +1,14 @@
+- id: lord_status_10th
+  type: lord_status
+  house: 10
+  base_score: 0.18
+
+- id: rajayoga_naive_01
+  type: rajayoga_naive
+  base_score: 0.18
+
+- id: aspect_on_10_jupiter
+  type: aspect_on_house
+  planet: Jupiter
+  house: 10
+  base_score: 0.12

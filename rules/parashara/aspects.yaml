@@ -1,0 +1,18 @@
+version: 1
+description: |
+  Parashara-style whole-sign aspects configuration. Offsets are 1-based
+  counts where 7 means the 7th sign (opposition). This file drives the
+  Aspect Engine for deterministic Phase-1 behavior.
+planets:
+  default:
+    offsets: [7]
+  Mars:
+    offsets: [4,7,8]
+  Jupiter:
+    offsets: [5,7,9]
+  Saturn:
+    offsets: [3,7,10]
+  Rahu:
+    offsets: [7]
+  Ketu:
+    offsets: [7]

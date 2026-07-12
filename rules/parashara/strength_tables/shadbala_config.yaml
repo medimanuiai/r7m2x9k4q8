@@ -1,0 +1,31 @@
+version: 1
+description: Configuration for shadbala aggregation and weights
+weights:
+  sthana: 1.0
+  dig: 0.6
+  kala: 0.5
+  cheshta: 0.4
+  naisargika: 0.8
+  drik: 0.3
+
+sthana:
+  base: 6.0
+  own_sign_bonus: 1.0
+  moolatrikona_bonus: 0.8
+  uccha_weight: 0.6
+
+cheshta:
+  base: 10.0
+  retro_bonus: 8.0
+  speed_scale: 10.0
+
+kala:
+  day_bonus: 6.0
+  night_bonus: 4.0
+
+drik:
+  default_aspect_weight: 2.0
+
+versioning:
+  table_version: 1
+  engine_version: "M2-data-driven-1"

@@ -1,0 +1,12 @@
+version: 1
+description: Exaltation degrees per classical planet
+exaltations:
+  Sun: 10.0
+  Moon: 3.0
+  Mars: 28.0
+  Mercury: 15.0
+  Jupiter: 5.0
+  Venus: 27.0
+  Saturn: 21.0
+  Rahu: 0.0
+  Ketu: 0.0

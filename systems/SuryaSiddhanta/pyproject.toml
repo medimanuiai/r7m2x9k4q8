@@ -1,0 +1,156 @@
+[project]
+name = "ndastro-engine"
+version = "0.26.0"
+description = "A modern Vedic astrology calculation engine for Python, providing accurate astronomical calculations for birth charts, planetary positions, and ayanamsa systems."
+authors = [
+    {name = "Jaganathan, B", email = "jaganathan.eswaran@gmail.com"}
+]
+maintainers = [
+    {name = "Jaganathan, B", email = "jaganathan.eswaran@gmail.com"}
+]
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10,<4.0"
+keywords = ["astronomy", "vedic astrology", "south indian astrology", "north indian astrology", "astro", "skyfield", "astronomical-calculations", "birth-chart", "horoscope"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+dependencies = [
+    "skyfield>=1.53,<2.0",
+    "pytz>=2025.2,<2026.0",
+    "python-dotenv (>=1.2.2,<2.0.0)",
+]
+
+[project.urls]
+Homepage = "https://dhuruvah-in.github.io/ndastro-core/"
+Repository = "https://github.com/dhuruvah-apps/ndastro-core"
+Documentation = "https://docs.dhuruvah.in/ndastro-core/"
+"Bug Tracker" = "https://github.com/dhuruvah-apps/ndastro-core/issues"
+Changelog = "https://github.com/dhuruvah-apps/ndastro-core/releases"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0.2",
+    "pytest-cov>=6.0.0",
+    "pytest-xdist>=3.6.1",
+    "ruff>=0.14.10",
+    "mypy>=1.19.1",
+]
+docs = [
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.5.0",
+    "mkdocstrings[python]>=0.24.0",
+    "pymdown-extensions>=10.7.0",
+]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+warn_return_any = true
+warn_unused_configs = true
+namespace_packages = true
+explicit_package_bases = true
+
+[tool.ruff]
+line-length = 150
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore=["INP001", "COM812", "D213", "D203"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/{tests}/*" = ["S101", "D103", "D100", "ANN201"]
+
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 72
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = [
+    "-ra",
+    "-q",
+    "--strict-markers",
+    "--strict-config",
+    "--cov=ndastro_engine",
+    "--cov-report=term-missing:skip-covered",
+    "--cov-report=html",
+    "--cov-report=xml",
+]
+testpaths = [
+    "tests"
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+]
+
+[tool.coverage.run]
+source = ["ndastro_engine"]
+branch = true
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/.*",
+]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if TYPE_CHECKING:",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "@abstractmethod",
+    "@abc.abstractmethod",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.poetry.group.dev.dependencies]
+pytest-xdist = "3.6.1"
+pytest-cov = "6.0.0"
+mkdocs-material = "^9.7.1"
+mkdocstrings = {extras = ["python"], version = "^1.0.0"}
+pymdown-extensions = "^10.20"
+commitizen = "4.11.0"
+pre-commit = "^4.5.1"
+
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.26.0"
+tag_format = "v$version"
+version_scheme = "semver2"
+version_provider = "pep621"
+version_files = [
+    "pyproject.toml:version",
+]
+update_changelog_on_bump = true
+major_version_zero = true

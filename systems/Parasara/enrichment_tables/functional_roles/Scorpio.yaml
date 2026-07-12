@@ -1,0 +1,8 @@
+Mercury:
+  functional_role: functional_malefic
+  functional_score: 0.25
+  yoga_role: null
+Mars:
+  functional_role: functional_benefic
+  functional_score: 0.65
+  yoga_role: yogakaraka

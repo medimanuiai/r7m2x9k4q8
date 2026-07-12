@@ -1,0 +1,230 @@
+{
+  "metadata": {
+    "birth_datetime_utc": "1990-01-01T12:00:00+00:00",
+    "birth_location": {
+      "latitude": 12.9716,
+      "longitude": 77.5946,
+      "timezone_offset_minutes": 330
+    },
+    "ayanamsa": "lahiri",
+    "house_system": "whole_sign",
+    "sidereal": true
+  },
+  "lagna": {
+    "sign": "Cancer",
+    "degree": 3.8443
+  },
+  "planets": [
+    {
+      "name": "Empty",
+      "sign": "Aries",
+      "degree": 0.0,
+      "house": 1,
+      "nakshatra": {
+        "name": "ASWINNI",
+        "pada": 1,
+        "index": 1
+      },
+      "motion": {
+        "retrograde": false
+      },
+      "flags": {
+        "combust": false,
+        "exalted": false,
+        "debilitated": false
+      }
+    },
+    {
+      "name": "Ascendant",
+      "sign": "Cancer",
+      "degree": 3.8443,
+      "house": 4,
+      "nakshatra": {
+        "name": "POOSAM",
+        "pada": 1,
+        "index": 8
+      },
+      "motion": {
+        "retrograde": false
+      },
+      "flags": {
+        "combust": false,
+        "exalted": false,
+        "debilitated": false
+      }
+    },
+    {
+      "name": "Sun",
+      "sign": "Capricorn",
+      "degree": 10.8143,
+      "house": 10,
+      "nakshatra": {
+        "name": "THIRUVONAM",
+        "pada": 1,
+        "index": 22
+      },
+      "motion": {
+        "retrograde": false
+      },
+      "flags": {
+        "combust": false,
+        "exalted": false,
+        "debilitated": false
+      }
+    },
+    {
+      "name": "Moon",
+      "sign": "Pisces",
+      "degree": 3.2677,
+      "house": 12,
+      "nakshatra": {
+        "name": "POORATTAATHI",
+        "pada": 4,
+        "index": 25
+      },
+      "motion": {
+        "retrograde": false
+      },
+      "flags": {
+        "combust": false,
+        "exalted": false,
+        "debilitated": false
+      }
+    },
+    {
+      "name": "Mars",
+      "sign": "Sagittarius",
+      "degree": 10.0001,
+      "house": 9,
+      "nakshatra": {
+        "name": "MOOLAM",
+        "pada": 4,
+        "index": 19
+      },
+      "motion": {
+        "retrograde": false
+      },
+      "flags": {
+        "combust": false,
+        "exalted": false,
+        "debilitated": false
+      }
+    },
+    {
+      "name": "Mercury",
+      "sign": "Capricorn",
+      "degree": 25.6728,
+      "house": 10,
+      "nakshatra": {
+        "name": "AVITTAM",
+        "pada": 1,
+        "index": 23
+      },
+      "motion": {
+        "retrograde": false
+      },
+      "flags": {
+        "combust": false,
+        "exalted": false,
+        "debilitated": false
+      }
+    },
+    {
+      "name": "Jupiter",
+      "sign": "Cancer",
+      "degree": 5.1488,
+      "house": 4,
+      "nakshatra": {
+        "name": "POOSAM",
+        "pada": 1,
+        "index": 8
+      },
+      "motion": {
+        "retrograde": false
+      },
+      "flags": {
+        "combust": false,
+        "exalted": false,
+        "debilitated": false
+      }
+    },
+    {
+      "name": "Venus",
+      "sign": "Aquarius",
+      "degree": 6.222,
+      "house": 11,
+      "nakshatra": {
+        "name": "AVITTAM",
+        "pada": 4,
+        "index": 23
+      },
+      "motion": {
+        "retrograde": false
+      },
+      "flags": {
+        "combust": false,
+        "exalted": false,
+        "debilitated": false
+      }
+    },
+    {
+      "name": "Saturn",
+      "sign": "Capricorn",
+      "degree": 15.6575,
+      "house": 10,
+      "nakshatra": {
+        "name": "THIRUVONAM",
+        "pada": 2,
+        "index": 22
+      },
+      "motion": {
+        "retrograde": false
+      },
+      "flags": {
+        "combust": false,
+        "exalted": false,
+        "debilitated": false
+      }
+    },
+    {
+      "name": "Rahu",
+      "sign": "Aquarius",
+      "degree": 16.8755,
+      "house": 11,
+      "nakshatra": {
+        "name": "SHATHAYAM",
+        "pada": 4,
+        "index": 24
+      },
+      "motion": {
+        "retrograde": false
+      },
+      "flags": {
+        "combust": false,
+        "exalted": false,
+        "debilitated": false
+      }
+    },
+    {
+      "name": "Kethu",
+      "sign": "Leo",
+      "degree": 16.8755,
+      "house": 5,
+      "nakshatra": {
+        "name": "POORAM",
+        "pada": 2,
+        "index": 11
+      },
+      "motion": {
+        "retrograde": false
+      },
+      "flags": {
+        "combust": false,
+        "exalted": false,
+        "debilitated": false
+      }
+    }
+  ],
+  "houses": [],
+  "aspects": []
+}

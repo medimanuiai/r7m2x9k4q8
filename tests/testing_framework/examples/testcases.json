@@ -1,0 +1,11 @@
+[
+  {
+    "id": "example_01",
+    "description": "Golden chart example",
+    "input_chart_path": "systems/Parasara/fixtures/golden_chart_01.json",
+    "expected": {
+      "full_snapshot": "systems/Parasara/tests/snapshots/output_golden_chart_01.json"
+    },
+    "tags": ["golden", "smoke"]
+  }
+]

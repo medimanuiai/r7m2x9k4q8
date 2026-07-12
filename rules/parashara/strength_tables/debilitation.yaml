@@ -1,0 +1,12 @@
+version: 1
+description: Debilitation degrees (usually opposite exaltation)
+debilitations:
+  Sun: 190.0
+  Moon: 183.0
+  Mars: 208.0
+  Mercury: 195.0
+  Jupiter: 185.0
+  Venus: 207.0
+  Saturn: 201.0
+  Rahu: 0.0
+  Ketu: 0.0

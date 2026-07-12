@@ -1,0 +1,13 @@
+pytest
+pytest-mock
+pytest-cov
+freezegun
+# parallel test runner
+pytest-xdist
+# srtm is optional for integration tests
+# srtm
+pytest
+pytest-mock
+pytest-cov
+freezegun
+srtm

@@ -1,0 +1,372 @@
+{
+  "metadata": {
+    "birth_datetime_utc": "1990-01-01T12:00:00Z",
+    "birth_location": {
+      "latitude": 12.9716,
+      "longitude": 77.5946,
+      "timezone_offset_minutes": 330
+    },
+    "ayanamsa": "lahiri",
+    "house_system": "whole_sign",
+    "sidereal": true,
+    "ephemeris_source": null
+  },
+  "location": {
+    "place": null,
+    "latitude": 12.9716,
+    "longitude": 77.5946,
+    "timezone_offset_minutes": 330
+  },
+  "lagna_sign": "Aries",
+  "lagna_degree": 5.12,
+  "planets": [
+    {
+      "name": "Sun",
+      "sign": "Sagittarius",
+      "degree": 10.5,
+      "house": 9,
+      "dignity": "fire",
+      "strength": 0.51,
+      "canonical_id": "sun",
+      "degree_norm": 10.5,
+      "vargas": {
+        "D1": [
+          10.5
+        ],
+        "D9": [
+          {
+            "part_index": 0,
+            "varga_longitude": 20.0,
+            "rashi_index": 0,
+            "rashi_name": "Aries"
+          }
+        ],
+        "D60": [
+          {
+            "part_index": 1,
+            "varga_longitude": 9.0,
+            "rashi_index": 0,
+            "rashi_name": "Aries"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Moon",
+      "sign": "Cancer",
+      "degree": 15.3,
+      "house": 4,
+      "dignity": "neutral",
+      "strength": 0.71,
+      "canonical_id": "moon",
+      "degree_norm": 15.3,
+      "vargas": {
+        "D1": [
+          15.3
+        ],
+        "D9": [
+          {
+            "part_index": 0,
+            "varga_longitude": 20.0,
+            "rashi_index": 0,
+            "rashi_name": "Aries"
+          }
+        ],
+        "D60": [
+          {
+            "part_index": 2,
+            "varga_longitude": 15.0,
+            "rashi_index": 0,
+            "rashi_name": "Aries"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Mars",
+      "sign": "Aries",
+      "degree": 3.2,
+      "house": 1,
+      "dignity": "fire",
+      "strength": 0.76,
+      "canonical_id": "mars",
+      "degree_norm": 3.2,
+      "vargas": {
+        "D1": [
+          3.2
+        ],
+        "D9": [
+          {
+            "part_index": 0,
+            "varga_longitude": 20.0,
+            "rashi_index": 0,
+            "rashi_name": "Aries"
+          }
+        ],
+        "D60": [
+          {
+            "part_index": 0,
+            "varga_longitude": 3.0,
+            "rashi_index": 0,
+            "rashi_name": "Aries"
+          }
+        ]
+      }
+    }
+  ],
+  "houses": [
+    {
+      "number": 1,
+      "sign": "Aries",
+      "cusp_degree": 5.12,
+      "lord": "Mars"
+    },
+    {
+      "number": 4,
+      "sign": "Cancer",
+      "cusp_degree": 15.3,
+      "lord": "Moon"
+    }
+  ],
+  "diagnostics": {
+    "planet_count": 3,
+    "lagna_summary": {
+      "sign": "Aries",
+      "degree": 5.12,
+      "element": "Fire",
+      "modality": "Movable",
+      "lord": "Mars"
+    }
+  },
+  "enrichments": {
+    "canonical_planet_ids": {
+      "Sun": "sun",
+      "Moon": "moon",
+      "Mars": "mars"
+    },
+    "normalized_degrees": {
+      "Sun": 10.5,
+      "Moon": 15.3,
+      "Mars": 3.2
+    },
+    "planet_strengths": {
+      "Sun": {
+        "planet": "Sun",
+        "dignity": "neutral",
+        "functional_role": "functional_benefic",
+        "combust": false,
+        "retrograde": false,
+        "temporary_friendship": "Friend",
+        "strength": 0.51,
+        "strength_components": {
+          "dignity_bonus": 0.0,
+          "combust_penalty": 0.0,
+          "retro_bonus": 0.0,
+          "temp_friend_bonus": 0.05,
+          "varga_bonus": 0.06
+        },
+        "natural_role": "natural_malefic",
+        "owns_houses": [
+          5
+        ],
+        "functional_score": 0.68
+      },
+      "Moon": {
+        "planet": "Moon",
+        "dignity": "own_sign",
+        "functional_role": "functional_neutral",
+        "combust": false,
+        "retrograde": false,
+        "temporary_friendship": "Neutral",
+        "strength": 0.71,
+        "strength_components": {
+          "dignity_bonus": 0.25,
+          "combust_penalty": 0.0,
+          "retro_bonus": 0.0,
+          "temp_friend_bonus": 0.0,
+          "varga_bonus": 0.06
+        },
+        "natural_role": "natural_benefic",
+        "owns_houses": [
+          4
+        ],
+        "functional_score": 0.56
+      },
+      "Mars": {
+        "planet": "Mars",
+        "dignity": "own_sign",
+        "functional_role": "yogakaraka",
+        "combust": false,
+        "retrograde": false,
+        "temporary_friendship": "Friend",
+        "strength": 0.76,
+        "strength_components": {
+          "dignity_bonus": 0.25,
+          "combust_penalty": 0.0,
+          "retro_bonus": 0.0,
+          "temp_friend_bonus": 0.05,
+          "varga_bonus": 0.06
+        },
+        "natural_role": "natural_malefic",
+        "owns_houses": [
+          1,
+          8
+        ],
+        "functional_score": 0.85,
+        "yoga_role": "yogakaraka"
+      }
+    },
+    "house_summaries": [
+      {
+        "number": 1,
+        "sign": "Aries",
+        "lord": "Mars",
+        "occupants": [
+          "Mars"
+        ],
+        "lord_strength": 0.76,
+        "benefic_pressure": 0.646,
+        "malefic_pressure": 0.0,
+        "aspected_by": [],
+        "house_score": 0.823
+      },
+      {
+        "number": 4,
+        "sign": "Cancer",
+        "lord": "Moon",
+        "occupants": [
+          "Moon"
+        ],
+        "lord_strength": 0.71,
+        "benefic_pressure": 0.0,
+        "malefic_pressure": 0.0,
+        "aspected_by": [],
+        "house_score": 0.5
+      }
+    ],
+    "aspects": []
+  },
+  "derived": {
+    "planets": {
+      "Sun": {
+        "planet": "Sun",
+        "dignity": "neutral",
+        "functional_role": "functional_benefic",
+        "functional_score": 0.68,
+        "combust": false,
+        "retrograde": false,
+        "temporary_friendship": "Friend",
+        "strength": 0.51,
+        "strength_components": {
+          "dignity_bonus": 0.0,
+          "combust_penalty": 0.0,
+          "retro_bonus": 0.0,
+          "temp_friend_bonus": 0.05,
+          "varga_bonus": 0.06
+        }
+      },
+      "Moon": {
+        "planet": "Moon",
+        "dignity": "own_sign",
+        "functional_role": "functional_neutral",
+        "functional_score": 0.56,
+        "combust": false,
+        "retrograde": false,
+        "temporary_friendship": "Neutral",
+        "strength": 0.71,
+        "strength_components": {
+          "dignity_bonus": 0.25,
+          "combust_penalty": 0.0,
+          "retro_bonus": 0.0,
+          "temp_friend_bonus": 0.0,
+          "varga_bonus": 0.06
+        }
+      },
+      "Mars": {
+        "planet": "Mars",
+        "dignity": "own_sign",
+        "functional_role": "yogakaraka",
+        "functional_score": 0.85,
+        "combust": false,
+        "retrograde": false,
+        "temporary_friendship": "Friend",
+        "strength": 0.76,
+        "strength_components": {
+          "dignity_bonus": 0.25,
+          "combust_penalty": 0.0,
+          "retro_bonus": 0.0,
+          "temp_friend_bonus": 0.05,
+          "varga_bonus": 0.06
+        }
+      }
+    },
+    "houses": [
+      {
+        "number": 1,
+        "sign": "Aries",
+        "lord": "Mars",
+        "occupants": [
+          "Mars"
+        ],
+        "lord_strength": 0.76,
+        "benefic_pressure": 0.646,
+        "malefic_pressure": 0.0,
+        "aspected_by": [],
+        "house_score": 0.823
+      },
+      {
+        "number": 4,
+        "sign": "Cancer",
+        "lord": "Moon",
+        "occupants": [
+          "Moon"
+        ],
+        "lord_strength": 0.71,
+        "benefic_pressure": 0.0,
+        "malefic_pressure": 0.0,
+        "aspected_by": [],
+        "house_score": 0.5
+      }
+    ],
+    "functional_roles": {
+      "Sun": {
+        "planet": "Sun",
+        "natural_role": "natural_malefic",
+        "owns_houses": [
+          5
+        ],
+        "functional_role": "functional_benefic",
+        "functional_score": 0.68,
+        "yoga_role": null
+      },
+      "Moon": {
+        "planet": "Moon",
+        "natural_role": "natural_benefic",
+        "owns_houses": [
+          4
+        ],
+        "functional_role": "functional_neutral",
+        "functional_score": 0.56,
+        "yoga_role": null
+      },
+      "Mars": {
+        "planet": "Mars",
+        "natural_role": "natural_malefic",
+        "owns_houses": [
+          1,
+          8
+        ],
+        "functional_role": "yogakaraka",
+        "functional_score": 0.85,
+        "yoga_role": "yogakaraka"
+      }
+    },
+    "relationships": {
+      "aspects": []
+    },
+    "diagnostics": {
+      "planet_count": 3,
+      "house_count": 2
+    }
+  }
+}

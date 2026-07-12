@@ -1,0 +1,162 @@
+{
+  "dasha_timeline": [],
+  "diagnostics": {
+    "aspects": [],
+    "houses": [
+      {
+        "aspected_by": [],
+        "benefic_pressure": 0.646,
+        "house_score": 0.823,
+        "lord": "Mars",
+        "lord_strength": 0.76,
+        "malefic_pressure": 0.0,
+        "number": 1,
+        "occupants": [
+          "Mars"
+        ],
+        "sign": "Aries"
+      },
+      {
+        "aspected_by": [],
+        "benefic_pressure": 0.0,
+        "house_score": 0.5,
+        "lord": "Moon",
+        "lord_strength": 0.71,
+        "malefic_pressure": 0.0,
+        "number": 4,
+        "occupants": [
+          "Moon"
+        ],
+        "sign": "Cancer"
+      }
+    ],
+    "lagna_summary": {
+      "degree": 5.12,
+      "element": "Fire",
+      "lord": "Mars",
+      "modality": "Movable",
+      "sign": "Aries"
+    },
+    "planet_strengths": {
+      "Mars": {
+        "combust": false,
+        "dignity": "own_sign",
+        "functional_role": "yogakaraka",
+        "functional_score": 0.85,
+        "natural_role": "natural_malefic",
+        "owns_houses": [
+          1,
+          8
+        ],
+        "planet": "Mars",
+        "retrograde": false,
+        "strength": 0.76,
+        "strength_components": {
+          "combust_penalty": 0.0,
+          "dignity_bonus": 0.25,
+          "retro_bonus": 0.0,
+          "temp_friend_bonus": 0.05,
+          "varga_bonus": 0.06
+        },
+        "temporary_friendship": "Friend",
+        "yoga_role": "yogakaraka"
+      },
+      "Moon": {
+        "combust": false,
+        "dignity": "own_sign",
+        "functional_role": "functional_neutral",
+        "functional_score": 0.56,
+        "natural_role": "natural_benefic",
+        "owns_houses": [
+          4
+        ],
+        "planet": "Moon",
+        "retrograde": false,
+        "strength": 0.71,
+        "strength_components": {
+          "combust_penalty": 0.0,
+          "dignity_bonus": 0.25,
+          "retro_bonus": 0.0,
+          "temp_friend_bonus": 0.0,
+          "varga_bonus": 0.06
+        },
+        "temporary_friendship": "Neutral"
+      },
+      "Sun": {
+        "combust": false,
+        "dignity": "neutral",
+        "functional_role": "functional_benefic",
+        "functional_score": 0.68,
+        "natural_role": "natural_malefic",
+        "owns_houses": [
+          5
+        ],
+        "planet": "Sun",
+        "retrograde": false,
+        "strength": 0.51,
+        "strength_components": {
+          "combust_penalty": 0.0,
+          "dignity_bonus": 0.0,
+          "retro_bonus": 0.0,
+          "temp_friend_bonus": 0.05,
+          "varga_bonus": 0.06
+        },
+        "temporary_friendship": "Friend"
+      }
+    },
+    "yogas": []
+  },
+  "domains": {
+    "career": {
+      "components": [
+        {
+          "house": 4,
+          "planet": "Moon",
+          "type": "planet",
+          "weight": 0.21
+        },
+        {
+          "house": 1,
+          "planet": "Mars",
+          "type": "planet",
+          "weight": 0.26
+        }
+      ],
+      "confidence": 0.3,
+      "evidence": [],
+      "indicators": [],
+      "score": 0.735,
+      "scoring": {
+        "base_score": 0.735,
+        "final_score": 0.735,
+        "formula": "final = min(1.0, base_score + sum(contributions))",
+        "total_contribution": 0.0
+      },
+      "summary": "Career score 0.735 (confidence 0.3)",
+      "trace_id": "career_001"
+    },
+    "wealth": {
+      "components": [],
+      "confidence": 0.5,
+      "indicators": [],
+      "score": 0.5,
+      "summary": ""
+    }
+  },
+  "engine": {
+    "engine_version": "0.1.0",
+    "name": "jyothishyam-parashara",
+    "rule_set_family": "parashara",
+    "rule_set_version": "v1"
+  },
+  "explainability": {
+    "conflict_resolution_policy": {},
+    "indicators_legend": {},
+    "scoring_formula": {}
+  },
+  "meta": {
+    "engine_version": "jyothishyam-parashara@0.1.0",
+    "generated_at": null
+  },
+  "transits": []
+}

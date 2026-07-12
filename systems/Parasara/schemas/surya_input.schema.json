@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Surya Siddhanta Input",
+  "type": "object",
+  "required": ["metadata", "lagna", "planets", "houses"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["birth_datetime_utc", "birth_location"],
+      "properties": {
+        "birth_datetime_utc": { "type": "string", "format": "date-time" },
+        "birth_location": {
+          "type": "object",
+          "required": ["latitude", "longitude", "timezone_offset_minutes"],
+          "properties": {
+            "latitude": { "type": "number" },
+            "longitude": { "type": "number" },
+            "timezone_offset_minutes": { "type": "integer" }
+          }
+        },
+        "ayanamsa": { "type": "string" },
+        "house_system": { "type": "string" },
+        "sidereal": { "type": "boolean" },
+        "ephemeris_source": { "type": "string" }
+      }
+    },
+    "lagna": {
+      "type": "object",
+      "required": ["sign", "degree"],
+      "properties": {"sign": {"type":"string"}, "degree": {"type":"number"}}
+    },
+    "planets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "sign", "degree", "house", "nakshatra"],
+        "properties": {
+          "name": {"type":"string"},
+          "sign": {"type":"string"},
+          "degree": {"type":"number"},
+          "house": {"type":"integer","minimum":1,"maximum":12},
+          "nakshatra": {
+            "type":"object",
+            "required":["name","pada","index"],
+            "properties":{"name":{"type":"string"},"pada":{"type":"integer"},"index":{"type":"integer"}}
+          },
+          "motion": {"type":"object","properties":{"retrograde":{"type":"boolean"}}},
+          "flags": {"type":"object","properties":{"combust":{"type":"boolean"},"exalted":{"type":"boolean"},"debilitated":{"type":"boolean"}}}
+        }
+      }
+    },
+    "houses": { "type": "array" },
+    "aspects": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "current_transits": {
+      "type": "object",
+      "properties": {
+        "datetime_utc": { "type": "string", "format": "date-time" },
+        "planets": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "vargas": { "type": "object" }
+  }
+}
