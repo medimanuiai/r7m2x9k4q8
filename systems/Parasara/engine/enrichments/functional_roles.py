@@ -1,5 +1,6 @@
 from typing import Dict, Any, List
 import os
+from pathlib import Path
 import yaml
 
 SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces']
@@ -16,32 +17,34 @@ TRIKONAS = {1,5,9}
 def _load_table_for_lagna(lagna: str) -> Dict[str, Dict[str, Any]]:
     """Load a YAML table override for a given lagna if present.
 
-    Lookup order:
-    1. `rules/parashara/functional_roles/<lagna>.yaml` (preferred)
-    2. `systems/Parasara/enrichment_tables/functional_roles/<lagna>.yaml` (legacy)
+    Lookup order (anchored to the repository, independent of CWD):
+    1. `systems/Parasara/enrichment_tables/functional_roles/<lagna>.yaml`
+    2. `rules/parashara/functional_roles/<lagna>.yaml`
     File maps planet name -> { functional_role:, functional_score:, yoga_role:, owns_houses: [] }
     """
-    # primary location (data-driven tables under rules/)
-    base1 = os.path.join(os.getcwd(), 'rules', 'parashara', 'functional_roles')
-    fname1 = os.path.join(base1, f"{lagna}.yaml")
+    repository_root = Path(__file__).resolve().parents[4]
+
+    # Compatibility table used by the approved functional-role tests/goldens.
+    base1 = repository_root / 'systems' / 'Parasara' / 'enrichment_tables' / 'functional_roles'
+    fname1 = base1 / f"{lagna}.yaml"
     if os.path.exists(fname1):
         try:
             with open(fname1, 'r', encoding='utf-8') as fh:
                 docs = yaml.safe_load(fh)
                 if isinstance(docs, dict):
-                    return docs.get('functional_roles', docs)
+                    return docs
         except Exception:
             pass
 
-    # fallback legacy location
-    base2 = os.path.join(os.getcwd(), 'systems', 'Parasara', 'enrichment_tables', 'functional_roles')
-    fname2 = os.path.join(base2, f"{lagna}.yaml")
+    # Fallback data-driven table.
+    base2 = repository_root / 'rules' / 'parashara' / 'functional_roles'
+    fname2 = base2 / f"{lagna}.yaml"
     if os.path.exists(fname2):
         try:
             with open(fname2, 'r', encoding='utf-8') as fh:
                 docs = yaml.safe_load(fh)
                 if isinstance(docs, dict):
-                    return docs
+                    return docs.get('functional_roles', docs)
         except Exception:
             pass
     return {}

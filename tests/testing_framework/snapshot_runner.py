@@ -5,12 +5,13 @@ from .json_compare import compare_json
 from typing import Any, Dict, Optional
 
 
-def compare_snapshots(input_chart: str, golden_snapshot: str, ignore_keys=None, float_tol: float = 1e-6) -> Dict[str, Any]:
+def compare_snapshots(input_chart: str, golden_snapshot: str, ignore_keys=None, float_tol: float = 1e-6,
+                      output_path: Optional[str] = None) -> Dict[str, Any]:
     """Generate snapshot for `input_chart` and compare full JSON against `golden_snapshot`.
 
     Returns dict with keys: matched (bool), diff (dict) and details.
     """
-    tmp_out = Path('tests/tmp_snapshot.json')
+    tmp_out = Path(output_path) if output_path else Path('tests/tmp_snapshot.json')
     try:
         out = generate(input_chart, str(tmp_out))
     except Exception as e:

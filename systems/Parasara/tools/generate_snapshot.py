@@ -12,6 +12,13 @@ from systems.Parasara.engine.interpreters.career import interpret_career
 
 
 def assemble_output(astro):
+    planet_strengths = astro.enrichments.get(
+        'planet_strengths', {p.name: p.strength for p in astro.planets}
+    )
+    public_planet_strengths = {
+        name: ({key: value for key, value in row.items() if key != 'shadbala'} if isinstance(row, dict) else row)
+        for name, row in planet_strengths.items()
+    }
     return {
         "engine": {
             "name": "jyothishyam-parashara",
@@ -25,7 +32,7 @@ def assemble_output(astro):
         },
         "diagnostics": {
             "lagna_summary": astro.diagnostics.get('lagna_summary', {}),
-            "planet_strengths": astro.enrichments.get('planet_strengths', {p.name: p.strength for p in astro.planets}),
+            "planet_strengths": public_planet_strengths,
             "houses": astro.enrichments.get('house_summaries', astro.houses),
             "aspects": astro.enrichments.get('aspects', {}),
             "yogas": [],

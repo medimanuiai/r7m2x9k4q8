@@ -11,8 +11,7 @@ def load_rules_from_dir(rules_dir: str) -> Dict[str, Dict[str, Any]]:
     This function is lightweight and intended for M1: it loads declarative
     rule metadata (id, type, base_score, priority, etc.) into memory.
     """
-    global RULE_REGISTRY
-    RULE_REGISTRY = {}
+    RULE_REGISTRY.clear()
     if not os.path.exists(rules_dir):
         return RULE_REGISTRY
 

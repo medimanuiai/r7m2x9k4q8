@@ -1,16 +1,40 @@
 - id: in_house_mars_1
+  name: Mars in 1st House
+  author: legacy-unverified
+  created_date: legacy-unverified
+  source_reference: repository:8a04e1c3a5284030e8306b8d0ae11bcb1744fc26
+  classical_reference: legacy-unverified
+  validation_status: legacy-unverified
+  sme_required: true
+  sme_approved: false
   type: in_house
   planet: Mars
   house: 1
   base_score: 0.05
 
 - id: in_sign_moon_own
+  name: Moon in Own Sign
+  author: legacy-unverified
+  created_date: legacy-unverified
+  source_reference: repository:8a04e1c3a5284030e8306b8d0ae11bcb1744fc26
+  classical_reference: legacy-unverified
+  validation_status: legacy-unverified
+  sme_required: true
+  sme_approved: false
   type: in_sign
   planet: Moon
   sign: Cancer
   base_score: 0.05
 
 - id: strong_in_10_mars
+  name: Strong Mars in 10th House
+  author: legacy-unverified
+  created_date: legacy-unverified
+  source_reference: repository:8a04e1c3a5284030e8306b8d0ae11bcb1744fc26
+  classical_reference: legacy-unverified
+  validation_status: legacy-unverified
+  sme_required: true
+  sme_approved: false
   type: strong_in_10
   planet: Mars
   base_score: 0.2

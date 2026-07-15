@@ -1,0 +1,54 @@
+# Prompt-01 WP00 fully resolved dependency lock.
+# Generated from requirements-stage01.in on 2026-07-14.
+# Install the local SuryaSiddhanta package separately in editable/no-deps mode.
+
+annotated-doc==0.0.4
+annotated-types==0.7.0
+anyio==4.14.2
+attrs==26.1.0
+certifi==2026.6.17
+click==8.4.2
+colorama==0.4.6
+coverage==7.15.1
+execnet==2.1.2
+fastapi==0.139.0
+freezegun==1.5.5
+h11==0.16.0
+hypothesis==6.156.1
+idna==3.18
+iniconfig==2.3.0
+jplephem==2.24
+jsonschema==4.26.0
+jsonschema-specifications==2025.9.1
+numpy==2.5.1; python_version >= "3.14"
+numpy==2.4.6; python_version < "3.14"
+packaging==26.2
+pip-licenses==5.5.1
+pluggy==1.6.0
+prettytable==3.18.0
+pydantic==2.13.4
+pydantic-core==2.46.4
+Pygments==2.20.0
+pytest==9.1.1
+pytest-cov==7.1.0
+pytest-mock==3.15.1
+pytest-xdist==3.6.1
+python-dateutil==2.9.0.post0
+python-dotenv==1.2.2
+pytz==2025.2
+PyYAML==6.0.3
+referencing==0.37.0
+rpds-py==2026.6.3
+sgp4==2.27
+six==1.17.0
+skyfield==1.54
+sortedcontainers==2.4.0
+starlette==1.3.1
+typing-extensions==4.16.0
+typing-inspection==0.4.2
+uvicorn==0.50.0
+wcwidth==0.8.2
+
+# Optional integration-only package. Its published metadata excludes Python
+# 3.11, while its bundled PyO3 excludes Python 3.14.
+srtm==0.3.6; python_version >= "3.12" and python_version < "3.14"

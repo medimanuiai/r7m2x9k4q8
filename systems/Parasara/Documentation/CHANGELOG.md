@@ -2,6 +2,28 @@
 
 All notable changes to documentation are recorded here.
 
+## 2026-07-13
+
+- Completed evidence-based reviews of architecture, specifications, implementation, governance, guides, and operations.
+- Expanded current-state and target-state boundaries without changing engine behavior.
+- Corrected implementation status, task, testing, vertical-slice, governance, and operational claims against repository evidence.
+- Archived the mixed gap proposal list and added a canonical evidence-based gap register.
+- Normalized compatibility-pointer metadata and corrected root and repository documentation indexes.
+
+## 2026-07-12
+
+- Established a local documentation index, authority policy, and separate current/target architecture records.
+- Added canonical implementation status, roadmap, active tasks, and focused architecture specifications.
+- Migrated and corrected testing and vertical-slice guides under `guides/`.
+- Migrated engineering guardrails under `governance/`.
+- Migrated operational and licensing documentation under `operations/`.
+- Moved the point-in-time license inventory to `evidence/licenses.json`.
+- Updated known repository references to the migrated paths.
+- Archived the superseded mixed architecture, specification, implementation-status, roadmap, and task documents.
+- Added replacement notices at former stable paths and redirected repository indexes to canonical documents.
+- Completed the final structural validation pass and recorded evidence under `evidence/`.
+- Recorded a point-in-time structural index while keeping live stage-workspace status separate from canonical documentation.
+
 ## 2026-07-05
 
 - Split large `implementation.md` content into modular docs and added scaffolding:

@@ -1,13 +1,37 @@
 - id: lord_status_10th
+  name: 10th House Lord Status
+  author: legacy-unverified
+  created_date: legacy-unverified
+  source_reference: repository:8a04e1c3a5284030e8306b8d0ae11bcb1744fc26
+  classical_reference: legacy-unverified
+  validation_status: legacy-unverified
+  sme_required: true
+  sme_approved: false
   type: lord_status
   house: 10
   base_score: 0.18
 
 - id: rajayoga_naive_01
+  name: Naive Raja Yoga 01
+  author: legacy-unverified
+  created_date: legacy-unverified
+  source_reference: repository:8a04e1c3a5284030e8306b8d0ae11bcb1744fc26
+  classical_reference: legacy-unverified
+  validation_status: legacy-unverified
+  sme_required: true
+  sme_approved: false
   type: rajayoga_naive
   base_score: 0.18
 
 - id: aspect_on_10_jupiter
+  name: Jupiter Aspect on 10th House
+  author: legacy-unverified
+  created_date: legacy-unverified
+  source_reference: repository:8a04e1c3a5284030e8306b8d0ae11bcb1744fc26
+  classical_reference: legacy-unverified
+  validation_status: legacy-unverified
+  sme_required: true
+  sme_approved: false
   type: aspect_on_house
   planet: Jupiter
   house: 10

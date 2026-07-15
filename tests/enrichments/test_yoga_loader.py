@@ -12,6 +12,7 @@ def test_load_yoga_rules():
 
 
 def test_rule_registered():
+    load_yoga_rules()
     r = get_rule('rajayoga_naive')
     assert isinstance(r, dict)
     assert r.get('name') == 'Naive Raja Yoga'

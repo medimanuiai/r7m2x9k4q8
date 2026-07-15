@@ -242,7 +242,7 @@ def evaluate_rule_with_score(astro: AstroState, rule: Dict[str, Any]) -> Dict[st
     # construct a RuleMatch object for consistent schema
     rm = RuleMatch(
         rule_id=rid,
-        rule_version=rule.get('version'),
+        rule_version=str(rule.get('version')) if rule.get('version') is not None else None,
         rule_family=rule.get('family'),
         matched=bool(matched),
         priority=rule.get('priority'),

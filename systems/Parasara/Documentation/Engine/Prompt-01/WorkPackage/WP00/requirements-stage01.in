@@ -1,0 +1,27 @@
+# Prompt-01 WP00 direct dependency source.
+#
+# Versions already present in repository dependency declarations or the
+# repository licensing evidence are retained. PyYAML is added because the
+# active loaders and rule linter import it. pytest-xdist retains the exact
+# version in systems/SuryaSiddhanta/pyproject.toml.
+
+fastapi==0.139.0
+freezegun==1.5.5
+hypothesis==6.156.1
+jsonschema==4.26.0
+pip-licenses==5.5.1
+pydantic==2.13.4
+pytest==9.1.1
+pytest-cov==7.1.0
+pytest-mock==3.15.1
+pytest-xdist==3.6.1
+PyYAML==6.0.3
+python-dotenv==1.2.2
+pytz==2025.2
+skyfield==1.54
+# Optional integration-only dependency. Version 0.3.6 declares Python >=3.12
+# and bundles PyO3 0.22.6, which rejects Python 3.14. The application has a
+# documented JSON fallback, so WP00 omits it outside its supported 3.12-3.13
+# range rather than changing the repository-evidenced version.
+srtm==0.3.6; python_version >= "3.12" and python_version < "3.14"
+uvicorn==0.50.0

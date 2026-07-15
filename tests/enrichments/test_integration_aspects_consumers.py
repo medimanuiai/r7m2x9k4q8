@@ -21,7 +21,7 @@ def test_aspectgraph_identity_and_consumers():
 
     # consumers must read from astro.enrichments only
     # run yoga detector
-    yogas = yoga.detect_yogas_from_aspect_graph(astro)
+    yogas = yoga.evaluate_yoga_rules(astro)
     # run shadbala drik for Mars
     sa = shadbala.compute_shadbala_for_planet(next(p for p in astro.planets if p.name == 'Mars'), astro)
 
