@@ -52,6 +52,21 @@ def test_completion_claims_keep_release_and_publication_separate():
         ROOT
         / "systems/Parasara/Documentation/prompts/prompt-01/README.md"
     ).read_text(encoding="utf-8")
+    report = (
+        ROOT
+        / "systems/Parasara/Documentation/Engine/Prompt-01/WorkPackage/Reports/WP19/WP19.md"
+    ).read_text(encoding="utf-8")
     assert "PROMPT_01_IMPLEMENTATION: COMPLETE" in prompt
     assert "RELEASE_READINESS: NOT ASSESSED" in prompt
     assert "PUBLICATION_APPROVAL: NOT GRANTED" in prompt
+    for statement in (
+        "Windows is the supported Stage-01 backend/runtime platform.",
+        "Linux is not currently supported or validated.",
+        "Linux portability may be considered in a separately authorized future package.",
+        "Web and future iPhone clients remain platform-independent API consumers.",
+    ):
+        assert statement in prompt
+        assert statement in report
+    assert "actions/runs/29598198223" in report
+    assert "out-of-scope platform incompatibility" in report
+    assert "Audit-25 release/publication approval" in report

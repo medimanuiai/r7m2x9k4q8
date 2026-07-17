@@ -12,6 +12,12 @@ This guide describes the implemented Prompt-01 validation boundary and the
 remaining test layers. WP19 contains the dated complete-suite evidence; it is
 not scientific, release, privacy, or publication approval.
 
+Windows is the supported Stage-01 backend/runtime platform for development,
+validation, CI, and backend deployment. Linux is not currently supported or
+validated, so Linux results do not block Prompt-01 completion. Linux
+portability may be considered in a separately authorized future package.
+Web and future iPhone clients remain platform-independent API consumers.
+
 ## Test layers
 
 - Adapter, normalization, derived-state, rule-runtime, Career, and vertical-slice tests: `systems/Parasara/tests/`.
@@ -24,7 +30,7 @@ not scientific, release, privacy, or publication approval.
 
 ## Authoritative Stage-01 command
 
-From repository root in either supported Python environment:
+From repository root on Windows in either supported Python environment:
 
 ```text
 python tools/validate_prompt01.py full
@@ -96,12 +102,13 @@ Snapshot changes require deliberate review; never auto-approve broad drift after
 
 `.github/workflows/ci.yaml` installs the WP00 Stage-01 lock plus editable
 SuryaSiddhanta without dependencies and runs the authoritative full command in
-Python 3.11 and 3.14. It has no fallback, snapshot update, credentialed
-mutation, report-tree upload, or failure suppression. The aggregate check is
-`Prompt-01 Stage-01 / Prompt-01 required gate`.
+Python 3.11 and 3.14 on `windows-latest`. It has no fallback, snapshot update,
+credentialed mutation, report-tree upload, or failure suppression. The
+aggregate check is `Prompt-01 Stage-01 / Prompt-01 required gate`.
 
 `.github/workflows/parasara-snapshot-compare.yml` is supplemental. It uses the
-same lock and an explicit runner-temporary `--out`; it publishes nothing.
+same Windows runner contract, lock, and an explicit runner-temporary `--out`;
+it publishes nothing.
 
 ## Makefile limitations
 

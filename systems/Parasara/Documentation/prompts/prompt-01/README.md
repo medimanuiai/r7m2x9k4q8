@@ -45,9 +45,19 @@ compatibility evidence is [WP18](../../Engine/Prompt-01/WorkPackage/Reports/WP18
 Final CI/documentation evidence is
 [WP19](../../Engine/Prompt-01/WorkPackage/Reports/WP19/WP19.md).
 
+## Supported platform
+
+Windows is the supported Stage-01 backend/runtime platform.
+This includes Prompt-01 development, validation, CI, and backend deployment.
+Linux is not currently supported or validated.
+Linux portability may be considered in a separately authorized future package.
+
+This backend platform decision does not constrain clients.
+Web and future iPhone clients remain platform-independent API consumers.
+
 ## Authoritative validation
 
-From repository root, using either supported environment:
+From repository root on Windows, using either supported Python environment:
 
 ```text
 python tools/validate_prompt01.py full
@@ -59,7 +69,7 @@ update mode, strict failure propagation, WP17 enforcement, full pytest,
 deterministic manifest comparison, exact rule-lint coverage, strict approved
 snapshot bytes, and protected-artifact/worktree checks.
 
-CI runs this command in both lanes from the WP00 lock. The recommended
+Windows CI runs this command in both lanes from the WP00 lock. The recommended
 branch-protection check is
 `Prompt-01 Stage-01 / Prompt-01 required gate`; repository-setting enforcement
 was not verifiable locally.

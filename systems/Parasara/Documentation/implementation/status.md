@@ -11,8 +11,10 @@ Last verified: 2026-07-17
 - `MISSING`: no active implementation of the approved component was found.
 - `UNVERIFIED`: implementation exists, but correctness or acceptance evidence was not established during documentation review.
 
-Prompt-01 validation was reproduced on 2026-07-17 in Python 3.11.9 and 3.14.6.
-This does not certify scientific, release, privacy, security, licensing, or
+Prompt-01 validation was reproduced on Windows on 2026-07-17 in Python 3.11.9
+and 3.14.6. Windows is the supported Stage-01 backend/runtime, validation, CI,
+and deployment platform. Linux is not currently supported or validated. This
+does not certify scientific, release, privacy, security, licensing, or
 operational readiness.
 
 ## Component matrix
@@ -44,7 +46,7 @@ operational readiness.
 | OutputAssembler | MISSING | `systems/Parasara/tools/generate_snapshot.py` assembles dictionaries directly | Dedicated schema-validating serialization-only layer absent |
 | Rule-set selection | PARTIAL | Hardcoded `v1` paths in runtime/loaders and output metadata | No explicit EngineConfig, strict selection, or cache-safe version propagation |
 | Rule governance | MISSING | Metadata fragments and proposed policy only | No promotion, rollback, approval enforcement, or audit service |
-| Prompt-01 validation/CI | IMPLEMENTED | `tools/validate_prompt01.py`, `tests/wp19`, CI workflow, WP19 | External required-check setting and release/compliance gates are separate |
+| Prompt-01 validation/CI | IMPLEMENTED | `tools/validate_prompt01.py`, `tests/wp19`, Windows dual-Python CI workflow, WP19 | Linux portability, external required-check setting, and release/compliance gates are separate |
 | Snapshot/testing harness | PARTIAL | Prompt-01 gate, snapshots, testing framework | Prompt-01 compatibility validated; scientific/production acceptance remains |
 | Public engine API | MISSING | Tool-level entry points only | Versioned service/facade contract absent |
 | Production operations | MISSING | Documentation checklist only | Monitoring, deployment, retention automation, and operational evidence absent |
@@ -60,8 +62,9 @@ operational readiness.
 
 ## Validation status
 
-The WP19 dual-lane gate passed 2026-07-17 with identical ordered collection,
-determinism manifest, lint inventory, and approved snapshot. Scientific
+The WP19 Windows dual-lane gate passed 2026-07-17 with identical ordered
+collection, determinism manifest, lint inventory, and approved snapshot. Linux
+is not a supported or validated Prompt-01 platform. Scientific
 correctness, SME approval, public schema approval, privacy/security/licensing,
 and production operations remain separate gates.
 
