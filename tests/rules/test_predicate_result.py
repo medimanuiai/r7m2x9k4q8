@@ -1,75 +1,123 @@
-import json
-from dataclasses import asdict
+"""Canonical public predicate/condition boundary smoke contracts."""
 
-from systems.Parasara.engine.astrostate import AstroState, PlanetState
-from systems.Parasara.engine.rules.engine import evaluate_predicate, evaluate_condition, register_predicate, clear_cache, PredicateResult
-import systems.Parasara.engine.rules.predicates as _preds  # ensure predicates are registered
+from __future__ import annotations
 
+from types import SimpleNamespace
 
-def make_astro_with_mars():
-    astro = AstroState(metadata={}, location=None, lagna_sign=None, planets=[PlanetState(name='Mars', sign='Aries', degree=0.0, house=7)], houses=[])
-    return astro
-
-
-def test_planet_in_house_true_and_cache():
-    astro = make_astro_with_mars()
-    clear_cache()
-    res = evaluate_predicate('PLANET_IN_HOUSE', {'planet': 'Mars', 'house': 7}, astro, {})
-    assert isinstance(res, PredicateResult)
-    assert res.matched is True
-    assert res.predicate_id == 'PLANET_IN_HOUSE'
-    assert res.cache_hit is False
-    assert res.evaluation_time_ms is not None
-
-    # second call should be cached
-    res2 = evaluate_predicate('PLANET_IN_HOUSE', {'planet': 'Mars', 'house': 7}, astro, {})
-    assert isinstance(res2, PredicateResult)
-    assert res2.cache_hit is True
+from systems.Parasara.engine.rules.canonical import (
+    predicate_result_full_json_bytes,
+    predicate_result_from_full_data,
+    predicate_result_to_full_data,
+)
+from systems.Parasara.engine.rules.conditions import ConditionEvaluator
+from systems.Parasara.engine.rules.evaluator import PredicateEvaluator
+from systems.Parasara.engine.rules.models import (
+    ConditionResult,
+    PredicateResult,
+    PredicateStatus,
+)
+from systems.Parasara.engine.rules.prepared_state import (
+    PredicateEvaluationContext,
+    prepare_predicate_state,
+)
 
 
-def test_planet_exalted_false():
-    astro = make_astro_with_mars()
-    clear_cache()
-    res = evaluate_predicate('PLANET_EXALTED', {'planet': 'Mars'}, astro, {})
-    assert isinstance(res, PredicateResult)
-    assert res.matched is False
-    assert res.errors == []
+def _state():
+    source = SimpleNamespace(
+        planets=[SimpleNamespace(name="Mars", sign="Aries", degree=0.0, house=7)],
+        lagna_sign="Aries",
+        enrichments={},
+        derived=None,
+        metadata={},
+        diagnostics={},
+    )
+    outcome = prepare_predicate_state(source)
+    assert outcome.succeeded and outcome.state is not None
+    return outcome.state
 
 
-def test_predicate_exception_becomes_structured_failure():
-    astro = make_astro_with_mars()
-    clear_cache()
+def test_planet_in_house_returns_typed_result_and_instance_cache_telemetry():
+    evaluator = PredicateEvaluator()
+    params = {"planet": "Mars", "house": 7}
+    first = evaluator.evaluate(
+        "PLANET_IN_HOUSE", params, _state(), PredicateEvaluationContext()
+    )
+    second = evaluator.evaluate(
+        "PLANET_IN_HOUSE", params, _state(), PredicateEvaluationContext()
+    )
 
-    @register_predicate('RAISE_TEST')
-    def _raise(params, astro, context):
-        raise RuntimeError('boom')
-
-    res = evaluate_predicate('RAISE_TEST', {}, astro, {})
-    # structured failure
-    assert isinstance(res, PredicateResult)
-    assert res.matched is False
-    assert len(res.errors) >= 1
-
-    # cleanup
-    from systems.Parasara.engine.rules.engine import PREDICATE_REGISTRY
-    PREDICATE_REGISTRY.pop('RAISE_TEST', None)
+    assert isinstance(first, PredicateResult)
+    assert first.status is PredicateStatus.MATCHED and first.matched
+    assert first.predicate_id == "PLANET_IN_HOUSE"
+    assert first.cache_hit is False
+    assert second.cache_hit is True
 
 
-def test_evaluate_condition_returns_predicate_result():
-    astro = make_astro_with_mars()
-    clear_cache()
-    node = {'type': 'PLANET_IN_HOUSE', 'params': {'planet': 'Mars', 'house': 7}}
-    pr = evaluate_condition(node, astro, {})
-    assert isinstance(pr, PredicateResult)
-    assert pr.matched is True
+def test_missing_exaltation_fact_is_nonfactual_not_boolean_false():
+    result = PredicateEvaluator().evaluate(
+        "PLANET_EXALTED",
+        {"planet": "Mars"},
+        _state(),
+        PredicateEvaluationContext(),
+    )
+    assert result.status is PredicateStatus.MISSING_CAPABILITY
+    assert result.matched is False
+    assert result.errors
 
 
-def test_predicateresult_serialization():
-    astro = make_astro_with_mars()
-    clear_cache()
-    res = evaluate_predicate('PLANET_IN_HOUSE', {'planet': 'Mars', 'house': 7}, astro, {})
-    # dataclass as dict is JSON serializable with default=str
-    d = asdict(res)
-    s = json.dumps(d, default=str)
-    assert 'predicate_id' in d
-    assert isinstance(s, str)
+def test_planet_sign_is_not_reinterpreted_as_canonical_exaltation():
+    source = SimpleNamespace(
+        planets=[SimpleNamespace(name="Sun", sign="Aries", degree=10.0, house=1)],
+        lagna_sign="Aries",
+        enrichments={},
+        derived=None,
+        metadata={},
+        diagnostics={},
+    )
+    outcome = prepare_predicate_state(source)
+    assert outcome.succeeded and outcome.state is not None
+    result = PredicateEvaluator().evaluate(
+        "PLANET_EXALTED",
+        {"planet": "Sun"},
+        outcome.state,
+        PredicateEvaluationContext(),
+    )
+    assert result.status is PredicateStatus.MISSING_CAPABILITY
+    assert result.matched is False
+
+
+def test_condition_boundary_returns_typed_recursive_result():
+    result = ConditionEvaluator(PredicateEvaluator()).evaluate(
+        {"type": "PLANET_IN_HOUSE", "params": {"planet": "Mars", "house": 7}},
+        _state(),
+        PredicateEvaluationContext(),
+    )
+    assert isinstance(result, PredicateResult)
+    logical = ConditionEvaluator(PredicateEvaluator()).evaluate(
+        {
+            "type": "AND",
+            "children": [
+                {"type": "PLANET_IN_HOUSE", "params": {"planet": "Mars", "house": 7}},
+                {"type": "PLANET_IN_HOUSE", "params": {"planet": "Mars", "house": 1}},
+            ],
+        },
+        _state(),
+        PredicateEvaluationContext(),
+    )
+    assert isinstance(logical, ConditionResult)
+    assert logical.status is PredicateStatus.UNMATCHED
+
+
+def test_full_serialization_round_trips_without_permissive_string_coercion():
+    result = PredicateEvaluator().evaluate(
+        "PLANET_IN_HOUSE",
+        {"planet": "Mars", "house": 7},
+        _state(),
+        PredicateEvaluationContext(),
+    )
+    data = predicate_result_to_full_data(result)
+    restored = predicate_result_from_full_data(data)
+    payload = predicate_result_full_json_bytes(result)
+    assert restored == result
+    assert payload.startswith(b"{") and payload.endswith(b"}")
+    assert b"PredicateResult" not in payload

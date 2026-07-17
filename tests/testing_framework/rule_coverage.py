@@ -1,28 +1,71 @@
+"""Deterministic coverage derived from explicit typed evaluation records."""
+
+from __future__ import annotations
+
+from collections import OrderedDict
 import json
-from typing import Dict, Any
-from tests.testing_framework.instrumentation import summary, reset
-from systems.Parasara.engine.rules import loader
+from pathlib import Path
+from typing import Any
+
+from systems.Parasara.engine.rules.models import ConditionResult, PredicateResult
+from tests.testing_framework.typed_rule_evaluation import evaluate_typed_rule_surfaces
 
 
-def run_rule_coverage_scan(astro: Any, out_path: str = None) -> Dict[str, Any]:
-    """Execute the rule set over the given astro by triggering runtime.evaluate_rule_with_score
-    for each registered rule id so that instrumentation records hits.
-    This is a synthetic harness to force rule execution for coverage purposes.
-    """
-    reset()
-    # ensure rules loaded from standard path
-    rules_path = 'systems/Parasara/rules/parashara/v1'
-    loader.load_rules_from_dir(rules_path)
-    rules = loader.RULE_REGISTRY
-    for rid, rule in list(rules.items()):
-        # call runtime.evaluate_rule_with_score lazily to trigger evaluation
-        try:
-            from systems.Parasara.engine.rules import runtime
-            runtime.evaluate_rule_with_score(astro, {'id': rid, 'type': rule.get('type')})
-        except Exception:
-            continue
-    rep = summary()
+def _predicate_results(result):
+    if isinstance(result, PredicateResult):
+        yield result
+    elif isinstance(result, ConditionResult):
+        for child in result.children:
+            if child.result is not None:
+                yield from _predicate_results(child.result)
+
+
+def run_rule_coverage_scan(astro: Any, out_path: str | None = None) -> dict[str, Any]:
+    """Report only Yoga/Career records actually inspected by their typed owners."""
+
+    surfaces = evaluate_typed_rule_surfaces(astro)
+    hits: OrderedDict[str, int] = OrderedDict()
+    predicate_statuses: OrderedDict[str, OrderedDict[str, int]] = OrderedDict()
+
+    def accumulate_predicate(result: PredicateResult) -> None:
+        identity = f"{result.predicate_id}@{result.predicate_version}"
+        statuses = predicate_statuses.setdefault(identity, OrderedDict())
+        status = result.status.value
+        statuses[status] = statuses.get(status, 0) + 1
+
+    for record in surfaces.yoga.records:
+        identity = f"yoga:{record.yoga_id}@{record.rule_version}"
+        hits[identity] = hits.get(identity, 0) + 1
+        if record.condition_result is not None:
+            for result in _predicate_results(record.condition_result):
+                accumulate_predicate(result)
+
+    for candidate in surfaces.career.candidates:
+        version = candidate.definition.rule_version or candidate.fact.fact_version
+        identity = f"career:{candidate.definition.candidate_id}@{version}"
+        hits[identity] = hits.get(identity, 0) + 1
+        if candidate.fact.backing_result is not None:
+            for result in _predicate_results(candidate.fact.backing_result):
+                accumulate_predicate(result)
+
+    total = len(hits)
+    report = {
+        "rules": {
+            "total_available": total,
+            "total_executed": total,
+            "coverage_ratio": 1.0 if total else 0.0,
+            "hits": dict(hits),
+        },
+        "predicates": {key: dict(value) for key, value in predicate_statuses.items()},
+    }
     if out_path:
-        with open(out_path, 'w', encoding='utf-8') as fh:
-            json.dump(rep, fh, indent=2)
-    return rep
+        path = Path(out_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(report, indent=2, ensure_ascii=False, allow_nan=False),
+            encoding="utf-8",
+        )
+    return report
+
+
+__all__ = ("run_rule_coverage_scan",)

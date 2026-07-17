@@ -8,7 +8,6 @@ import math
 import pytest
 
 from systems.Parasara.engine.rules.canonical import CanonicalValueError
-from systems.Parasara.engine.rules import engine
 from systems.Parasara.engine.rules.models import (
     PredicateError,
     PredicateResult,
@@ -457,15 +456,16 @@ def test_canonical_models_are_deliberately_unhashable_until_wp03(model):
         hash(model)
 
 
-def test_legacy_runtime_result_remains_a_separate_eight_field_compatibility_type():
-    assert PredicateResult is not engine.PredicateResult
-    assert [field.name for field in fields(engine.PredicateResult)] == [
+def test_predicate_result_is_the_only_ten_field_factual_contract():
+    assert [field.name for field in fields(PredicateResult)] == [
         "matched",
         "predicate_id",
+        "predicate_version",
         "inputs",
         "evidence",
         "trace_steps",
         "errors",
         "cache_hit",
         "evaluation_time_ms",
+        "status",
     ]

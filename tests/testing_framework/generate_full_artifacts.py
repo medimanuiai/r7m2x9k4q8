@@ -5,23 +5,38 @@ Outputs (under tests/reports/artifacts/):
 - raw_surya.json
 - astrostate.json
 - rule_traces.json
-- domain_prediction.json
+- career_rule_traces.json
 - rashi_chart.svg
 - dashas.json
 - transits.json
-- explainability.json
 - test_summary.json
 """
 import json
 from pathlib import Path
 from systems.Parasara.engine.adapter.surya_adapter import SuryaAdapter
 from systems.Parasara.engine.normalizer import chart_to_astrostate
-from systems.Parasara.engine.rules import loader
-from systems.Parasara.engine.rules import runtime
+from systems.Parasara.engine.interpreters.career_models import (
+    career_evaluation_batch_to_logical_data,
+)
+from systems.Parasara.engine.rules.canonical import canonical_json_data
+from systems.Parasara.engine.enrichments.yoga_engine import yoga_batch_to_logical_data
+from tests.testing_framework.typed_rule_evaluation import evaluate_typed_rule_surfaces
 
 
 OUTDIR = Path('tests/reports/artifacts')
-OUTDIR.mkdir(parents=True, exist_ok=True)
+
+
+def _output_dir(out_dir=None):
+    path = OUTDIR if out_dir is None else Path(out_dir)
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def _write_json(path, value):
+    path.write_text(
+        json.dumps(value, indent=2, ensure_ascii=False, allow_nan=False),
+        encoding='utf-8',
+    )
 
 
 def save_raw_surya(chart_path: str):
@@ -48,59 +63,20 @@ def save_astrostate(chart):
     return astro, ad
 
 
-def run_rules_and_trace(astro):
-    # ensure rules loaded
-    rules_path = Path('systems/Parasara/rules/parashara/v1')
-    loader.load_rules_from_dir(str(rules_path))
-    traces = []
-    career_traces = []
-    for rid, rule in loader.RULE_REGISTRY.items():
-        try:
-            rm = runtime.evaluate_rule_with_score(astro, dict(rule))
-        except Exception as e:
-            rm = {'rule_id': rid, 'matched': False, 'evidence': {'error': str(e)}, 'adjusted_score': 0.0}
-        traces.append(rm)
-        # select career-related rules heuristically: house==10 or id contains '10' or type in known set
-        is_career = False
-        if isinstance(rule, dict):
-            if rule.get('house') == 10:
-                is_career = True
-            if '10' in str(rule.get('id') or ''):
-                is_career = True
-            if rule.get('type') in ('lord_status', 'strong_in_10', 'rajayoga_naive', 'aspect_on_house'):
-                is_career = True
-        if is_career:
-            career_traces.append(rm)
+def run_rules_and_trace(astro, out_dir=None):
+    """Write deterministic logical projections from the active typed owners."""
 
-    p = OUTDIR / 'rule_traces.json'
-    p.write_text(json.dumps(traces, indent=2))
-    p2 = OUTDIR / 'career_rule_traces.json'
-    p2.write_text(json.dumps(career_traces, indent=2))
+    surfaces = evaluate_typed_rule_surfaces(astro)
+    yoga_data = canonical_json_data(yoga_batch_to_logical_data(surfaces.yoga))
+    career_data = canonical_json_data(
+        career_evaluation_batch_to_logical_data(surfaces.career)
+    )
+    traces = yoga_data['records']
+    career_traces = career_data['candidates']
+    destination = _output_dir(out_dir)
+    _write_json(destination / 'rule_traces.json', traces)
+    _write_json(destination / 'career_rule_traces.json', career_traces)
     return traces, career_traces
-
-
-def synthesize_domain_prediction(career_traces):
-    total = 0.0
-    contributors = []
-    for t in career_traces:
-        score = float(t.get('adjusted_score') or t.get('adjustedScore') or 0.0)
-        matched = bool(t.get('matched'))
-        if matched:
-            total += score
-        contributors.append({'rule_id': t.get('rule_id'), 'matched': matched, 'evidence': t.get('evidence'), 'contribution': score})
-
-    # normalize to 0..1 by simple heuristic
-    norm = min(1.0, total)
-    pred = {
-        'domain': 'career',
-        'score': round(norm, 3),
-        'confidence': 0.75 if norm > 0.1 else 0.35,
-        'contributors': contributors,
-        'explainability': {'summary': f'{len([c for c in contributors if c["matched"]])} contributing rules'}
-    }
-    p = OUTDIR / 'domain_prediction.json'
-    p.write_text(json.dumps(pred, indent=2))
-    return pred
 
 
 def render_rashi_svg(astro):
@@ -153,12 +129,6 @@ def save_dashas_and_transits(astro):
     return dashas, transits
 
 
-def save_explainability(pred):
-    p = OUTDIR / 'explainability.json'
-    p.write_text(json.dumps(pred.get('explainability', {}), indent=2))
-    return pred.get('explainability', {})
-
-
 def run_tests_summary():
     # attempt to run pytest and capture summary counts
     import subprocess, shlex, sys
@@ -178,10 +148,8 @@ def main():
     chart, raw = save_raw_surya(chart_path)
     astro, astro_dict = save_astrostate(chart)
     traces, career_traces = run_rules_and_trace(astro)
-    pred = synthesize_domain_prediction(career_traces)
     svg = render_rashi_svg(astro)
     dashas, transits = save_dashas_and_transits(astro)
-    explain = save_explainability(pred)
     tests_out = run_tests_summary()
     print('Artifacts generated under', OUTDIR)
 
