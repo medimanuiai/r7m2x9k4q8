@@ -303,7 +303,7 @@ Use the exact safe commands and explicit `--basetemp` policy recorded by WP00-R/
 
 Create:
 
-`systems/Parasara/Documentation/Engine/Prompt-01/WorkPackage/WP02/WP02.md`
+`systems/Parasara/Documentation/Engine/Prompt-01/WorkPackage/Reports/WP02/WP02.md`
 
 Include:
 

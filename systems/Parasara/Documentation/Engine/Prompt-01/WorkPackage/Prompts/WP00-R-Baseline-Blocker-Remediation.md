@@ -12,9 +12,9 @@ Read before making changes:
 
 - the repository file named `Prompt-01-Locked-Decisions-and-Execution-Plan.md`;
 - the repository file named `Prompt-01-Final-Audit-Consolidation.md`;
-- `systems/Parasara/Documentation/Engine/Prompt-01/WorkPackage/WP00/WP00-Dual-Python-Decision-and-Baseline.md`
-- `systems/Parasara/Documentation/Engine/Prompt-01/WorkPackage/WP00/requirements-stage01.in`
-- `systems/Parasara/Documentation/Engine/Prompt-01/WorkPackage/WP00/requirements-stage01.lock.txt`
+- `systems/Parasara/Documentation/Engine/Prompt-01/WorkPackage/Reports/WP00/WP00-Dual-Python-Decision-and-Baseline.md`
+- `systems/Parasara/Documentation/Engine/Prompt-01/WorkPackage/Reports/WP00/requirements-stage01.in`
+- `systems/Parasara/Documentation/Engine/Prompt-01/WorkPackage/Reports/WP00/requirements-stage01.lock.txt`
 - the relevant Audit-15, Audit-16, Audit-21, Audit-22, and Audit-23 reports.
 
 Locate the first two references by exact filename rather than assuming a directory. If any other listed path differs, locate it by filename. Record every actual path used and stop if duplicate authoritative-looking copies disagree.
@@ -231,7 +231,7 @@ If any condition is not met, verdict is `BLOCKED`. Do not authorize WP01.
 
 Create:
 
-`systems/Parasara/Documentation/Engine/Prompt-01/WorkPackage/WP00-R/WP00-R.md`
+`systems/Parasara/Documentation/Engine/Prompt-01/WorkPackage/Reports/WP00-R/WP00-R.md`
 
 Include:
 
