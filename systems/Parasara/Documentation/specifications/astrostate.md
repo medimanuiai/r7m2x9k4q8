@@ -4,7 +4,7 @@ Status: APPROVED
 Authority: Master Architecture Specification  
 Approval basis: Master Architecture Specification and approved staged sequence  
 Owner: Parāśara engine maintainers  
-Last reviewed: 2026-07-13
+Last reviewed: 2026-07-17
 
 ## Contract
 
@@ -73,8 +73,19 @@ Changing normalization, relevant enrichment configuration, evaluation instant, s
 - Broad exception fallbacks must not make failed enrichment indistinguishable from an evaluated empty result.
 - Construction diagnostics remain factual and must not become domain interpretation.
 
-## Current compatibility boundary
+## Implemented Prompt-01 factual boundary
 
-The present implementation is split across `engine/astrostate.py`, `engine/derived/models.py`, and dictionary output from `engine/derived/builder.py`. It is mutable, exposes dictionaries/lists directly, uses mutable collection defaults, and has no capability model, evaluation-context contract, logical digest, or stable query API.
+The adapter/normalizer-facing `AstroState` remains the mutable compatibility
+construction model. Prompt-01 adds an explicit `prepare_predicate_state`
+boundary that copies supported facts into an immutable `PreparedAstroState`
+with capability readiness, producer/schema versions, defensive freezing, and
+a deterministic digest.
 
-Derived-state validation currently falls back to an unvalidated dictionary on failure, and some enrichment builders mutate AstroState or planet nodes. Prompt-01 may use existing access where required for compatibility, but must not expand into the full AstroState query-API stage or silently redefine astrological facts.
+The digest includes canonical predicate-relevant facts, readiness/content,
+relevant versions, and explicit factual context. It excludes Yoga/domain
+outputs, cache telemetry, performance timing, random IDs, and caller-owned
+mutable identity. Predicate handlers receive only this prepared snapshot.
+
+This is not the future general AstroState query API. Other enrichments and
+domains may still use the mutable compatibility AstroState, and the broader
+construction/query redesign remains deferred.

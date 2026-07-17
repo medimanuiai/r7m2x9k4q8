@@ -2,7 +2,7 @@
 
 Status: CURRENT-STATE  
 Owner: Parāśara engine maintainers  
-Last verified: 2026-07-13
+Last verified: 2026-07-17
 
 ## Purpose
 
@@ -29,12 +29,13 @@ The Master Architecture and approved prompts define what the system should becom
 | Current implementation | [Current State](architecture/current-state.md) | Verified description of the present runtime and known gaps |
 | Approved destination | [Target State](architecture/target-state.md) | Architectural requirements inherited from the Master Architecture |
 | Documentation rules | [Documentation Policy](governance/documentation-policy.md) | Status labels, evidence rules, ownership, and migration policy |
-| Stage prompts | [Prompt-01 Summary](prompts/prompt-01/README.md) | Stable authority, scope, and implementation gate; live workspace status is separate |
+| Stage prompts | [Prompt-01 Completion](prompts/prompt-01/README.md) | Implemented scope, evidence, validation command, and deferred boundaries |
 | Implementation status | [Canonical Status](implementation/status.md) | Evidence-based component status and known limitations |
 | Delivery roadmap | [Canonical Roadmap](implementation/roadmap.md) | Ordered architecture stages and validation gates |
 | Active work | [Canonical Tasks](implementation/tasks.md) | Actionable task registry without duplicated architecture claims |
 | Specifications | [Specification Index](specifications/README.md) | Focused contracts extracted from legacy mixed specifications |
 | Developer guides | [Guide Index](guides/README.md) | Testing and M1 vertical-slice workflows with side-effect classifications |
+| Predicate authoring | [Predicate Authoring](guides/predicate-authoring.md) | Active registration and factual-handler guidance |
 | Vertical slice | [Vertical Slice](guides/vertical-slice.md) | Current M1 snapshot path and target-boundary warning |
 | Engineering guardrails | [Guardrails](governance/guardrails.md) | Approved invariant and validation gates |
 | Operations | [Operations Index](operations/README.md) | Proposed controls and bounded operational evidence |

@@ -2,6 +2,18 @@
 
 All notable changes to documentation are recorded here.
 
+## 2026-07-17
+
+- Completed Prompt-01's immutable typed predicate, prepared-state,
+  evaluator/cache, condition, Yoga, Career factual-bridge, and tooling
+  migration while preserving the approved public snapshot.
+- Added one non-mutating validation command and a blocking Python 3.11/3.14 CI
+  matrix using the WP00 dependency lock.
+- Updated architecture, authoring/testing guidance, status, roadmap, tasks,
+  gaps, guardrails, indexes, and completion evidence.
+- Kept later architecture and release/privacy/security/licensing/publication
+  approval explicitly deferred.
+
 ## 2026-07-13
 
 - Completed evidence-based reviews of architecture, specifications, implementation, governance, guides, and operations.

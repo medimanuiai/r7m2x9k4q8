@@ -3,7 +3,7 @@
 Status: CURRENT-STATE  
 Authority: Jyothishyam Master Architecture Specification and approved Prompt-01  
 Owner: Parāśara engine maintainers  
-Last verified: 2026-07-12
+Last verified: 2026-07-17
 
 ## Objective
 
@@ -21,76 +21,66 @@ Apply this order within Prompt-01 work:
 4. Source code and tests as evidence of current behavior.
 5. Implementation and status documents.
 
-The currently approved Prompt-01 source is `Documentation/AI-Prompt/Prompt-01.docx`. A reviewed Markdown copy may be added here in a later documentation batch; until then, this index does not replace that source.
+The locked decision record is
+[Prompt-01 Locked Decisions and Execution Plan](../../Engine/Prompt-01/WorkPackage/Prompts/Prompt-01-Locked-Decisions-and-Execution-Plan.md).
+Audit instructions remain under `../../Engine/Prompt-01/Audits/`; completed
+point-in-time reports remain under `../../Engine/Prompt-01/Reports/`.
 
-## Current implementation baseline
+## Implemented result
 
-An initial `PredicateResult` implementation exists in `systems/Parasara/engine/rules/engine.py`. It must be preserved where it agrees with the approved architecture and completed or replaced only where evidence shows noncompliance.
+WP00-R through WP19 completed the bounded migration. Active registered factual
+predicates use immutable typed status/error/trace/result contracts, validated
+definition metadata and aliases, strict parameter schemas,
+capability/readiness distinctions, a prepared defensively frozen factual
+state/digest, `PredicateEvaluator`, and an engine-owned bounded cache.
 
-Known baseline characteristics requiring Audit-1 verification include:
+Conditions retain typed leaves and deterministic `AND`/`OR`/`NOT` results with
+short-circuit/skipped-child evidence. Yoga retains typed internal batches and
+an unchanged compatibility projection. Career uses a temporary typed factual
+bridge while preserving public scoring/confidence output. Active legacy
+tuple/raw-Boolean/dictionary predicate adapters were retired.
 
-- a global predicate registry storing handlers;
-- import-triggered predicate registration;
-- an initial frozen result dataclass with mutable nested collections;
-- tuple-return compatibility in predicate evaluation;
-- an in-memory cache keyed partly by AstroState object identity;
-- generic predicate-leaf and `AND`/`OR` evaluation;
-- Yoga integration through the generic condition evaluator;
-- separate raw-boolean helpers and M1 rule evaluation in `rules/runtime.py`.
+Executable architecture contracts are in `tests/wp17/`. Full regression and
+compatibility evidence is [WP18](../../Engine/Prompt-01/WorkPackage/Reports/WP18/WP18.md).
+Final CI/documentation evidence is
+[WP19](../../Engine/Prompt-01/WorkPackage/Reports/WP19/WP19.md).
 
-These statements are orientation, not final audit conclusions.
+## Authoritative validation
 
-## Approved decisions
+From repository root, using either supported environment:
 
-- Preserve existing PredicateResult behavior where it agrees with the Master Architecture.
-- Do not discard working compatibility behavior without evidence.
-- Audit raw-boolean functions in `runtime.py`; do not automatically migrate or delete them unless Prompt-01 scope requires it.
-- Do not decide whether `ASPECT` and `ASPECT_EXISTS` are aliases or separate identities until callers, rules, tests, and compatibility requirements are audited.
-- Do not guess ownership of the two rule-directory trees; determine it from loaders, imports, runtime paths, CI, tests, and documentation.
-- Preserve simplified astrological calculations unless PredicateResult correctness requires a change.
-- Complete Audit-1 before Prompt-01 implementation.
+```text
+python tools/validate_prompt01.py full
+```
 
-## Audit workspace status
+Python 3.11 is the baseline lane and Python 3.14 is the forward lane. The
+command uses the current interpreter, unique OS-temporary outputs, no snapshot
+update mode, strict failure propagation, WP17 enforcement, full pytest,
+deterministic manifest comparison, exact rule-lint coverage, strict approved
+snapshot bytes, and protected-artifact/worktree checks.
 
-The active audit workspace is indexed at `../../Engine/Prompt-01/Audits/README.md`. Its Audit 1–4 files are instruction templates with unpopulated report sections; `Audit-5.md` is empty. No completed audit deliverable currently exists at the report paths specified by those templates.
+CI runs this command in both lanes from the WP00 lock. The recommended
+branch-protection check is
+`Prompt-01 Stage-01 / Prompt-01 required gate`; repository-setting enforcement
+was not verifiable locally.
 
-Claims inside later templates that earlier audits are complete describe expected workflow state and are not completion evidence.
+## Final disposition
 
-## Audit sequence
+```text
+PROMPT_01_IMPLEMENTATION: COMPLETE
+PROMPT_01_VALIDATION: COMPLETE
+PROMPT_01_CI_GATE: COMPLETE
+PROMPT_01_DOCUMENTATION: COMPLETE
+RELEASE_READINESS: NOT ASSESSED
+PUBLICATION_APPROVAL: NOT GRANTED
+```
 
-### Audit-1: Predicate registry
+Prompt-01 completion does not approve release, privacy, security, licensing,
+data publication, or public output exposure. Audit-25 findings remain
+separately owned.
 
-Audit registration, storage, discovery, initialization, metadata, duplicates, aliases, lookup behavior, deterministic enumeration, test isolation, loader interaction, and Prompt-01 compliance.
-
-The existing audit instruction is currently located at:
-
-`systems/Parasara/Documentation/Engine/Prompt-01/Audits/Audit-01-Predicate-Registry.md`
-
-The instruction template remains separate from any completed report. Its embedded report headings are currently unpopulated.
-
-### Later impact analysis
-
-Subsequent approved audits or migration inventories should establish:
-
-- all registered predicates and return formats;
-- tuple-unpacking and raw-boolean callers;
-- cache consumers and version inputs;
-- condition-evaluator boundaries;
-- Yoga and domain compatibility;
-- serialization and snapshot exposure;
-- rule-directory ownership relevant to predicate validation.
-
-## Implementation gate
-
-Prompt-01 implementation must not begin until Audit-1 establishes the current registry contract, impact surface, conflicts, backward-compatibility requirements, and migration boundaries.
-
-Prompt-01 must not be marked complete while active registered predicates or active callers remain on an unapproved legacy contract.
-
-## Out of scope for this documentation batch
-
-- Running or completing Audit-1.
-- Changing PredicateResult code.
-- Moving or renaming existing Prompt-01 audit templates.
-- Deciding `ASPECT` versus `ASPECT_EXISTS` semantics.
-- Choosing rule-directory ownership.
-- Changing rule, Yoga, Career, scoring, or astrological behavior.
+Universal `RuleMatch`, shared `InferenceEngine`, universal typed
+`DomainPrediction`, `OutputAssembler`, a full DSL/compiler/dependency graph,
+persistent/distributed caching, broad concurrency/performance architecture,
+Dasha clock redesign, additional domains, and astrology-semantic changes
+remain future-stage work. No later work package is created by this completion.

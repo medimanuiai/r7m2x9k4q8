@@ -4,7 +4,7 @@ Status: APPROVED
 Authority: Master Architecture Specification and Prompt-01  
 Approval basis: Master Architecture Specification and approved staged sequence  
 Owner: Parāśara engine maintainers  
-Last reviewed: 2026-07-13
+Last reviewed: 2026-07-17
 
 ## Predicate responsibility
 
@@ -62,8 +62,24 @@ Only predicates declared deterministic and cacheable may be cached. Cold and war
 
 One canonical serializer must provide stable field order, enum values, numeric representation, datetime formatting, nested normalization, and JSON-safe output. Repeated logical evaluation and serialization must be equivalent for the same state, predicate, parameters, and context.
 
-## Migration constraint
+## Implemented Stage-01 boundary
 
-Prompt-01 must preserve compliant existing behavior and astrological semantics. Stage-required audits determine alias compatibility, active predicate scope, legacy return contracts, callers, supporting models, parameter validation, and rule-directory ownership before migration decisions are implemented.
+Prompt-01 now implements the contract in `engine/rules/models.py`,
+`canonical.py`, `registry.py`, `parameters.py`, `capabilities.py`,
+`prepared_state.py`, `evaluator.py`, and `conditions.py`. All ten
+`PredicateResult` fields are present: `matched`, `predicate_id`,
+`predicate_version`, `inputs`, `evidence`, `trace_steps`, `errors`,
+`cache_hit`, `evaluation_time_ms`, and `status`.
 
-The present model and registry in `engine/rules/engine.py` are partial compatibility implementations: nested collections are mutable, required identity/status/error metadata is incomplete, tuple compatibility remains, registration validation is minimal, and cache identity uses process-local object identity.
+Logical and full serialization are distinct; telemetry is excluded from
+logical identity. Registry bootstrap/freeze/isolation, strict normalization,
+prepared-state readiness/digest, engine-owned bounded cache policy, typed
+conditions, and deterministic serialization are executable contracts.
+`ASPECT` remains the explicit compatibility alias for `ASPECT_EXISTS`.
+
+See [Predicate Authoring](../guides/predicate-authoring.md) for the active
+registration, safety, evidence, cache, and test workflow.
+
+Universal RuleMatch, shared inference, public schema redesign, persistent or
+distributed caching, broad concurrency, and a full DSL/compiler remain outside
+this implemented boundary.

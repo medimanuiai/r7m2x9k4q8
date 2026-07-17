@@ -4,7 +4,7 @@ Status: APPROVED
 Authority: Master Architecture Specification  
 Approval basis: Master Architecture Specification and approved staged sequence  
 Owner: Parāśara engine maintainers  
-Last reviewed: 2026-07-13
+Last reviewed: 2026-07-17
 
 ## Domain interpreters
 
@@ -38,4 +38,14 @@ Public schema versioning is separate from internal model versioning. Backward co
 
 ## Current state
 
-Career returns an untyped dictionary and owns local scoring/confidence, narrative construction, and component assembly. The snapshot tool directly assembles public dictionaries. Wealth is a placeholder; Dasha, transits, and top-level explainability sections are empty or skeletal. Other domains and a dedicated schema-validating OutputAssembler are missing.
+Career now retains a typed internal prepared-facts/evaluation batch for its
+factual bridge, then deliberately projects to the unchanged public dictionary.
+It still owns local candidate selection, scoring/confidence, narrative, and
+component assembly. That bridge is temporary and must not be described as the
+future universal inference/output architecture.
+
+The snapshot tool still assembles public dictionaries directly. Wealth is a
+placeholder; Dasha, transits, and top-level explainability sections are empty
+or skeletal. Universal RuleMatch, shared InferenceEngine, typed universal
+DomainPrediction, public schema redesign, and a schema-validating
+OutputAssembler are not implemented.

@@ -2,7 +2,7 @@
 
 Status: CURRENT-STATE  
 Owner: Parāśara engine maintainers  
-Last verified: 2026-07-13
+Last verified: 2026-07-17
 
 ## Task rules
 
@@ -37,18 +37,18 @@ Last verified: 2026-07-13
 
 | ID | Task | Status | Acceptance |
 |---|---|---|---|
-| P01-AUD | Complete and approve the stage prerequisite audits | MANAGED IN STAGE WORKSPACE | Approved audit decisions establish the complete migration inventory and boundaries |
-| P01-I01 | Implement approved PredicateResult contract | BLOCKED BY P01-AUD | Model, typed errors/traces/status, immutability, canonical serialization, and parameter behavior satisfy Prompt-01 |
-| P01-I02 | Migrate predicate registry and cache | BLOCKED BY P01-I01 | Metadata validation and version/digest-safe cache behavior pass targeted tests |
-| P01-I03 | Migrate active predicates and condition evaluation | BLOCKED BY P01-I02 | Active registered predicates return PredicateResult and child results remain available downstream |
-| P01-I04 | Migrate callers and verify compatibility | BLOCKED BY P01-I03 | No unapproved active legacy callers; Yoga and Career behavior preserved |
-| P01-I05 | Complete Prompt-01 validation report | BLOCKED BY P01-I04 | Targeted, regression, determinism, serialization, and performance evidence recorded |
+| P01-AUD | Complete and approve the stage prerequisite audits | COMPLETE | Audit reports and locked decisions preserved in the Prompt-01 workspace |
+| P01-I01 | Implement approved PredicateResult contract | COMPLETE | WP02-WP03 and WP17 executable contracts |
+| P01-I02 | Migrate predicate registry and cache | COMPLETE | WP04-WP09 and cache/registry determinism tests |
+| P01-I03 | Migrate active predicates and condition evaluation | COMPLETE | WP08-WP12 and typed condition tests |
+| P01-I04 | Migrate callers and verify compatibility | COMPLETE | WP13-WP16; Yoga/Career/tooling compatibility |
+| P01-I05 | Complete validation and CI/docs sign-off | COMPLETE | WP17-WP19 and authoritative dual-lane gate |
 
 ## Deferred architecture work
 
 | ID | Task | Status | Dependency |
 |---|---|---|---|
-| P02-001 | Universal RuleMatch | DEFERRED | Prompt-01 complete |
+| P02-001 | Universal RuleMatch | DEFERRED / READY FOR OWNER AUTHORIZATION | Prompt-01 complete |
 | P03-001 | Shared InferenceEngine | DEFERRED | Universal RuleMatch complete |
 | P04-001 | Stable AstroState query API | DEFERRED | Approved stage entry |
 | P05-001 | Typed domain outputs and thin Career interpreter | DEFERRED | Shared inference complete |
@@ -56,3 +56,4 @@ Last verified: 2026-07-13
 | P06-001 | Explicit engine and rule-set version selection | DEFERRED | Approved stage entry |
 | P07-001 | DSL baseline extensions | DEFERRED | Stable predicate/rule contracts |
 | P08-001 | Rule dependency graph | DEFERRED | Stable DSL compiler contract |
+| REL-001 | Privacy/security/licensing/publication findings | SEPARATE OWNER WORK | Audit-25; before applicable public release |
