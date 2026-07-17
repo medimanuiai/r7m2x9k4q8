@@ -40,19 +40,3 @@ class Chart(BaseModel):
     aspects: Optional[List[Dict[str, Any]]] = None
     current_transits: Optional[Dict[str, Any]] = None
     vargas: Optional[Dict[str, Any]] = None
-
-
-class RuleMatch(BaseModel):
-    rule_id: str
-    rule_version: Optional[str] = None
-    rule_family: Optional[str] = None
-    matched: bool
-    priority: Optional[int] = None
-    context: Optional[Dict[str, Any]] = None
-    base_score: Optional[float] = None
-    adjusted_score: Optional[float] = None
-    confidence: Optional[float] = None
-    evidence: Optional[Dict[str, Any]] = None
-    trace_id: Optional[str] = None
-    provenance: Optional[Dict[str, Any]] = None
-    evaluation_time_ms: Optional[int] = None

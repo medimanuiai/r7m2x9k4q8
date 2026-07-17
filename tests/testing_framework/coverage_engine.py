@@ -101,7 +101,7 @@ class CoverageEngine:
                     self.covered['dashas'].add(f"period:{period}")
 
     def ingest_rule_coverage(self, rule_summary: Dict[str, Any]):
-        # rule_summary is expected to look like instrumentation.summary()
+        # rule_summary is the stable typed-rule coverage projection.
         rules = (rule_summary or {}).get('rules', {}).get('hits', {}) or {}
         # store rule ids count under 'rules' key
         if 'rules' not in self.covered:

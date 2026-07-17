@@ -16,7 +16,8 @@ def load_rules_from_dir(rules_dir: str) -> Dict[str, Dict[str, Any]]:
         return RULE_REGISTRY
 
     for root, dirs, files in os.walk(rules_dir):
-        for f in files:
+        dirs.sort()
+        for f in sorted(files):
             if not f.endswith(('.yml', '.yaml')):
                 continue
             path = os.path.join(root, f)
@@ -25,6 +26,8 @@ def load_rules_from_dir(rules_dir: str) -> Dict[str, Dict[str, Any]]:
                     docs = yaml.safe_load(fh)
                     if isinstance(docs, list):
                         for r in docs:
+                            if not isinstance(r, dict):
+                                continue
                             rid = r.get('id')
                             if rid:
                                 r['_source_file'] = path

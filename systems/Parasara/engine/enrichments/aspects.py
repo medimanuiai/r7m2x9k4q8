@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import Dict, Any, List
 import yaml
 from systems.Parasara.engine.astrostate import AstroState
@@ -6,8 +7,8 @@ from systems.Parasara.engine.astrostate import AstroState
 SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces']
 
 
-def _load_aspect_table() -> Dict[str, Any]:
-    path = os.path.join('rules', 'parashara', 'aspects.yaml')
+def _load_aspect_table(config_path: str | Path | None = None) -> Dict[str, Any]:
+    path = config_path or os.path.join('rules', 'parashara', 'aspects.yaml')
     try:
         with open(path, 'r', encoding='utf-8') as fh:
             return yaml.safe_load(fh) or {}
@@ -21,13 +22,16 @@ def _sign_index(name: str) -> int:
     return -1
 
 
-def compute_aspect_graph(astro: AstroState) -> Dict[str, Any]:
+def compute_aspect_graph(
+    astro: AstroState, *, config_path: str | Path | None = None
+) -> Dict[str, Any]:
     """Compute a whole-sign AspectGraph from the given AstroState.
 
     Returns a dict with 'edges' list and 'by_planet' map. Each edge includes
     explainability trace and sign-level reasoning.
     """
-    table = _load_aspect_table().get('planets', {})
+    loaded_table = _load_aspect_table(config_path)
+    table = loaded_table.get('planets', {})
     # default offsets
     default_offsets = table.get('default', {}).get('offsets', [7])
 
@@ -92,7 +96,7 @@ def compute_aspect_graph(astro: AstroState) -> Dict[str, Any]:
                 edges.append(edge)
                 by_planet.setdefault(pname, []).append(edge)
 
-    graph = {'edges': edges, 'by_planet': by_planet, 'config_version': _load_aspect_table().get('version')}
+    graph = {'edges': edges, 'by_planet': by_planet, 'config_version': loaded_table.get('version')}
     # attach into astro.enrichments for downstream consumers
     try:
         if getattr(astro, 'enrichments', None) is None:

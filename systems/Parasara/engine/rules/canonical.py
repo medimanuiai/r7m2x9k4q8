@@ -1,7 +1,7 @@
 """Strict canonical values and serialization for predicate-domain models.
 
-This module is internal to the predicate subsystem.  It does not serialize
-legacy runtime results or publish canonical models through domain/public APIs.
+This module is internal to the predicate subsystem and does not publish
+canonical models through domain/public APIs.
 """
 
 from __future__ import annotations
@@ -15,18 +15,17 @@ import hashlib
 from io import IOBase
 import json
 import math
-from pathlib import PurePath
 import re
-import socket
 from types import GeneratorType, MappingProxyType, ModuleType, TracebackType
 from typing import Any, TYPE_CHECKING
-from uuid import UUID
 
 from _thread import LockType, RLock
 from pydantic import BaseModel
 
 if TYPE_CHECKING:
     from systems.Parasara.engine.rules.models import (
+        ConditionChildResult,
+        ConditionResult,
         PredicateError,
         PredicateResult,
         PredicateTraceStep,
@@ -127,6 +126,15 @@ def _canonical_hash(value: Any) -> int:
     return hash((type(value).__name__, value))
 
 
+def _has_runtime_type(value: Any, module: str, name: str) -> bool:
+    """Recognize an unsupported operational type without importing its module."""
+
+    return any(
+        item.__module__ == module and item.__name__ == name
+        for item in type(value).__mro__
+    )
+
+
 def _unsupported_category(value: Any) -> str:
     if isinstance(value, (set, frozenset)):
         return "set"
@@ -138,9 +146,9 @@ def _unsupported_category(value: Any) -> str:
         return "complex"
     if isinstance(value, (datetime, date, timedelta)):
         return "temporal"
-    if isinstance(value, UUID):
+    if _has_runtime_type(value, "uuid", "UUID"):
         return "uuid"
-    if isinstance(value, PurePath):
+    if _has_runtime_type(value, "pathlib", "PurePath"):
         return "path"
     if isinstance(value, re.Pattern):
         return "regex"
@@ -158,7 +166,7 @@ def _unsupported_category(value: Any) -> str:
         return "open resource"
     if isinstance(value, (LockType, _RLOCK_TYPE)):
         return "lock"
-    if isinstance(value, socket.socket):
+    if _has_runtime_type(value, "socket", "socket"):
         return "socket"
     if isinstance(value, BaseModel):
         return "pydantic model"
@@ -512,3 +520,185 @@ def predicate_result_logical_sha256(result: "PredicateResult") -> str:
     """Return the persisted logical identity of a canonical result."""
 
     return hashlib.sha256(predicate_result_logical_json_bytes(result)).hexdigest()
+
+
+def _condition_child_to_data(child: "ConditionChildResult", *, full: bool) -> dict[str, Any]:
+    from systems.Parasara.engine.rules.models import (
+        ConditionChildResult,
+        ConditionNodeDisposition,
+        ConditionResult,
+        PredicateResult,
+    )
+
+    _require_model(child, ConditionChildResult, "child")
+    kind = None
+    projected = None
+    if child.disposition is ConditionNodeDisposition.EVALUATED:
+        if isinstance(child.result, PredicateResult):
+            kind = "predicate"
+            projected = (
+                predicate_result_to_full_data(child.result)
+                if full
+                else predicate_result_to_logical_data(child.result)
+            )
+        elif isinstance(child.result, ConditionResult):
+            kind = "condition"
+            projected = _condition_result_to_data(child.result, full=full)
+        else:  # pragma: no cover - the model invariant prevents this branch
+            raise TypeError("evaluated child has an unsupported result")
+    return {
+        "node_id": child.node_id,
+        "child_index": child.child_index,
+        "disposition": child.disposition.value,
+        "result_kind": kind,
+        "result": projected,
+        "skip_reason": child.skip_reason,
+    }
+
+
+def _condition_result_to_data(result: "ConditionResult", *, full: bool) -> dict[str, Any]:
+    from systems.Parasara.engine.rules.models import ConditionResult
+
+    _require_model(result, ConditionResult, "result")
+    data = {
+        "node_id": result.node_id,
+        "operator": result.operator.value,
+        "matched": result.matched,
+        "status": result.status.value,
+        "details": canonical_json_data(result.details),
+        "children": [_condition_child_to_data(child, full=full) for child in result.children],
+        "errors": [predicate_error_to_data(error) for error in result.errors],
+        "trace_steps": [predicate_trace_step_to_data(step) for step in result.trace_steps],
+    }
+    if full:
+        data["evaluation_time_ms"] = result.evaluation_time_ms
+    return data
+
+
+def condition_result_to_logical_data(result: "ConditionResult") -> dict[str, Any]:
+    """Project a recursive condition tree without condition/leaf telemetry."""
+
+    return _condition_result_to_data(result, full=False)
+
+
+def condition_result_to_full_data(result: "ConditionResult") -> dict[str, Any]:
+    """Project a recursive condition tree including approved telemetry."""
+
+    return _condition_result_to_data(result, full=True)
+
+
+def condition_result_logical_json_text(result: "ConditionResult") -> str:
+    return canonical_json_text(condition_result_to_logical_data(result))
+
+
+def condition_result_logical_json_bytes(result: "ConditionResult") -> bytes:
+    return condition_result_logical_json_text(result).encode("utf-8")
+
+
+def condition_result_full_json_text(result: "ConditionResult") -> str:
+    return canonical_json_text(condition_result_to_full_data(result))
+
+
+def condition_result_full_json_bytes(result: "ConditionResult") -> bytes:
+    return condition_result_full_json_text(result).encode("utf-8")
+
+
+_CONDITION_CHILD_KEYS = {
+    "node_id", "child_index", "disposition", "result_kind", "result", "skip_reason"
+}
+_CONDITION_LOGICAL_KEYS = {
+    "node_id", "operator", "matched", "status", "details", "children", "errors", "trace_steps"
+}
+_CONDITION_FULL_KEYS = _CONDITION_LOGICAL_KEYS | {"evaluation_time_ms"}
+
+
+def _condition_operator(value: Any):
+    from systems.Parasara.engine.rules.models import ConditionOperator
+
+    if type(value) is not str:
+        raise CanonicalValueError("$.operator: expected string operator")
+    try:
+        return ConditionOperator(value)
+    except ValueError as exc:
+        raise CanonicalValueError("$.operator: invalid condition operator") from exc
+
+
+def _condition_disposition(value: Any):
+    from systems.Parasara.engine.rules.models import ConditionNodeDisposition
+
+    if type(value) is not str:
+        raise CanonicalValueError("$.disposition: expected string disposition")
+    try:
+        return ConditionNodeDisposition(value)
+    except ValueError as exc:
+        raise CanonicalValueError("$.disposition: invalid child disposition") from exc
+
+
+def _condition_child_from_data(data: Any, *, full: bool) -> "ConditionChildResult":
+    from systems.Parasara.engine.rules.models import (
+        ConditionChildResult,
+        ConditionNodeDisposition,
+    )
+
+    value = _canonical_object(data, _CONDITION_CHILD_KEYS, path="$.children[]")
+    disposition = _condition_disposition(value["disposition"])
+    kind = value["result_kind"]
+    raw_result = value["result"]
+    parsed = None
+    if disposition is ConditionNodeDisposition.EVALUATED:
+        if kind == "predicate":
+            parsed = _result_from_data(raw_result, full=full)
+        elif kind == "condition":
+            parsed = _condition_result_from_data(raw_result, full=full)
+        else:
+            raise CanonicalValueError("$.children[]: invalid evaluated result kind")
+    elif kind is not None or raw_result is not None:
+        raise CanonicalValueError("$.children[]: skipped child cannot carry a result")
+    return ConditionChildResult(
+        node_id=value["node_id"],
+        child_index=value["child_index"],
+        disposition=disposition,
+        result=parsed,
+        skip_reason=value["skip_reason"],
+    )
+
+
+def _condition_result_from_data(data: Any, *, full: bool) -> "ConditionResult":
+    from systems.Parasara.engine.rules.models import ConditionResult
+
+    expected = _CONDITION_FULL_KEYS if full else _CONDITION_LOGICAL_KEYS
+    value = _canonical_object(data, expected, path="$")
+    children = _canonical_array(value["children"], path="$.children")
+    errors = _canonical_array(value["errors"], path="$.errors")
+    traces = _canonical_array(value["trace_steps"], path="$.trace_steps")
+    return ConditionResult(
+        node_id=value["node_id"],
+        operator=_condition_operator(value["operator"]),
+        matched=value["matched"],
+        status=_status_from_value(value["status"]),
+        details=value["details"],
+        children=tuple(_condition_child_from_data(child, full=full) for child in children),
+        errors=tuple(predicate_error_from_data(error) for error in errors),
+        trace_steps=tuple(predicate_trace_step_from_data(step) for step in traces),
+        evaluation_time_ms=value["evaluation_time_ms"] if full else None,
+    )
+
+
+def condition_result_from_logical_data(data: Any) -> "ConditionResult":
+    return _condition_result_from_data(data, full=False)
+
+
+def condition_result_from_full_data(data: Any) -> "ConditionResult":
+    return _condition_result_from_data(data, full=True)
+
+
+def condition_result_from_logical_json(payload: str | bytes) -> "ConditionResult":
+    return condition_result_from_logical_data(_load_strict_json(payload))
+
+
+def condition_result_from_full_json(payload: str | bytes) -> "ConditionResult":
+    return condition_result_from_full_data(_load_strict_json(payload))
+
+
+def condition_result_logical_sha256(result: "ConditionResult") -> str:
+    return hashlib.sha256(condition_result_logical_json_bytes(result)).hexdigest()

@@ -8,9 +8,13 @@ from pathlib import Path
 import pytest
 
 from systems.Parasara.engine.adapter.surya_adapter import SuryaAdapter
-from systems.Parasara.engine.interpreters.career import interpret_career
+from systems.Parasara.engine.interpreters.career import (
+    evaluate_career_batch,
+    interpret_career,
+    prepare_career_facts,
+)
 from systems.Parasara.engine.normalizer import chart_to_astrostate
-from systems.Parasara.engine.rules import engine, loader, runtime
+from systems.Parasara.engine.rules import loader
 from systems.Parasara.tools.generate_snapshot import generate
 
 
@@ -25,19 +29,12 @@ APPROVED_CAREER = REPO_ROOT / "systems" / "Parasara" / "tests" / "fixtures" / "g
 @pytest.fixture(autouse=True)
 def isolated_rule_globals():
     rules = deepcopy(loader.RULE_REGISTRY)
-    predicate_registry = dict(engine.PREDICATE_REGISTRY)
-    predicate_cache = dict(engine._CACHE)
     loader.load_rules_from_dir(str(RULES_DIR))
-    engine.clear_cache()
     try:
         yield
     finally:
         loader.RULE_REGISTRY.clear()
         loader.RULE_REGISTRY.update(rules)
-        engine.PREDICATE_REGISTRY.clear()
-        engine.PREDICATE_REGISTRY.update(predicate_registry)
-        engine._CACHE.clear()
-        engine._CACHE.update(predicate_cache)
 
 
 def load_astro(path):
@@ -48,21 +45,14 @@ def sha256(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def test_candidate_membership_order_and_golden_career_contract(monkeypatch):
+def test_candidate_membership_order_and_golden_career_contract():
     astro = load_astro(GOLDEN_INPUT)
     state_before = astro.model_dump(mode="python")
-    candidates = []
-    original = runtime.evaluate_rule_with_score
-
-    def recording_evaluator(candidate_astro, rule):
-        candidates.append(deepcopy(rule))
-        return original(candidate_astro, rule)
-
-    monkeypatch.setattr(runtime, "evaluate_rule_with_score", recording_evaluator)
+    batch = evaluate_career_batch(prepare_career_facts(astro))
     actual = interpret_career(astro)
     approved = json.loads(APPROVED_CAREER.read_text(encoding="utf-8"))
 
-    assert [rule["id"] for rule in candidates] == [
+    assert [item.definition.candidate_id for item in batch.candidates] == [
         "strong_in_10_Sun",
         "strong_in_10_Moon",
         "strong_in_10_Mars",

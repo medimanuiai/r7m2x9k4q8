@@ -36,7 +36,7 @@ def load_yoga_rules(rules_path: str = None) -> List[Dict[str, Any]]:
     for r in rules:
         try:
             validate_yoga_rule(r)
-            # register into RULE_REGISTRY for runtime use
+            # Preserve the supported generic-loader/Yoga interoperability API.
             register_rule(r)
             validated.append(r)
         except Exception:
