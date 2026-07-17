@@ -4,7 +4,7 @@ Status: APPROVED
 Authority: Master Architecture Specification and approved stage prompts  
 Approval basis: Master Architecture Specification and approved staged sequence  
 Owner: Parāśara engine maintainers  
-Last reviewed: 2026-07-13
+Last reviewed: 2026-07-17
 
 ## Architectural invariants
 
@@ -54,16 +54,23 @@ Compatibility behavior is preserved unless approved evidence shows that it viola
 
 ## Current automated enforcement
 
-The repository currently provides limited automated enforcement:
+`tools/validate_prompt01.py full` enforces typed contracts,
+architecture/purity/safety, complete regression, deterministic manifest and
+serialization, Yoga/loader order, Career/tooling compatibility, exact
+supported-file rule lint, strict no-update snapshot bytes, and protected
+artifact/worktree preservation.
 
-- `.github/workflows/ci.yaml` runs the Python test suite, then invokes coverage/report and snapshot-PR tooling through non-blocking commands when the test step succeeds;
-- `.github/workflows/parasara-snapshot-compare.yml` runs the Parāśara snapshot comparison;
-- `systems/Parasara/Makefile` provides schema validation and subsystem test targets;
-- `tools/rules_lint.py` exists as rule-metadata tooling.
+`.github/workflows/ci.yaml` installs the WP00 lock and runs that command as a
+blocking Python 3.11/3.14 matrix. It has no weak retry, failure suppression,
+credentialed mutation, snapshot approval, or report-tree upload. The
+supplemental snapshot workflow uses the same lock and an explicit temporary
+output.
 
-Coverage/report and snapshot-PR helper failures are currently suppressed with `|| true`, so those helper steps are not enforcement gates. The presence of `tools/rules_lint.py` does not establish CI enforcement; no active workflow step was verified for it. Likewise, current workflows do not prove scientific validation, SME approval enforcement, deterministic replay across versions, privacy controls, or production readiness.
+These gates do not prove scientific validation, SME approval,
+branch-protection configuration, privacy/security/license readiness, or
+production readiness.
 
-## Required enforcement before production
+## Additional enforcement required before production
 
 - Rule/schema linting and duplicate/version validation in CI.
 - Determinism and version-isolation checks.

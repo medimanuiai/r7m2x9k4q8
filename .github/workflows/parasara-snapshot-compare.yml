@@ -10,6 +10,8 @@ on:
 
 jobs:
   snapshot-compare:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -22,11 +24,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          if [ -f systems/Parasara/requirements.txt ]; then python -m pip install -r systems/Parasara/requirements.txt; fi
+          python -m pip install --disable-pip-version-check -r systems/Parasara/Documentation/Engine/Prompt-01/WorkPackage/Reports/WP00/requirements-stage01.lock.txt
+          python -m pip install --disable-pip-version-check --no-deps -e systems/SuryaSiddhanta
 
-      - name: Run snapshot compare
+      - name: Run supplemental no-update snapshot compare
         run: |
           PYTHONPATH=. python systems/Parasara/tools/ci_snapshot_check.py \
             --fixture systems/Parasara/fixtures/golden_chart_01.json \
-            --approved systems/Parasara/tests/snapshots/output_golden_chart_01.json
+            --approved systems/Parasara/tests/snapshots/output_golden_chart_01.json \
+            --out "$RUNNER_TEMP/parasara-snapshot.json"

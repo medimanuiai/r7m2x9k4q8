@@ -2,7 +2,7 @@
 
 Status: CURRENT-STATE  
 Owner: Parāśara engine maintainers  
-Last verified: 2026-07-13
+Last verified: 2026-07-17
 
 ## Purpose
 
@@ -16,8 +16,9 @@ Surya-format JSON
   -> Chart
   -> chart_to_astrostate
   -> mutable enriched AstroState
-  -> Career interpreter
-  -> M1 rule runtime and local scoring/confidence
+  -> Career prepared factual boundary
+  -> typed Career evaluation batch
+  -> preserved local scoring/confidence and compatibility projection
   -> snapshot dictionary/JSON
 ```
 
@@ -28,8 +29,7 @@ The current flow does not include the approved shared InferenceEngine, universal
 This command executes the current pipeline and writes generated JSON only to pytest's temporary directory, plus any normal Python/pytest caches:
 
 ```powershell
-$env:PYTHONPATH='.'
-python -m pytest -q systems/Parasara/tests/test_vertical_slice_career.py
+python tools/validate_prompt01.py focused
 ```
 
 Fixtures and snapshots live under `systems/Parasara/fixtures/` and `systems/Parasara/tests/snapshots/`.
@@ -42,7 +42,9 @@ The test compares the returned generated dictionary with `systems/Parasara/tests
 
 Direct generation requires an explicit output path and overwrites that path if it already exists. `surya_to_parasara.py` defaults to writing `systems/Parasara/fixtures/surya_generated_chart.json`; with `--run-snapshot`, it also writes `systems/Parasara/tests/snapshots/generated_surya_parasara_output.json`.
 
-The CI comparator is also mutating unless an output path outside the repository is supplied, because its default generated output is `tmp_generated_snapshot.json` at the repository root.
+The authoritative validator and supplemental CI comparator always supply a
+unique temporary `--out`. Direct comparator use remains mutating when `--out`
+is omitted.
 
 ## Current acceptance
 
@@ -53,7 +55,9 @@ The current snapshot additionally contains a placeholder Wealth domain, empty Da
 ## Known boundary risks
 
 - The normalizer and enrichments mutate the current AstroState.
-- Career owns generic scoring, confidence, narrative, and dictionary assembly.
-- The M1 runtime uses hardcoded rule types and imports test instrumentation.
-- Rule/table discovery can depend on the process working directory.
+- Career still owns generic scoring, confidence, narrative, and dictionary
+  assembly after its typed factual bridge.
+- The bridge is not universal RuleMatch or shared inference.
+- Some non-Prompt rule/table discovery can depend on the process working
+  directory.
 - The snapshot assembler does not act as the target schema-validating OutputAssembler.

@@ -4,7 +4,7 @@ Status: APPROVED
 Authority: Master Architecture Specification  
 Approval basis: Master Architecture Specification and approved staged sequence  
 Owner: Parāśara engine maintainers  
-Last reviewed: 2026-07-13
+Last reviewed: 2026-07-17
 
 ## Rules
 
@@ -42,6 +42,21 @@ Multiple versions may coexist. Selection, cache identity, traces, snapshots, and
 
 Higher-order rule dependencies belong to an explicit compiled rule graph, not recursive predicate calls. Missing dependencies, version incompatibility, disabled/unapproved dependencies, cross-domain restrictions, and direct or indirect cycles must have deterministic validation behavior.
 
-## Current compatibility boundary
+## Implemented Prompt-01 condition boundary
 
-The active loaders use mutable global dictionaries, silently replace duplicate IDs, skip some invalid files/rules through broad exception handling, and resolve paths partly from the current working directory. The M1 runtime hardcodes rule types and returns a serialized RuleMatch-shaped dictionary. Yoga and Career use additional custom dictionaries. These are current compatibility behaviors, not completion of this contract.
+The active Prompt-01 condition format supports registered predicate leaves and
+`AND`, `OR`, and `NOT`. Definition validation rejects malformed nodes, unknown
+operators/predicates, empty `AND`/`OR`, and invalid `NOT` arity.
+`ConditionEvaluator` evaluates children left to right, short-circuits
+deterministically, preserves typed evaluated children, and records
+unevaluated children as skipped.
+
+Yoga uses that boundary internally and retains a named one-way public
+compatibility projection. Career uses a separate temporary typed factual
+bridge. Neither is the universal RuleMatch implementation.
+
+The existing broader rule registry and M1 compatibility surfaces are not a
+full compiler or governed universal Rule Engine. Macro expansion, dependency
+graphs, multi-version selection, universal RuleMatch, and shared inference
+remain future stages. See
+[Conditions, Yoga, Loaders, and Career](../guides/conditions-yoga-career.md).

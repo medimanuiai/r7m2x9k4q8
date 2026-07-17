@@ -4,7 +4,7 @@ Status: APPROVED
 Authority: Master Architecture Specification and approved stage prompts  
 Approval basis: Master Architecture Specification and approved staged sequence  
 Owner: Parāśara engine maintainers  
-Last reviewed: 2026-07-13
+Last reviewed: 2026-07-17
 
 ## Planning rule
 
@@ -22,22 +22,24 @@ Gate: authoritative documents, current behavior, proposals, and historical mater
 
 ## Stage 1 — PredicateResult consolidation
 
-Status: AUDIT REQUIRED
+Status: COMPLETE (2026-07-17)
 
-1. Complete the full approved prerequisite audit sequence maintained by the Prompt-01 stage workspace.
-2. Approve the resulting migration boundaries and impact inventory.
-3. Preserve compliant existing behavior.
-4. Implement the universal immutable PredicateResult contract.
-5. Migrate registry metadata, cache behavior, condition evaluation, active predicates, and affected callers.
-6. Verify Yoga and domain compatibility, determinism, and serialization.
+1. Completed prerequisite audits and locked decisions.
+2. Implemented immutable typed predicate/condition contracts.
+3. Migrated registry, parameters, capabilities, prepared state,
+   evaluator/cache, active predicates, Yoga, Career facts, and tooling callers.
+4. Retired active legacy adapters while preserving public behavior.
+5. Added executable architecture/determinism and dual-Python CI gates.
+6. Recorded WP18 regression/performance and WP19 completion evidence.
 
 Gate: Prompt-01 acceptance criteria pass and active production paths contain no unapproved legacy predicate contract.
 
-The roadmap does not duplicate live audit filenames or completion status. The stage workspace owns that changing audit sequence; this document records only the architectural gate.
+Completion is Prompt-01 contract completion only, not production or release
+approval.
 
 ## Stage 2 — Universal RuleMatch
 
-Status: BLOCKED BY STAGE 1
+Status: READY FOR SEPARATE AUTHORIZATION
 
 - Establish one immutable RuleMatch model constructed by the generic Rule Engine.
 - Preserve PredicateResults, evidence, provenance, versions, context, and deterministic trace identity.

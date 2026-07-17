@@ -4,13 +4,15 @@ Status: APPROVED
 Authority: Jyothishyam Master Architecture Specification and approved stage prompts  
 Approval basis: Master Architecture Specification and approved staged sequence  
 Owner: Parāśara engine maintainers  
-Last reviewed: 2026-07-13
+Last reviewed: 2026-07-17
 
 ## Purpose
 
 These documents separate focused contracts from the mixed archived specification at `../archive/legacy-basic-specs.md`. They summarize approved requirements and explicitly identify current compatibility boundaries. The Master Architecture and approved stage prompts remain controlling.
 
-Specifications define required target contracts. They do not assert that the current implementation satisfies those contracts. Each specification must keep approved requirements separate from its current compatibility boundary.
+Specifications define required target contracts and may include an explicitly
+labeled implemented/current boundary backed by evidence. Requirements and
+implemented compatibility behavior remain separate.
 
 | Contract | Document |
 |---|---|

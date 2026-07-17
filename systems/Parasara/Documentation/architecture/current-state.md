@@ -2,7 +2,7 @@
 
 Status: CURRENT-STATE  
 Owner: Parāśara engine maintainers  
-Last verified: 2026-07-12
+Last verified: 2026-07-17
 
 ## Scope
 
@@ -49,38 +49,59 @@ Their responsibilities differ in practice, but ownership is not yet expressed th
 
 ### Predicate evaluation
 
-`systems/Parasara/engine/rules/engine.py` contains:
+Prompt-01 is implemented in `systems/Parasara/engine/rules/`. The immutable
+contracts are `PredicateStatus`, `PredicateError`, `PredicateTraceStep`,
+`PredicateResult`, typed condition children, and `ConditionResult`. The exact
+duration field is `evaluation_time_ms`. Logical serialization excludes
+`cache_hit` and duration telemetry; full serialization includes them.
 
-- a global predicate registry;
-- a registration decorator;
-- an initial frozen `PredicateResult` dataclass;
-- an in-memory predicate cache;
-- predicate-leaf and `AND`/`OR` condition evaluation.
+`PredicateDefinition` carries validated ID, SemVer version, description,
+parameter schema, capabilities, cache/determinism/cost/system metadata,
+deprecation data, and explicit aliases. Canonical bootstrap is deterministic,
+the production registry freezes after bootstrap, enumeration is ordered, and
+tests use isolated registries. `ASPECT` is an explicit alias for
+`ASPECT_EXISTS`.
 
-Registered predicate handlers live in `systems/Parasara/engine/rules/predicates.py`. Registration currently depends on importing that module. The registry stores handlers without the complete Prompt-01 metadata contract.
+Parameters are normalized by strict declared schemas. Unknown keys, material
+coercion, Boolean houses, out-of-range houses, and unknown planet identifiers
+are rejected. The capability catalog distinguishes unsupported, missing,
+empty, malformed, and absent-entity facts from factual false.
 
-The existing `PredicateResult` is only shallowly immutable because its collections remain mutable. It lacks several approved Prompt-01 fields and retains tuple-return compatibility.
+`prepare_predicate_state` creates a defensively frozen
+`PreparedAstroState` from the mutable compatibility AstroState. Its digest
+covers canonical predicate facts, readiness/content, producer/schema versions,
+and relevant explicit context; Yoga/domain output, telemetry, performance
+timing, random identity, and caller-owned mutable references are excluded.
 
-Predicate registration uppercases lookup IDs, stores handlers in a global mutable dictionary, and silently replaces an existing entry with the same normalized ID. Registration does not currently validate blank IDs, callable handlers, versions, schemas, capabilities, or alias metadata. Test-time registration uses the same global registry and relies on manual cleanup.
-
-The predicate cache is also global. Its key uses `id(astro)`, normalized predicate name, and serialized parameters; it does not include an AstroState digest, predicate version, enrichment/configuration versions, or evaluation context. Mutating an AstroState after caching can therefore leave a cached result associated with changed state.
+`PredicateEvaluator` owns a bounded per-instance cache. Keys include prepared
+state digest, canonical predicate ID/version, canonical parameters, relevant
+context, and capability versions. Only allowed factual results are cached;
+retrieval derives `cache_hit=True` without changing logical bytes.
 
 ### Rules and yoga evaluation
 
-Two related runtime paths exist:
+The active Prompt-01 runtime uses the generic predicate/condition evaluator.
+The former M1 runtime and raw predicate adapter modules were retired in WP16.
 
-1. The generic predicate/condition evaluator used by the rule-driven Yoga engine.
-2. The M1 runtime in `systems/Parasara/engine/rules/runtime.py`, which evaluates hardcoded rule types and applies prototype scores.
+Active condition evaluation supports typed leaves and `AND`, `OR`, and `NOT`.
+It validates the active format, evaluates left to right, short-circuits
+deterministically, preserves evaluated typed children, and represents
+unevaluated children explicitly as skipped.
 
-The YAML loaders use a global rule registry and best-effort loading. Yoga evaluation returns custom dictionaries and generates random UUID trace identifiers.
-
-The predicate registry and rule registry are separate global mechanisms. The rule loader silently replaces duplicate rule IDs and skips parse/validation failures through best-effort exception handling. Registry iteration is not governed by an explicit canonical ordering contract.
-
-The M1 rule runtime imports rule and predicate instrumentation from `tests.testing_framework`. Active engine code therefore depends on a test package for coverage instrumentation.
+Yoga retains a typed internal batch from one prepared state and one evaluator,
+then uses a named one-way compatibility projection to preserve existing public
+keys, firing, and row order. Dormant tuple helpers were retired. The generic
+rule loader remains a compatibility registry for current rule records; WP17
+enforces deterministic Yoga permutations and both loader trigger orders.
 
 ### Domain interpretation
 
-Career is the only substantive domain interpreter. It currently selects candidate rule dictionaries, evaluates M1 rules, aggregates contributions, computes confidence, creates narrative text, and returns an untyped dictionary.
+Career is the only substantive domain interpreter. Its factual checks now use
+a typed Career-specific prepared/evaluation batch and canonical occupancy
+facts. A compatibility projection preserves the prior candidate order,
+denominator, scoring, confidence, components, indicators, narrative, and
+public dictionary. Career still owns domain inference and is not the future
+universal inference layer.
 
 Other domain outputs are absent or placeholders in the snapshot assembler.
 
@@ -94,19 +115,19 @@ The snapshot assembler currently emits a substantive Career dictionary, a placeh
 
 ### Error and fallback behavior
 
-Broad `except Exception` handling appears in normalization, derived-state construction, enrichments, rule loading, runtime evaluation, Yoga evaluation, and Career interpretation. Depending on the path, failures may be skipped, converted to fallback dictionaries, or replaced with partial enrichment state. This preserves prototype execution but can obscure invalid configuration, missing capabilities, and programming defects.
+Predicate and condition boundaries convert expected failures to bounded typed
+errors/statuses and re-raise programming defects in strict mode. Broad
+compatibility fallbacks remain elsewhere in normalization, non-Prompt rule
+loading, timing, and other legacy enrichments.
 
 ### Determinism risks
 
-Known current risks include:
-
-- Yoga trace IDs generated with `uuid.uuid4()`;
-- Vimshottari fallback to `datetime.utcnow()` when birth time is absent or invalid;
-- predicate cache identity based on the in-process AstroState object ID;
-- mutable global predicate, rule, and cache dictionaries;
-- no explicit canonical registry-enumeration order;
-- working-directory-dependent table and rule discovery;
-- mutation of AstroState after construction and during enrichment.
+Prompt-01 logical predicate, condition, Yoga, Career, tooling, serialization,
+loader-order, registry, and cache scenarios are deterministic across the
+supported Python lanes, hash seeds, safe working directories, and repetitions.
+Remaining non-Prompt risks include Vimshottari wall-clock fallback, mutable
+preparation/enrichment stages, some working-directory-dependent legacy table
+discovery, and mutable compatibility rule registries.
 
 ## Current data flows
 
@@ -118,8 +139,9 @@ Surya JSON
   -> Chart
   -> chart_to_astrostate
   -> mutable enriched AstroState
-  -> Career interpreter
-  -> M1 rule runtime and local scoring/confidence
+  -> prepared Career factual boundary
+  -> typed Career evaluation batch
+  -> preserved Career scoring/confidence and public projection
   -> snapshot dictionary/JSON
 ```
 
@@ -127,27 +149,25 @@ Yoga flow:
 
 ```text
 AstroState
-  -> enrichment updates
-  -> YAML yoga loader
-  -> generic condition evaluator
-  -> PredicateResult
-  -> custom yoga-match dictionaries
+  -> explicit Yoga preparation
+  -> immutable PreparedAstroState
+  -> PredicateEvaluator and typed ConditionResult
+  -> typed Yoga batch
+  -> one-way compatibility projection
 ```
 
 ## Verified architectural gaps
 
-- No shared Inference Engine.
-- No universal active-runtime `RuleMatch` boundary.
-- No typed domain-output boundary.
-- No dedicated Output Assembler.
 - No stable read-only AstroState query API.
-- No complete predicate metadata registry.
-- No digest- and version-safe predicate cache.
+- No universal RuleMatch boundary.
+- No shared InferenceEngine.
+- No typed universal DomainPrediction boundary.
+- No OutputAssembler.
 - No fully wired engine/rule-set version selection.
 - No complete DSL compiler or dependency graph.
 - No production rule-governance workflow.
-- No explicit separation between production engine dependencies and test instrumentation.
-- No deterministic error/fallback policy shared across layers.
+- No persistent/distributed cache or broad concurrency architecture.
+- No deterministic error/fallback policy shared across non-Prompt layers.
 
 ## Interpretation rule
 
