@@ -9,10 +9,14 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: pwsh
+
 jobs:
   validate:
     name: Python ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
@@ -36,11 +40,14 @@ jobs:
 
   required:
     name: Prompt-01 required gate
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     needs: validate
     if: always()
     steps:
       - name: Require both Python lanes
         env:
           VALIDATION_RESULT: ${{ needs.validate.result }}
-        run: test "$VALIDATION_RESULT" = "success"
+        run: |
+          if ($env:VALIDATION_RESULT -ne 'success') {
+            throw 'Both required Python validation lanes must succeed.'
+          }
