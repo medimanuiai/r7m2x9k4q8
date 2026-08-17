@@ -10,7 +10,7 @@ import math
 from pathlib import Path
 import re
 from typing import Dict, Any, List
-from uuid import UUID, uuid5
+from uuid import UUID
 
 import yaml
 
@@ -59,8 +59,17 @@ from systems.Parasara.engine.rules.prepared_state import (
     PreparationIssue,
     PreparationOutcome,
     PreparedAstroState,
+    context_canonical_projection,
     prepare_predicate_state,
     prepared_state_sha256,
+)
+from systems.Parasara.engine.rules.rule_engine import ResolvedRule, RuleEngine
+from systems.Parasara.engine.rules.rule_match import (
+    RuleMatch,
+    RuleMatchError,
+    RuleMatchStatus,
+    rule_match_from_logical_data,
+    rule_match_to_logical_data,
 )
 
 
@@ -127,16 +136,12 @@ class YogaLegacyPreparation:
 
 @dataclass(frozen=True, slots=True, kw_only=True, eq=False)
 class YogaEvaluationRecord:
-    yoga_id: str
+    rule_match: RuleMatch
     name: str
-    rule_version: Any
     source: RuleSourceIdentity
     definition_disposition: YogaDefinitionDisposition
     definition_issues: tuple[DefinitionIssue, ...]
     condition_result: PredicateResult | ConditionResult | None
-    matched: bool
-    status: PredicateStatus
-    trace_reference: str
     compatibility_evidence: FrozenMapping = field(default_factory=FrozenMapping)
     compatibility_houses: tuple[Any, ...] = ()
     evaluation_time_ms: float | None = None
@@ -144,17 +149,16 @@ class YogaEvaluationRecord:
     __hash__ = None
 
     def __post_init__(self) -> None:
-        if not isinstance(self.yoga_id, str) or not _RULE_ID.fullmatch(self.yoga_id):
-            raise ValueError("yoga_id must be a stable canonical rule identity")
+        if not isinstance(self.rule_match, RuleMatch):
+            raise TypeError("rule_match must be the universal RuleMatch")
+        if not _RULE_ID.fullmatch(self.rule_match.rule_id):
+            raise ValueError("RuleMatch must carry a stable Yoga rule identity")
         if not isinstance(self.name, str):
             raise TypeError("name must be a string")
-        object.__setattr__(
-            self,
-            "rule_version",
-            freeze_canonical(self.rule_version, path="$.rule_version"),
-        )
         if not isinstance(self.source, RuleSourceIdentity) or self.source.rule_index is None:
             raise ValueError("source must carry a stable rule index")
+        if self.source.rule_id is not None and self.source.rule_id != self.rule_match.rule_id:
+            raise ValueError("source and RuleMatch rule identities must agree")
         if not isinstance(self.definition_disposition, YogaDefinitionDisposition):
             raise TypeError("definition_disposition must be YogaDefinitionDisposition")
         if not isinstance(self.definition_issues, tuple) or any(
@@ -165,26 +169,19 @@ class YogaEvaluationRecord:
             self.condition_result, (PredicateResult, ConditionResult)
         ):
             raise TypeError("condition_result must be canonical or None")
-        if type(self.matched) is not bool or not isinstance(self.status, PredicateStatus):
-            raise TypeError("matched/status have invalid types")
-        if self.matched is not (self.status is PredicateStatus.MATCHED):
-            raise ValueError("matched is true exactly when status is matched")
-        if self.condition_result is not None and (
-            self.condition_result.matched is not self.matched
-            or self.condition_result.status is not self.status
-        ):
-            raise ValueError("Yoga status must agree with its canonical condition result")
         if self.definition_disposition is YogaDefinitionDisposition.VALID:
             if self.definition_issues or self.condition_result is None:
                 raise ValueError("valid definitions require one result and no issues")
+            if self.condition_result.matched is not self.rule_match.matched:
+                raise ValueError("valid Yoga condition and RuleMatch outcomes must agree")
         elif not self.definition_issues:
             raise ValueError("invalid definitions require one or more WP12 issues")
         try:
-            parsed_trace = UUID(self.trace_reference)
+            parsed_trace = UUID(self.rule_match.trace_id)
         except (AttributeError, TypeError, ValueError) as exc:
-            raise ValueError("trace_reference must be a UUID string") from exc
+            raise ValueError("RuleMatch trace_id must be a UUID string") from exc
         if parsed_trace.version != 5:
-            raise ValueError("trace_reference must use deterministic UUIDv5")
+            raise ValueError("RuleMatch trace_id must use deterministic UUIDv5")
         if not isinstance(self.compatibility_evidence, FrozenMapping):
             object.__setattr__(
                 self,
@@ -208,16 +205,12 @@ class YogaEvaluationRecord:
 
     def _logical_values(self) -> tuple[Any, ...]:
         return (
-            self.yoga_id,
+            self.rule_match,
             self.name,
-            self.rule_version,
             self.source,
             self.definition_disposition,
             self.definition_issues,
             self.condition_result,
-            self.matched,
-            self.status,
-            self.trace_reference,
             self.compatibility_evidence,
             self.compatibility_houses,
         )
@@ -231,6 +224,34 @@ class YogaEvaluationRecord:
     def source_index(self) -> int:
         assert self.source.rule_index is not None
         return self.source.rule_index
+
+    @property
+    def yoga_id(self) -> str:
+        return self.rule_match.rule_id
+
+    @property
+    def rule_version(self) -> str:
+        return self.rule_match.rule_version
+
+    @property
+    def matched(self) -> bool:
+        return self.rule_match.matched
+
+    @property
+    def status(self) -> PredicateStatus:
+        return {
+            RuleMatchStatus.MATCHED: PredicateStatus.MATCHED,
+            RuleMatchStatus.UNMATCHED: PredicateStatus.UNMATCHED,
+            RuleMatchStatus.SKIPPED: PredicateStatus.SKIPPED,
+            RuleMatchStatus.EXCLUDED: PredicateStatus.SKIPPED,
+            RuleMatchStatus.MISSING_CAPABILITY: PredicateStatus.MISSING_CAPABILITY,
+            RuleMatchStatus.INVALID: PredicateStatus.INVALID_PARAMETERS,
+            RuleMatchStatus.ERROR: PredicateStatus.ERROR,
+        }[self.rule_match.status]
+
+    @property
+    def trace_reference(self) -> str:
+        return self.rule_match.trace_id
 
 
 @dataclass(frozen=True, slots=True, kw_only=True, eq=False)
@@ -283,6 +304,12 @@ class YogaEvaluationBatch:
         if not isinstance(other, YogaEvaluationBatch):
             return NotImplemented
         return self._logical_values() == other._logical_values()
+
+    @property
+    def rule_matches(self) -> tuple[RuleMatch, ...]:
+        """Universal results in canonical Rule Engine collection order."""
+
+        return RuleEngine.order_matches(tuple(item.rule_match for item in self.records))
 
 
 def load_yoga_rule_source(
@@ -414,21 +441,133 @@ def _without_duration(
     return replace(result, children=children, evaluation_time_ms=None)
 
 
-def _trace_reference(
-    *, yoga_id: str, rule_version: Any, source_index: int,
-    state_digest: str, result_hash: str,
-) -> str:
-    name = "|".join(
-        (
+def _resolved_yoga_rule(
+    record: Any,
+    *,
+    yoga_id: str,
+    name: str,
+    version: Any,
+    source_name: str,
+    source_index: int,
+    disposition: YogaDefinitionDisposition,
+) -> ResolvedRule:
+    raw = record if isinstance(record, Mapping) else {}
+    weights = raw.get("weights") if isinstance(raw.get("weights"), Mapping) else {}
+    base_weight = weights.get("base")
+    missing_base_weight = (
+        isinstance(base_weight, bool)
+        or not isinstance(base_weight, (int, float))
+        or not math.isfinite(base_weight)
+    )
+    if missing_base_weight:
+        raise ValueError("Yoga rules require a finite declared base weight")
+    priority = raw.get("priority", 0)
+    if type(priority) is not int:
+        priority = 0
+    provenance_value = raw.get("provenance")
+    provenance = (
+        dict(provenance_value)
+        if isinstance(provenance_value, Mapping)
+        else {"source": provenance_value or source_name}
+    )
+    metadata = {
+        "name": name,
+        "source_name": source_name,
+        "definition_disposition": disposition.value,
+        "sme_approved": raw.get("sme_approved"),
+        "evidence_required": raw.get("evidence_required"),
+        "domain_neutral": True,
+    }
+    if isinstance(raw.get("description"), str):
+        metadata["description"] = raw["description"]
+    return ResolvedRule(
+        system="parashara",
+        rule_id=yoga_id,
+        rule_version=str(version) if version is not None else "invalid",
+        rule_family="yoga",
+        rule_set_version="v1",
+        category=raw.get("category") if isinstance(raw.get("category"), str) else "invalid",
+        domains=(),
+        base_weight=base_weight,
+        priority=priority,
+        context="natal",
+        quality=None,
+        provenance=provenance,
+        metadata=metadata,
+        evaluation_plan_position=source_index,
+    )
+
+
+def _definition_rule_errors(issues: tuple[DefinitionIssue, ...]) -> tuple[RuleMatchError, ...]:
+    return tuple(
+        RuleMatchError(
+            code=issue.code,
+            message=issue.message,
+            phase="definition_validation",
+            recoverable=False,
+            details={
+                "node_path": issue.node_path,
+                "severity": issue.severity.value,
+                "parameter_name": issue.parameter_name,
+            },
+            source_predicate_id=issue.predicate_id,
+            source_trace_id=None,
+        )
+        for issue in issues
+    )
+
+
+def _build_yoga_rule_match(
+    engine: RuleEngine,
+    record: Any,
+    *,
+    yoga_id: str,
+    name: str,
+    version: Any,
+    source_name: str,
+    source_index: int,
+    disposition: YogaDefinitionDisposition,
+    issues: tuple[DefinitionIssue, ...],
+    result: PredicateResult | ConditionResult | None,
+    state_digest: str,
+    result_hash: str,
+    evaluation_context: PredicateEvaluationContext,
+    force_error: bool = False,
+) -> RuleMatch:
+    status_override = None
+    if disposition is YogaDefinitionDisposition.INVALID:
+        status_override = RuleMatchStatus.INVALID
+    elif force_error:
+        status_override = RuleMatchStatus.ERROR
+    return engine.build_match(
+        _resolved_yoga_rule(
+            record,
+            yoga_id=yoga_id,
+            name=name,
+            version=version,
+            source_name=source_name,
+            source_index=source_index,
+            disposition=disposition,
+        ),
+        result,
+        evaluation_snapshot_digest=state_digest,
+        evaluation_context=context_canonical_projection(evaluation_context),
+        status_override=status_override,
+        evidence={
+            "condition_result_hash": result_hash,
+            "definition_disposition": disposition.value,
+        },
+        errors=_definition_rule_errors(issues),
+        trace_namespace=YOGA_TRACE_NAMESPACE,
+        trace_components=(
             YOGA_EVALUATOR_VERSION,
             yoga_id,
-            str(rule_version),
+            str(version),
             str(source_index),
             state_digest,
             result_hash,
-        )
+        ),
     )
-    return str(uuid5(YOGA_TRACE_NAMESPACE, name))
 
 
 def _legacy_leaf_evidence(
@@ -552,6 +691,7 @@ def evaluate_yoga_batch(
     valid_by_index = {item.source.rule_index: item for item in source.validation.rules}
     issues_by_index = _issues_by_index(source)
     records: list[YogaEvaluationRecord] = []
+    rule_engine = RuleEngine()
 
     for index, raw_record in enumerate(source.records):
         yoga_id, name, version = _safe_record_identity(raw_record, index)
@@ -572,13 +712,29 @@ def evaluate_yoga_batch(
             result = _without_duration(
                 condition_evaluator.evaluate(condition, state, context)
             )
-        status = PredicateStatus.ERROR if result is None else result.status
-        matched = status is PredicateStatus.MATCHED
+        result_hash = (
+            definition_issues_sha256(issues)
+            if result is None
+            else _result_logical_hash(result)
+        )
+        rule_match = _build_yoga_rule_match(
+            rule_engine,
+            raw_record,
+            yoga_id=yoga_id,
+            name=name,
+            version=version,
+            source_name=source.source_name,
+            source_index=index,
+            disposition=disposition,
+            issues=issues,
+            result=result,
+            state_digest=digest,
+            result_hash=result_hash,
+            evaluation_context=context,
+        )
         if result is None:
-            result_hash = definition_issues_sha256(issues)
             compatibility_evidence = FrozenMapping()
         else:
-            result_hash = _result_logical_hash(result)
             compatibility_evidence = FrozenMapping(
                 _legacy_evidence(
                     condition,
@@ -596,9 +752,8 @@ def evaluate_yoga_batch(
                 houses = tuple(raw_houses)
         records.append(
             YogaEvaluationRecord(
-                yoga_id=yoga_id,
+                rule_match=rule_match,
                 name=name,
-                rule_version=version,
                 source=RuleSourceIdentity(
                     source_name=source.source_name,
                     rule_id=yoga_id if not yoga_id.startswith("invalid_yoga_rule_") else None,
@@ -607,15 +762,6 @@ def evaluate_yoga_batch(
                 definition_disposition=disposition,
                 definition_issues=issues,
                 condition_result=result,
-                matched=matched,
-                status=status,
-                trace_reference=_trace_reference(
-                    yoga_id=yoga_id,
-                    rule_version=version,
-                    source_index=index,
-                    state_digest=digest,
-                    result_hash=result_hash,
-                ),
                 compatibility_evidence=compatibility_evidence,
                 compatibility_houses=houses,
                 evaluation_time_ms=None,
@@ -698,15 +844,34 @@ def yoga_batch_from_preparation_failure(
     result = _preparation_error_result(issues[0])
     result_hash = predicate_result_logical_sha256(result)
     records = []
+    rule_engine = RuleEngine()
     for index, raw_record in enumerate(source.records):
         yoga_id, name, version = _safe_record_identity(raw_record, index)
         definition_issues = issues_by_index.get(index, ())
         condition = raw_record.get("conditions") if isinstance(raw_record, Mapping) else None
         records.append(
             YogaEvaluationRecord(
-                yoga_id=yoga_id,
+                rule_match=_build_yoga_rule_match(
+                    rule_engine,
+                    raw_record,
+                    yoga_id=yoga_id,
+                    name=name,
+                    version=version,
+                    source_name=source.source_name,
+                    source_index=index,
+                    disposition=(
+                        YogaDefinitionDisposition.VALID
+                        if index in valid_indexes and not definition_issues
+                        else YogaDefinitionDisposition.INVALID
+                    ),
+                    issues=definition_issues,
+                    result=result,
+                    state_digest=digest,
+                    result_hash=result_hash,
+                    evaluation_context=PredicateEvaluationContext(),
+                    force_error=True,
+                ),
                 name=name,
-                rule_version=version,
                 source=RuleSourceIdentity(
                     source_name=source.source_name,
                     rule_id=yoga_id if not yoga_id.startswith("invalid_yoga_rule_") else None,
@@ -719,15 +884,6 @@ def yoga_batch_from_preparation_failure(
                 ),
                 definition_issues=definition_issues,
                 condition_result=result,
-                matched=False,
-                status=PredicateStatus.ERROR,
-                trace_reference=_trace_reference(
-                    yoga_id=yoga_id,
-                    rule_version=version,
-                    source_index=index,
-                    state_digest=digest,
-                    result_hash=result_hash,
-                ),
                 compatibility_evidence=_failure_compatibility_evidence(condition),
                 compatibility_houses=(),
                 evaluation_time_ms=None,
@@ -802,7 +958,15 @@ def project_yoga_compatibility(batch: YogaEvaluationBatch) -> list[dict[str, Any
             {
                 "yoga_id": record.yoga_id,
                 "name": record.name,
-                "matched": bool(record.matched),
+                # The legacy projection historically exposed the evaluated
+                # condition Boolean even for a definition retained only for
+                # diagnostics. RuleMatch remains authoritative internally;
+                # this one-way compatibility seam preserves public behavior.
+                "matched": bool(
+                    record.condition_result.matched
+                    if record.condition_result is not None
+                    else record.matched
+                ),
                 "planets": _first_seen(planets),
                 "houses": _thaw(record.compatibility_houses),
                 "aspects_used": deepcopy(aspects_used),
@@ -843,9 +1007,8 @@ def _result_to_data(result: PredicateResult | ConditionResult | None, *, full: b
 def _record_to_data(record: YogaEvaluationRecord, *, full: bool) -> dict[str, Any]:
     result_kind, result = _result_to_data(record.condition_result, full=full)
     data = {
-        "yoga_id": record.yoga_id,
+        "rule_match": rule_match_to_logical_data(record.rule_match),
         "name": record.name,
-        "rule_version": record.rule_version,
         "source": {
             "source_name": record.source.source_name,
             "rule_id": record.source.rule_id,
@@ -855,9 +1018,6 @@ def _record_to_data(record: YogaEvaluationRecord, *, full: bool) -> dict[str, An
         "definition_issues": tuple(definition_issue_projection(item) for item in record.definition_issues),
         "condition_result_kind": result_kind,
         "condition_result": result,
-        "matched": record.matched,
-        "status": record.status.value,
-        "trace_reference": record.trace_reference,
         "compatibility_evidence": record.compatibility_evidence,
         "compatibility_houses": record.compatibility_houses,
     }
@@ -948,9 +1108,8 @@ def _record_from_data(data: Mapping[str, Any], *, full: bool) -> YogaEvaluationR
     else:
         raise CanonicalValueError("invalid Yoga condition result kind")
     return YogaEvaluationRecord(
-        yoga_id=data["yoga_id"],
+        rule_match=rule_match_from_logical_data(data["rule_match"]),
         name=data["name"],
-        rule_version=data["rule_version"],
         source=RuleSourceIdentity(
             source_name=data["source"]["source_name"],
             rule_id=data["source"]["rule_id"],
@@ -959,9 +1118,6 @@ def _record_from_data(data: Mapping[str, Any], *, full: bool) -> YogaEvaluationR
         definition_disposition=YogaDefinitionDisposition(data["definition_disposition"]),
         definition_issues=tuple(_definition_issue_from_data(item) for item in data["definition_issues"]),
         condition_result=result,
-        matched=data["matched"],
-        status=PredicateStatus(data["status"]),
-        trace_reference=data["trace_reference"],
         compatibility_evidence=data["compatibility_evidence"],
         compatibility_houses=tuple(data["compatibility_houses"]),
         evaluation_time_ms=data["evaluation_time_ms"] if full else None,

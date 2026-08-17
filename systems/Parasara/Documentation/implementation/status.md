@@ -2,7 +2,7 @@
 
 Status: CURRENT-STATE  
 Owner: Parāśara engine maintainers  
-Last verified: 2026-07-17
+Last verified: 2026-08-14
 
 ## Status rules
 
@@ -37,9 +37,9 @@ operational readiness.
 | Predicate evaluator/cache | IMPLEMENTED | `evaluator.py`, `prepared_state.py`, cache/determinism tests | Persistent/distributed and concurrent caching are deferred |
 | Generic condition evaluator | IMPLEMENTED | `conditions.py`, typed condition/definition/WP17 tests | Full compiler/DSL/dependency graph is deferred |
 | Rule loader | PARTIAL | `loader.py`, `yoga_loader.py`, active definition validation | Active formats/order validated; universal compiler/governance/version selection absent |
-| RuleMatch | PARTIAL | `systems/Parasara/engine/models.py`, M1 runtime | Runtime serializes the model to dictionaries; universal contract and PredicateResult preservation missing |
-| Yoga evaluation | IMPLEMENTED | typed batch plus `project_yoga_compatibility`, Yoga/WP17 tests | Compatibility projection/state attachment remain until universal RuleMatch |
-| Career interpreter | PARTIAL | typed factual bridge and compatibility projection in `career.py`/`career_models.py` | Preserved local scoring/confidence/public dictionary await shared inference/typed domains |
+| RuleMatch | IMPLEMENTED | `engine/rules/rule_match.py`, `rule_engine.py`, Prompt-02 contract/integration tests | Scientific/public/release validation remains separate |
+| Yoga evaluation | IMPLEMENTED | RuleMatch-backed typed batch plus `project_yoga_compatibility`, Yoga/Prompt-02/WP17 tests | Public compatibility projection/state attachment remain until later typed-output work |
+| Career interpreter | PARTIAL | RuleMatch-backed typed factual bridge and compatibility projection in `career.py`/`career_models.py` | Preserved local scoring/confidence/public dictionary await shared inference/typed domains |
 | Other domain interpreters | MISSING | Placeholder Wealth output in `systems/Parasara/tools/generate_snapshot.py` | Typed Wealth, Marriage, Children, Health, and Safety interpreters absent |
 | Shared InferenceEngine | MISSING | No active module found | Required aggregation, normalization, conflicts, and confidence service absent |
 | Typed domain output | MISSING | Current interpreters return dictionaries | Approved DomainPrediction boundary absent |
@@ -53,17 +53,17 @@ operational readiness.
 
 ## Active architectural blockers
 
-1. Universal RuleMatch is the next separately authorized architecture stage.
-2. Shared inference depends on universal RuleMatch.
-3. Domain thinning/public output stabilization depend on shared inference and
+1. Shared inference is the next separately authorized architecture stage.
+2. Domain thinning/public output stabilization depend on shared inference and
    typed outputs.
-4. Release/privacy/security/licensing/publication work remains separate owner
+3. Release/privacy/security/licensing/publication work remains separate owner
    work.
 
 ## Validation status
 
-The WP19 Windows dual-lane gate passed 2026-07-17 with identical ordered
-collection, determinism manifest, lint inventory, and approved snapshot. Linux
+The Prompt-01 baseline and Prompt-02 Windows dual-lane gates passed 2026-08-14
+with identical normalized RuleMatch hashes, deterministic manifests, protected
+artifacts, public behavior, and approved snapshot. Linux
 is not a supported or validated Prompt-01 platform. Scientific
 correctness, SME approval, public schema approval, privacy/security/licensing,
 and production operations remain separate gates.

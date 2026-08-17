@@ -42,6 +42,8 @@ from systems.Parasara.engine.rules.models import (
     PredicateStatus,
     PredicateTraceStep,
 )
+from systems.Parasara.engine.rules.rule_engine import ResolvedRule, RuleEngine
+from systems.Parasara.engine.rules.rule_match import RuleMatchError, RuleMatchStatus
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -242,8 +244,32 @@ def test_models_enforce_status_invariants_and_retain_all_nonfactual_statuses():
             inputs={"planet": "Mars", "house": 10}, evidence={}, errors=(error,),
             trace_steps=(trace,), backing_result=None, evaluation_time_ms=None,
         )
+        rule_status = {
+            PredicateStatus.MISSING_CAPABILITY: RuleMatchStatus.MISSING_CAPABILITY,
+            PredicateStatus.INVALID_PARAMETERS: RuleMatchStatus.INVALID,
+            PredicateStatus.ERROR: RuleMatchStatus.ERROR,
+            PredicateStatus.TIMEOUT: RuleMatchStatus.ERROR,
+            PredicateStatus.SKIPPED: RuleMatchStatus.SKIPPED,
+        }[status]
+        rule_match = RuleEngine().build_match(
+            ResolvedRule(
+                system="parashara", rule_id="controlled", rule_version="1.0",
+                rule_family="strong_in_10", rule_set_version="v1", category="career",
+                domains=("career",), base_weight=0.2, priority=10, context="natal",
+                provenance={"source": "controlled"}, metadata={},
+            ),
+            None,
+            evaluation_snapshot_digest="0" * 64,
+            evaluation_context={"evaluation_mode": "test"},
+            status_override=rule_status,
+            errors=(RuleMatchError(
+                code=error.code, message=error.message, phase="test",
+                recoverable=True, details=error.details,
+                source_predicate_id=error.predicate_id,
+            ),),
+        )
         evaluation = CareerCandidateEvaluation(
-            definition=definition, fact=fact, matched=False, status=status,
+            definition=definition, fact=fact, rule_match=rule_match,
             adjusted_score=0.0, contribution=0.0, compatibility_evidence={},
             trace_lineage=("career.test",), evaluation_time_ms=None,
         )

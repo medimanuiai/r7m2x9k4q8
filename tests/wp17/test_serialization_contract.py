@@ -337,12 +337,12 @@ def test_wp16_tooling_artifact_and_coverage_serialization_contract(tmp_path):
     run_rules_and_trace(astro, second)
     expected = {
         "rule_traces.json": (
-            35303,
-            "35d58eab17166e69e2a81205578bf08908d24d9e517ce88b79d2ec3a92b8fd9d",
+            63322,
+            "866dbee7630cd426503b0cce33af9f97eb0363577687e2f937ba4ca1a9a1cef6",
         ),
         "career_rule_traces.json": (
-            38791,
-            "00a67afca63e868354af064a3ad629b655ee662d5c1900119836594c60b8fe88",
+            60377,
+            "bca793f779ecf6fec0cb9d8e2e33736e01d7cf6ff45303e05f8b9ed0c9950f22",
         ),
     }
     for name, identity in expected.items():
