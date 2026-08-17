@@ -222,7 +222,7 @@ def test_yoga_and_career_retain_nonfactual_typed_outcomes_before_lossy_projectio
     surfaces = evaluate_typed_rule_surfaces(golden)
     assert [record.status for record in surfaces.yoga.records] == [
         PredicateStatus.UNMATCHED,
-        PredicateStatus.ERROR,
+        PredicateStatus.INVALID_PARAMETERS,
         PredicateStatus.MISSING_CAPABILITY,
     ]
     assert surfaces.yoga.records[1].definition_issues

@@ -88,10 +88,9 @@ def test_explicit_source_is_stable_strict_ordered_and_registry_independent(monke
 def test_model_field_inventory_and_disposition_values_are_exact():
     assert [item.value for item in YogaDefinitionDisposition] == ["valid", "invalid"]
     assert [item.name for item in fields(YogaEvaluationRecord)] == [
-        "yoga_id", "name", "rule_version", "source",
+        "rule_match", "name", "source",
         "definition_disposition", "definition_issues", "condition_result",
-        "matched", "status", "trace_reference", "compatibility_evidence",
-        "compatibility_houses", "evaluation_time_ms",
+        "compatibility_evidence", "compatibility_houses", "evaluation_time_ms",
     ]
     assert [item.name for item in fields(YogaEvaluationBatch)] == [
         "schema_version", "evaluator_version", "prepared_state_digest",
@@ -142,7 +141,7 @@ def test_typed_batch_retains_every_row_invalid_error_tree_and_shared_evaluator()
     ]
     assert [record.matched for record in batch.records] == [True, False, False]
     assert [record.status for record in batch.records] == [
-        PredicateStatus.MATCHED, PredicateStatus.ERROR, PredicateStatus.UNMATCHED
+        PredicateStatus.MATCHED, PredicateStatus.INVALID_PARAMETERS, PredicateStatus.UNMATCHED
     ]
     dhana = batch.records[1]
     assert dhana.definition_issues[0].code == "unknown_predicate"
@@ -177,7 +176,10 @@ def test_invalid_unknown_or_leaf_remains_error_but_later_match_is_decisive():
     dhana = batch.records[1]
     assert dhana.definition_disposition is YogaDefinitionDisposition.INVALID
     assert dhana.definition_issues[0].code == "unknown_predicate"
-    assert dhana.status is PredicateStatus.MATCHED and dhana.matched
+    assert dhana.status is PredicateStatus.INVALID_PARAMETERS and not dhana.matched
+    assert dhana.rule_match.status.value == "invalid"
+    assert dhana.condition_result.status is PredicateStatus.MATCHED
+    assert project_yoga_compatibility(batch)[1]["matched"] is True
     assert dhana.condition_result.children[0].result.status is PredicateStatus.ERROR
     assert dhana.condition_result.children[1].result.status is PredicateStatus.MATCHED
 
@@ -343,7 +345,11 @@ def test_preparation_failure_is_safe_typed_and_preserves_public_rows(monkeypatch
     assert preparation.outcome.issues[0].code == "yoga_aspect_preparation_failed"
     batch = yoga_batch_from_preparation_failure(source, preparation.outcome.issues)
     assert len(batch.records) == 3
-    assert all(record.status is PredicateStatus.ERROR for record in batch.records)
+    assert [record.status for record in batch.records] == [
+        PredicateStatus.ERROR,
+        PredicateStatus.INVALID_PARAMETERS,
+        PredicateStatus.ERROR,
+    ]
     assert batch.batch_issues == preparation.outcome.issues
 
     rows = yoga_engine.evaluate_yoga_rules(astro)

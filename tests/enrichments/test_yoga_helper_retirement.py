@@ -281,7 +281,7 @@ def test_house_lords_stays_unregistered_typed_invalid_and_publicly_stable():
 
     dhana = batch.records[1]
     assert dhana.definition_disposition is YogaDefinitionDisposition.INVALID
-    assert dhana.status is PredicateStatus.ERROR and not dhana.matched
+    assert dhana.status is PredicateStatus.INVALID_PARAMETERS and not dhana.matched
     assert isinstance(dhana.condition_result, ConditionResult)
     first = dhana.condition_result.children[0].result
     assert first is not None and first.status is PredicateStatus.ERROR
@@ -305,7 +305,7 @@ def test_house_lords_stays_unregistered_typed_invalid_and_publicly_stable():
     }
 
 
-def test_wp13_typed_full_and_complete_compatibility_hashes_are_unchanged():
+def test_rulematch_typed_full_and_compatibility_hashes_are_locked():
     _, batch = _batch()
     logical = yoga_batch_logical_json_bytes(batch)
     full = yoga_batch_full_json_bytes(batch)
@@ -314,12 +314,12 @@ def test_wp13_typed_full_and_complete_compatibility_hashes_are_unchanged():
     ).encode("utf-8")
 
     assert (len(logical), hashlib.sha256(logical).hexdigest()) == (
-        20547,
-        "f8cd75725599f26c03e574639395aee3dffd61d3e19d9072cfbac5df8f780ac2",
+        36908,
+        "8b639e9f1d0db13d82d1200db523b0e61aba643581f3da6f494ec8f294e07248",
     )
     assert (len(full), hashlib.sha256(full).hexdigest()) == (
-        20948,
-        "f1e90b6b5153d2655dd89f9ff5762ca50dc8e5391f5b142de0581d5ef90bfaa4",
+        37309,
+        "e4496167e64f98cdd434567063d65df0e09dfae55aa14a81124a591e75cd466e",
     )
     assert (len(compatibility), hashlib.sha256(compatibility).hexdigest()) == (
         1361,

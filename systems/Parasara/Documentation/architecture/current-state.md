@@ -2,7 +2,7 @@
 
 Status: CURRENT-STATE  
 Owner: Parāśara engine maintainers  
-Last verified: 2026-07-17
+Last verified: 2026-08-14
 
 ## Scope
 
@@ -16,11 +16,16 @@ This document describes verified implementation behavior. It is not the target a
 
 The active model surface is split across:
 
-- `systems/Parasara/engine/models.py` for adapter-facing `Chart` models and the current Pydantic `RuleMatch`;
+- `systems/Parasara/engine/models.py` for adapter-facing `Chart` models;
 - `systems/Parasara/engine/astrostate.py` for `AstroState` and `PlanetState`;
-- `systems/Parasara/engine/derived/models.py` for typed derived summaries.
+- `systems/Parasara/engine/derived/models.py` for typed derived summaries;
+- `systems/Parasara/engine/rules/rule_match.py` for the immutable universal
+  `RuleMatch` evaluation result.
 
-These are not one immutable end-to-end model boundary. Several models expose mutable dictionaries/lists or use mutable collection defaults. The existing `RuleMatch` is converted back to a dictionary by the M1 runtime, while Yoga and Career retain separate dictionary-shaped match/output contracts.
+These are not one immutable end-to-end model boundary. Several chart/state
+models expose mutable dictionaries/lists or use mutable collection defaults.
+RuleMatch and its nested logical values are immutable; Yoga and Career retain
+only explicit one-way compatibility projections for existing public output.
 
 ### Normalization and AstroState construction
 
@@ -89,7 +94,8 @@ deterministically, preserves evaluated typed children, and represents
 unevaluated children explicitly as skipped.
 
 Yoga retains a typed internal batch from one prepared state and one evaluator,
-then uses a named one-way compatibility projection to preserve existing public
+with one universal RuleMatch per record, then uses a named one-way
+compatibility projection to preserve existing public
 keys, firing, and row order. Dormant tuple helpers were retired. The generic
 rule loader remains a compatibility registry for current rule records; WP17
 enforces deterministic Yoga permutations and both loader trigger orders.
@@ -97,8 +103,9 @@ enforces deterministic Yoga permutations and both loader trigger orders.
 ### Domain interpretation
 
 Career is the only substantive domain interpreter. Its factual checks now use
-a typed Career-specific prepared/evaluation batch and canonical occupancy
-facts. A compatibility projection preserves the prior candidate order,
+a typed Career-specific prepared/evaluation batch, canonical occupancy
+facts, and one universal RuleMatch per candidate. A compatibility projection
+preserves the prior candidate order,
 denominator, scoring, confidence, components, indicators, narrative, and
 public dictionary. Career still owns domain inference and is not the future
 universal inference layer.
@@ -122,7 +129,8 @@ loading, timing, and other legacy enrichments.
 
 ### Determinism risks
 
-Prompt-01 logical predicate, condition, Yoga, Career, tooling, serialization,
+Prompt-01 logical predicate/condition and Prompt-02 RuleMatch, Yoga, Career,
+tooling, serialization,
 loader-order, registry, and cache scenarios are deterministic across the
 supported Python lanes, hash seeds, safe working directories, and repetitions.
 Remaining non-Prompt risks include Vimshottari wall-clock fallback, mutable
@@ -141,6 +149,7 @@ Surya JSON
   -> mutable enriched AstroState
   -> prepared Career factual boundary
   -> typed Career evaluation batch
+  -> universal RuleMatch collection
   -> preserved Career scoring/confidence and public projection
   -> snapshot dictionary/JSON
 ```
@@ -153,13 +162,13 @@ AstroState
   -> immutable PreparedAstroState
   -> PredicateEvaluator and typed ConditionResult
   -> typed Yoga batch
+  -> universal RuleMatch collection
   -> one-way compatibility projection
 ```
 
 ## Verified architectural gaps
 
 - No stable read-only AstroState query API.
-- No universal RuleMatch boundary.
 - No shared InferenceEngine.
 - No typed universal DomainPrediction boundary.
 - No OutputAssembler.

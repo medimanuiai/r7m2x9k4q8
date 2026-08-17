@@ -1,7 +1,8 @@
-"""Immutable WP15 Career-only factual and candidate contracts.
+"""Immutable Career factual bridge and thin RuleMatch compatibility wrapper.
 
-These models deliberately stop at the Career compatibility boundary.  They
-are not a shared rule-match, domain prediction, or public output model.
+Career scoring fields remain here solely to preserve the existing public
+projection. They are deliberately excluded from the universal RuleMatch and
+will be owned by later inference work.
 """
 
 from __future__ import annotations
@@ -40,6 +41,12 @@ from systems.Parasara.engine.rules.models import (
     PredicateResult,
     PredicateStatus,
     PredicateTraceStep,
+)
+from systems.Parasara.engine.rules.rule_engine import RuleEngine
+from systems.Parasara.engine.rules.rule_match import (
+    RuleMatch,
+    rule_match_from_logical_data,
+    rule_match_to_logical_data,
 )
 from systems.Parasara.engine.rules.prepared_state import (
     PreparedAstroState,
@@ -319,8 +326,7 @@ class CareerCandidateDefinition:
 class CareerCandidateEvaluation:
     definition: CareerCandidateDefinition
     fact: CareerFactResult
-    matched: bool
-    status: PredicateStatus
+    rule_match: RuleMatch
     adjusted_score: float
     contribution: float
     compatibility_evidence: Mapping[str, Any]
@@ -330,10 +336,12 @@ class CareerCandidateEvaluation:
     def __post_init__(self) -> None:
         if not isinstance(self.definition, CareerCandidateDefinition) or not isinstance(self.fact, CareerFactResult):
             raise TypeError("candidate evaluation requires typed definition and fact")
-        if type(self.matched) is not bool or self.matched is not self.fact.matched:
-            raise ValueError("candidate matched must agree with fact")
-        if self.status is not self.fact.status:
-            raise ValueError("candidate status must agree with fact")
+        if not isinstance(self.rule_match, RuleMatch):
+            raise TypeError("candidate evaluation requires one universal RuleMatch")
+        if self.rule_match.rule_id != self.definition.candidate_id:
+            raise ValueError("candidate and RuleMatch identities must agree")
+        if self.rule_match.matched is not self.fact.matched:
+            raise ValueError("candidate RuleMatch must agree with its fact")
         for name in ("adjusted_score", "contribution"):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, Real) or not math.isfinite(value):
@@ -349,6 +357,14 @@ class CareerCandidateEvaluation:
         if not isinstance(other, CareerCandidateEvaluation):
             return NotImplemented
         return _evaluation_to_data(self, full=False) == _evaluation_to_data(other, full=False)
+
+    @property
+    def matched(self) -> bool:
+        return self.rule_match.matched
+
+    @property
+    def status(self) -> PredicateStatus:
+        return self.fact.status
 
 
 @dataclass(frozen=True, eq=False, slots=True, kw_only=True)
@@ -398,6 +414,10 @@ class CareerEvaluationBatch:
         if not isinstance(other, CareerEvaluationBatch):
             return NotImplemented
         return career_evaluation_batch_to_logical_data(self) == career_evaluation_batch_to_logical_data(other)
+
+    @property
+    def rule_matches(self) -> tuple[RuleMatch, ...]:
+        return RuleEngine.order_matches(tuple(item.rule_match for item in self.candidates))
 
 
 def _planet_to_data(item: CareerPlanetFact) -> dict[str, Any]:
@@ -489,7 +509,7 @@ def _evaluation_to_data(value: CareerCandidateEvaluation, *, full: bool) -> dict
     data = {
         "definition": _definition_to_data(value.definition),
         "fact": _fact_to_data(value.fact, full=full),
-        "matched": value.matched, "status": value.status.value,
+        "rule_match": rule_match_to_logical_data(value.rule_match),
         "adjusted_score": value.adjusted_score, "contribution": value.contribution,
         "compatibility_evidence": canonical_json_data(value.compatibility_evidence),
         "trace_lineage": list(value.trace_lineage),
@@ -589,8 +609,9 @@ def _definition_from_data(value: Mapping[str, Any]) -> CareerCandidateDefinition
 def _evaluation_from_data(value: Mapping[str, Any], *, full: bool) -> CareerCandidateEvaluation:
     return CareerCandidateEvaluation(
         definition=_definition_from_data(value["definition"]),
-        fact=_fact_from_data(value["fact"], full=full), matched=value["matched"],
-        status=_status(value["status"]), adjusted_score=value["adjusted_score"],
+        fact=_fact_from_data(value["fact"], full=full),
+        rule_match=rule_match_from_logical_data(value["rule_match"]),
+        adjusted_score=value["adjusted_score"],
         contribution=value["contribution"], compatibility_evidence=value["compatibility_evidence"],
         trace_lineage=tuple(value["trace_lineage"]),
         evaluation_time_ms=value["evaluation_time_ms"] if full else None,

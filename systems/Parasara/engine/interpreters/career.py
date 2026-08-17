@@ -36,7 +36,14 @@ from systems.Parasara.engine.rules.models import (
 )
 from systems.Parasara.engine.rules.prepared_state import (
     PredicateEvaluationContext,
+    context_canonical_projection,
     prepare_predicate_state,
+)
+from systems.Parasara.engine.rules.rule_engine import ResolvedRule, RuleEngine
+from systems.Parasara.engine.rules.rule_match import (
+    RuleMatchError,
+    RuleMatchStatus,
+    RuleTraceReference,
 )
 
 
@@ -319,6 +326,143 @@ class _ObservedValue:
     source: str
 
 
+_RULE_ENGINE = RuleEngine()
+
+
+def _career_rule_status(status: PredicateStatus) -> RuleMatchStatus:
+    return {
+        PredicateStatus.MATCHED: RuleMatchStatus.MATCHED,
+        PredicateStatus.UNMATCHED: RuleMatchStatus.UNMATCHED,
+        PredicateStatus.SKIPPED: RuleMatchStatus.SKIPPED,
+        PredicateStatus.MISSING_CAPABILITY: RuleMatchStatus.MISSING_CAPABILITY,
+        PredicateStatus.INVALID_PARAMETERS: RuleMatchStatus.INVALID,
+        PredicateStatus.ERROR: RuleMatchStatus.ERROR,
+        PredicateStatus.TIMEOUT: RuleMatchStatus.ERROR,
+    }[status]
+
+
+def _resolved_career_rule(definition: CareerCandidateDefinition) -> ResolvedRule:
+    compatibility = thaw_ordered_compatibility(definition.compatibility_context)
+    raw_version = definition.rule_version
+    raw_priority = compatibility.get("priority")
+    priority = raw_priority if type(raw_priority) is int else 0
+    raw_family = compatibility.get("family")
+    rule_family = raw_family if isinstance(raw_family, str) and raw_family else definition.rule_type
+    raw_category = compatibility.get("category")
+    category = raw_category if isinstance(raw_category, str) and raw_category else definition.rule_type
+    base_weight = definition.base_score
+    weights = compatibility.get("weights")
+    if base_weight is None and isinstance(weights, Mapping):
+        base_weight = weights.get("base")
+    if isinstance(base_weight, bool) or not isinstance(base_weight, (int, float)):
+        raise ValueError("Career compatibility rule requires a declared finite base weight")
+    provenance = {"source_identity": definition.source_identity}
+    raw_provenance = compatibility.get("provenance")
+    if isinstance(raw_provenance, str) and raw_provenance:
+        provenance["source"] = raw_provenance
+    for key in (
+        "author", "source_reference", "classical_reference",
+        "validation_status", "sme_required", "sme_approved",
+    ):
+        if key in compatibility:
+            provenance[key] = compatibility[key]
+    metadata = {
+        "rule_type": definition.rule_type,
+        "source_identity": definition.source_identity,
+    }
+    for key in ("name", "description"):
+        if isinstance(compatibility.get(key), str):
+            metadata[key] = compatibility[key]
+    if raw_version is None:
+        metadata["diagnostic_missing_rule_version"] = True
+    if type(raw_priority) is not int:
+        metadata["diagnostic_missing_priority"] = True
+    return ResolvedRule(
+        system="parashara",
+        rule_id=definition.candidate_id,
+        rule_version=raw_version or "legacy-unversioned",
+        rule_family=rule_family,
+        rule_set_version="v1",
+        category=category,
+        domains=("career",),
+        base_weight=base_weight,
+        priority=priority,
+        context="natal",
+        quality=None,
+        provenance=provenance,
+        metadata=metadata,
+        evaluation_plan_position=definition.source_index,
+    )
+
+
+def _candidate_evaluation(
+    definition: CareerCandidateDefinition,
+    fact: CareerFactResult,
+    *,
+    adjusted_score: float,
+    contribution: float,
+    compatibility_evidence: Mapping[str, Any],
+    evaluation_snapshot_digest: str,
+    evaluation_context: PredicateEvaluationContext,
+) -> CareerCandidateEvaluation:
+    trace_lineage = tuple(step.step_id for step in fact.trace_steps)
+    rule_errors = tuple(
+        RuleMatchError(
+            code=error.code,
+            message=error.message,
+            phase="career_fact_bridge",
+            recoverable=error.recoverable,
+            details=error.details,
+            source_predicate_id=error.predicate_id,
+            source_trace_id=trace_lineage[0] if trace_lineage else None,
+        )
+        for error in fact.errors
+    )
+    trace_references = tuple(
+        RuleTraceReference(
+            trace_id=step_id,
+            trace_type="career_fact",
+            relation="compatibility_fact",
+            order=index,
+        )
+        for index, step_id in enumerate(trace_lineage)
+    )
+    resolved_rule = _resolved_career_rule(definition)
+    rule_match = _RULE_ENGINE.build_match(
+        resolved_rule,
+        fact.backing_result,
+        evaluation_snapshot_digest=evaluation_snapshot_digest,
+        evaluation_context=context_canonical_projection(evaluation_context),
+        status_override=_career_rule_status(fact.status),
+        evidence={
+            "fact_id": fact.fact_id,
+            "fact_kind": fact.fact_kind.value,
+            "fact_trace_ids": trace_lineage,
+        },
+        errors=rule_errors,
+        additional_trace_references=trace_references,
+        trace_components=(
+            CAREER_EVALUATOR_VERSION,
+            definition.candidate_id,
+            resolved_rule.rule_version,
+            str(definition.source_index),
+            evaluation_snapshot_digest,
+            fact.status.value,
+            *trace_lineage,
+        ),
+    )
+    return CareerCandidateEvaluation(
+        definition=definition,
+        fact=fact,
+        rule_match=rule_match,
+        adjusted_score=round(float(adjusted_score), 3),
+        contribution=float(contribution),
+        compatibility_evidence=compatibility_evidence,
+        trace_lineage=trace_lineage,
+        evaluation_time_ms=None,
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class _BaseEvaluation:
     base_score: float
@@ -350,6 +494,7 @@ def _strong_evaluation(
     facts: CareerPreparedFacts,
     evaluator: PredicateEvaluator,
     context: PredicateEvaluationContext,
+    evaluation_snapshot_digest: str,
 ) -> CareerCandidateEvaluation:
     planet_id = definition.normalized_parameters["planet"]
     backing = evaluator.evaluate(
@@ -447,18 +592,22 @@ def _strong_evaluation(
             )
             adjusted = definition.matched_score if matched else definition.unmatched_score
     contribution = float(adjusted) if fact.matched and adjusted > 0 else 0.0
-    return CareerCandidateEvaluation(
-        definition=definition, fact=fact, matched=fact.matched, status=fact.status,
-        adjusted_score=round(float(adjusted), 3), contribution=contribution,
+    return _candidate_evaluation(
+        definition,
+        fact,
+        adjusted_score=adjusted,
+        contribution=contribution,
         compatibility_evidence=compatibility_evidence,
-        trace_lineage=tuple(step.step_id for step in fact.trace_steps),
-        evaluation_time_ms=None,
+        evaluation_snapshot_digest=evaluation_snapshot_digest,
+        evaluation_context=context,
     )
 
 
 def _lord_evaluation(
     definition: CareerCandidateDefinition,
     facts: CareerPreparedFacts,
+    context: PredicateEvaluationContext,
+    evaluation_snapshot_digest: str,
 ) -> CareerCandidateEvaluation:
     lord = definition.normalized_parameters["lord"]
     fact_id = f"career.fact.{definition.candidate_id}"
@@ -516,17 +665,22 @@ def _lord_evaluation(
             )
             adjusted = definition.matched_score if matched else definition.unmatched_score
     contribution = float(adjusted) if fact.matched and adjusted > 0 else 0.0
-    return CareerCandidateEvaluation(
-        definition=definition, fact=fact, matched=fact.matched, status=fact.status,
-        adjusted_score=round(float(adjusted), 3), contribution=contribution,
+    return _candidate_evaluation(
+        definition,
+        fact,
+        adjusted_score=adjusted,
+        contribution=contribution,
         compatibility_evidence=legacy_evidence,
-        trace_lineage=tuple(step.step_id for step in fact.trace_steps), evaluation_time_ms=None,
+        evaluation_snapshot_digest=evaluation_snapshot_digest,
+        evaluation_context=context,
     )
 
 
 def _rajayoga_evaluation(
     definition: CareerCandidateDefinition,
     facts: CareerPreparedFacts,
+    context: PredicateEvaluationContext,
+    evaluation_snapshot_digest: str,
 ) -> CareerCandidateEvaluation:
     occ1 = [item.planet_id for item in facts.planets if item.house == 1 and item.planet_id in _BENEFICS]
     occ10 = [item.planet_id for item in facts.planets if item.house == 10 and item.planet_id in _BENEFICS]
@@ -548,17 +702,21 @@ def _rajayoga_evaluation(
         evaluation_time_ms=None,
     )
     adjusted = definition.matched_score if matched else definition.unmatched_score
-    return CareerCandidateEvaluation(
-        definition=definition, fact=fact, matched=matched, status=status,
-        adjusted_score=round(float(adjusted), 3),
+    return _candidate_evaluation(
+        definition,
+        fact,
+        adjusted_score=adjusted,
         contribution=float(adjusted) if matched and adjusted > 0 else 0.0,
         compatibility_evidence=evidence,
-        trace_lineage=(step.step_id,), evaluation_time_ms=None,
+        evaluation_snapshot_digest=evaluation_snapshot_digest,
+        evaluation_context=context,
     )
 
 
 def _failed_candidate_evaluation(
     definition: CareerCandidateDefinition,
+    context: PredicateEvaluationContext,
+    evaluation_snapshot_digest: str,
 ) -> CareerCandidateEvaluation:
     fact_id = f"career.fact.{definition.candidate_id}"
     error = _safe_error(
@@ -592,16 +750,14 @@ def _failed_candidate_evaluation(
         backing_result=None,
         evaluation_time_ms=None,
     )
-    return CareerCandidateEvaluation(
-        definition=definition,
-        fact=fact,
-        matched=False,
-        status=PredicateStatus.ERROR,
+    return _candidate_evaluation(
+        definition,
+        fact,
         adjusted_score=0.0,
         contribution=0.0,
         compatibility_evidence={},
-        trace_lineage=(step.step_id,),
-        evaluation_time_ms=None,
+        evaluation_snapshot_digest=evaluation_snapshot_digest,
+        evaluation_context=context,
     )
 
 
@@ -761,16 +917,16 @@ def evaluate_career_batch(
     for definition in _candidate_catalog(prepared_facts):
         try:
             if definition.rule_type == "strong_in_10":
-                result = _strong_evaluation(definition, prepared_facts, active_evaluator, context)
+                result = _strong_evaluation(definition, prepared_facts, active_evaluator, context, digest)
             elif definition.rule_type == "lord_status":
-                result = _lord_evaluation(definition, prepared_facts)
+                result = _lord_evaluation(definition, prepared_facts, context, digest)
             else:
-                result = _rajayoga_evaluation(definition, prepared_facts)
+                result = _rajayoga_evaluation(definition, prepared_facts, context, digest)
         except Exception:
             # Safe typed recovery retains the candidate and denominator.  No
             # exception text/type/path is copied and status is never relabeled
             # as factual unmatched.
-            result = _failed_candidate_evaluation(definition)
+            result = _failed_candidate_evaluation(definition, context, digest)
         evaluations.append(result)
     batch_errors = ()
     try:
@@ -867,12 +1023,12 @@ def project_career_compatibility(batch: CareerEvaluationBatch) -> dict[str, Any]
         })
     scoring = explainability.scoring_breakdown(batch.base_score, contributions)
     final = scoring.get("final_score", batch.base_score)
-    rule_matches = [
+    confidence_rows = [
         {"matched": True, "adjusted_score": item.get("contribution")}
         for item in evidence_rows
     ]
     confidence = confidence_mod.compute_confidence(
-        rule_matches,
+        confidence_rows,
         max(1, batch.confidence_denominator),
         _confidence_input(batch.completeness),
     )

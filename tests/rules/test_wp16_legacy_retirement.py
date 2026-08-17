@@ -16,7 +16,6 @@ RETIRED_SYMBOLS = frozenset(
         "is_exalted",
         "evaluate_rule",
         "evaluate_rule_with_score",
-        "RuleMatch",
         "record_predicate",
         "record_rule",
     }

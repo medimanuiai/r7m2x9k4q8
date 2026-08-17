@@ -4,7 +4,7 @@ Status: APPROVED
 Authority: Master Architecture Specification  
 Approval basis: Master Architecture Specification and approved staged sequence  
 Owner: Parāśara engine maintainers  
-Last reviewed: 2026-07-17
+Last reviewed: 2026-08-14
 
 ## Rules
 
@@ -26,7 +26,9 @@ Logical operators preserve evaluated PredicateResults and explicit errors rather
 
 One immutable RuleMatch contract must preserve rule identity and version, rule-set version, family/category/domain, match state, semantic weight and priority, context, PredicateResults, evidence, provenance, quality, and deterministic trace identity.
 
-Predicates must not assign adjusted domain contributions. Custom Yoga and Career match dictionaries are compatibility behavior pending the universal RuleMatch stage.
+Predicates must not assign adjusted domain contributions. Prompt-02 implements
+the universal contract in `engine/rules/rule_match.py`; Yoga and Career retain
+only named one-way public compatibility projections.
 
 RuleMatch must remain serializable, deterministic, and evidence-backed for both matched and diagnostic unmatched results. A match must not exist without the originating rule identity, version, provenance, and preserved predicate evaluation evidence.
 
@@ -42,7 +44,7 @@ Multiple versions may coexist. Selection, cache identity, traces, snapshots, and
 
 Higher-order rule dependencies belong to an explicit compiled rule graph, not recursive predicate calls. Missing dependencies, version incompatibility, disabled/unapproved dependencies, cross-domain restrictions, and direct or indirect cycles must have deterministic validation behavior.
 
-## Implemented Prompt-01 condition boundary
+## Implemented Prompt-01 and Prompt-02 boundaries
 
 The active Prompt-01 condition format supports registered predicate leaves and
 `AND`, `OR`, and `NOT`. Definition validation rejects malformed nodes, unknown
@@ -51,12 +53,12 @@ operators/predicates, empty `AND`/`OR`, and invalid `NOT` arity.
 deterministically, preserves typed evaluated children, and records
 unevaluated children as skipped.
 
-Yoga uses that boundary internally and retains a named one-way public
-compatibility projection. Career uses a separate temporary typed factual
-bridge. Neither is the universal RuleMatch implementation.
+`RuleEngine` now constructs the sole universal immutable `RuleMatch`, retaining
+the exact evaluated PredicateResults, status, declared metadata, evidence,
+errors, and trace references. Yoga and Career wrappers contain that model and
+retain named one-way public compatibility projections.
 
 The existing broader rule registry and M1 compatibility surfaces are not a
 full compiler or governed universal Rule Engine. Macro expansion, dependency
-graphs, multi-version selection, universal RuleMatch, and shared inference
-remain future stages. See
+graphs, multi-version selection, and shared inference remain future stages. See
 [Conditions, Yoga, Loaders, and Career](../guides/conditions-yoga-career.md).

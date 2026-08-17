@@ -19,7 +19,6 @@ RETIRED_MODULES = frozenset(
 )
 RETIRED_SYMBOLS = frozenset(
     {
-        "RuleMatch",
         "evaluate_rule",
         "evaluate_rule_with_score",
         "in_house",

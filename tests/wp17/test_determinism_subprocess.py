@@ -75,8 +75,8 @@ def test_manifest_matches_across_repeats_processes_hash_seeds_and_safe_cwds(tmp_
     assert b"\r" not in payload
     assert str(ROOT).encode("utf-8") not in payload
     assert (len(payload), hashlib.sha256(payload).hexdigest()) == (
-        1898,
-        "01b53b093e62e328de7758ed543a2c8f3b06c3a97e0502d7e879730e8c10d256",
+        1899,
+        "75b65d2cd1420c6261aadbb8159d10fb8c641137ce08d29f2a651952e5cdfaf7",
     )
     assert {
         path: path.read_bytes() if path.exists() else None for path in fixed_paths
