@@ -1,0 +1,80 @@
+{
+  "config_schema_version": "1.0.0",
+  "inference_version": "career-compat-1.0.0",
+  "inference_schema_version": "1.0.0",
+  "system": "parashara",
+  "normalization": {
+    "strategy": "baseline_additive_clip",
+    "neutral_score": 0.5,
+    "score_min": 0.0,
+    "score_max": 1.0,
+    "precision": 3
+  },
+  "contribution": {
+    "rounding_policy": "no_intermediate_rounding",
+    "quality_fallback": 1.0,
+    "evidence_strength_policy": "identity",
+    "evidence_strength_min": 0.0,
+    "evidence_strength_max": 1.0,
+    "context_order": ["natal"],
+    "context_multipliers": {"natal": 1.0},
+    "priority_multiplier_policy": "identity",
+    "rule_weight_overrides": {"rajayoga_naive": 0.18}
+  },
+  "component_grouping": {
+    "strategy": "category",
+    "normalization": "baseline_additive_clip"
+  },
+  "conflict": {
+    "strategy": "priority_quality_evidence_independence",
+    "group_by": ["category", "context"],
+    "record_without_score_rewrite": true
+  },
+  "agreement": {
+    "strategy": "absolute_net_over_absolute_total",
+    "precision": 6
+  },
+  "confidence": {
+    "strategy": "career_mvp01_structural",
+    "precision": 3,
+    "factor_weights": {
+      "rule_coverage": 0.4,
+      "evidence_strength": 0.3,
+      "data_completeness": 0.3,
+      "rule_quality": 0.0,
+      "context_agreement": 0.0,
+      "independent_evidence": 0.0,
+      "category_diversity": 0.0
+    },
+    "unresolved_conflict_penalty": 0.1,
+    "missing_required_penalty": 0.0,
+    "missing_optional_penalty": 0.0,
+    "evidence_strength_strategy": "mean_absolute_contribution",
+    "coverage_strategy": "matched_over_evaluated"
+  },
+  "completeness": {
+    "career": {
+      "required_capabilities": ["d1", "rule_pack"],
+      "optional_capabilities": [],
+      "legacy_checks": ["birth_datetime_present", "houses_present", "lagna_present", "planets_present"],
+      "legacy_check_weight": 0.25
+    }
+  },
+  "no_match": {
+    "status": "insufficient_evidence",
+    "normalized_score": 0.5,
+    "confidence": 0.0
+  },
+  "trace": {
+    "policy": "rule_evidence_and_inference_factors",
+    "stable_id_algorithm": "sha256-prefix-24"
+  },
+  "career_compatibility": {
+    "baseline_rule_id": "career.base_kendra_strength",
+    "baseline_category": "career_baseline",
+    "baseline_neutral": 0.5,
+    "baseline_priority": 100,
+    "public_formula": "final = min(1.0, base_score + sum(contributions))",
+    "public_trace_id": "career_001"
+  }
+}

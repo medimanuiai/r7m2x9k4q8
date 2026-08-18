@@ -2,7 +2,7 @@
 
 Status: CURRENT-STATE  
 Owner: Parāśara engine maintainers  
-Last verified: 2026-08-14
+Last verified: 2026-08-17
 
 ## Task rules
 
@@ -49,7 +49,7 @@ Last verified: 2026-08-14
 | ID | Task | Status | Dependency |
 |---|---|---|---|
 | P02-001 | Universal RuleMatch | COMPLETE / PENDING COMMIT REVIEW | Prompt-02 contract, migrations, dual-lane validation |
-| P03-001 | Shared InferenceEngine | DEFERRED / READY FOR OWNER AUTHORIZATION | Universal RuleMatch complete |
+| P03-001 | Shared InferenceEngine | IMPLEMENTED / PENDING COMMIT REVIEW | Prompt-03 contracts, Career migration, validator, and dual-lane evidence |
 | P04-001 | Stable AstroState query API | DEFERRED | Approved stage entry |
 | P05-001 | Typed domain outputs and thin Career interpreter | DEFERRED | Shared inference complete |
 | P05-002 | OutputAssembler | DEFERRED | Typed output contracts approved |

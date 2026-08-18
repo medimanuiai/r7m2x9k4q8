@@ -2,7 +2,7 @@
 
 Status: CURRENT-STATE  
 Owner: Parāśara engine maintainers  
-Last verified: 2026-08-14
+Last verified: 2026-08-17
 
 ## Scope
 
@@ -102,13 +102,13 @@ enforces deterministic Yoga permutations and both loader trigger orders.
 
 ### Domain interpretation
 
-Career is the only substantive domain interpreter. Its factual checks now use
-a typed Career-specific prepared/evaluation batch, canonical occupancy
-facts, and one universal RuleMatch per candidate. A compatibility projection
-preserves the prior candidate order,
-denominator, scoring, confidence, components, indicators, narrative, and
-public dictionary. Career still owns domain inference and is not the future
-universal inference layer.
+Career is the only substantive domain interpreter. Its factual checks use a
+typed Career-specific prepared/evaluation batch, canonical occupancy facts,
+and universal RuleMatch values. Career supplies explicit completeness and a
+RuleMatch-backed compatibility baseline to the one shared InferenceEngine.
+The compatibility projection preserves candidate order, components,
+indicators, narrative, and the public dictionary, while final score and
+confidence come only from InferenceResult.
 
 Other domain outputs are absent or placeholders in the snapshot assembler.
 
@@ -116,7 +116,7 @@ Other domain outputs are absent or placeholders in the snapshot assembler.
 
 A Vimshottari implementation exists but is not integrated into the primary snapshot output. Snapshot generation is performed by `systems/Parasara/tools/generate_snapshot.py`, which directly assembles public dictionaries.
 
-There is no dedicated shared `InferenceEngine` or serialization-only `OutputAssembler` in the active runtime.
+There is one dedicated shared `InferenceEngine`; there is no serialization-only `OutputAssembler` in the active runtime.
 
 The snapshot assembler currently emits a substantive Career dictionary, a placeholder Wealth dictionary, empty Dasha and transit collections, and skeletal explainability policy sections.
 
@@ -150,7 +150,8 @@ Surya JSON
   -> prepared Career factual boundary
   -> typed Career evaluation batch
   -> universal RuleMatch collection
-  -> preserved Career scoring/confidence and public projection
+  -> shared InferenceEngine and immutable InferenceResult
+  -> preserved one-way Career public projection
   -> snapshot dictionary/JSON
 ```
 
@@ -169,7 +170,6 @@ AstroState
 ## Verified architectural gaps
 
 - No stable read-only AstroState query API.
-- No shared InferenceEngine.
 - No typed universal DomainPrediction boundary.
 - No OutputAssembler.
 - No fully wired engine/rule-set version selection.

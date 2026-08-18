@@ -50,4 +50,15 @@ Input RuleMatches are processed in canonical order. No random identity, system t
 
 ## Current state
 
-No shared InferenceEngine exists. Career-local scoring and confidence are prototype compatibility behavior, not this contract's implementation.
+Prompt-03 implements this boundary in `engine/inference/`. The active
+`career-compat-1.0.0` policy is loaded from
+`config/inference/career_compat_v1.json`; it preserves MVP-01 Career scoring
+and confidence while making contributions, normalization, agreement,
+conflicts, completeness effects, confidence factors, and trace identity
+explicit. Career supplies a typed completeness snapshot and one compatibility
+baseline RuleMatch, calls the shared engine once, and projects the resulting
+score/confidence without recalculating them.
+
+The active confidence is structural and is not a calibrated probability.
+Only Career is migrated. Other domains, typed DomainPrediction, AstroState
+query APIs, output redesign, and rule-set governance remain later work.

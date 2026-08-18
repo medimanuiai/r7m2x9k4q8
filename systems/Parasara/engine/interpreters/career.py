@@ -8,9 +8,16 @@ from pathlib import PureWindowsPath
 from types import SimpleNamespace
 from typing import Any
 
-from systems.Parasara.engine import confidence as confidence_mod
 from systems.Parasara.engine import explainability
 from systems.Parasara.engine.astrostate import AstroState
+from systems.Parasara.engine.inference import (
+    CapabilityAvailability,
+    DataCompleteness,
+    InferenceConfig,
+    InferenceEngine,
+    InferenceResult,
+    load_inference_config,
+)
 from systems.Parasara.engine.interpreters.career_models import (
     CAREER_EVALUATOR_VERSION,
     CAREER_FACT_VERSION,
@@ -327,6 +334,7 @@ class _ObservedValue:
 
 
 _RULE_ENGINE = RuleEngine()
+_CAREER_INFERENCE_CONFIG = load_inference_config()
 
 
 def _career_rule_status(status: PredicateStatus) -> RuleMatchStatus:
@@ -978,26 +986,179 @@ def _public_components(batch: CareerEvaluationBatch) -> list[dict[str, Any]]:
     return output
 
 
-def _confidence_input(completeness: Mapping[str, Any]) -> SimpleNamespace:
-    return SimpleNamespace(
-        lagna_sign="present" if completeness["lagna_present"] else None,
-        planets=(True,) if completeness["planets_present"] else (),
-        houses=(True,) if completeness["houses_present"] else (),
-        metadata={"birth_datetime_utc": True} if completeness["birth_datetime_present"] else {},
+def _baseline_rule_match(batch: CareerEvaluationBatch, config: InferenceConfig) -> Any:
+    """Represent the legacy per-chart base as explicit universal rule meaning."""
+
+    if not batch.base_facts:
+        return None
+    fact = batch.base_facts[0]
+    trace_lineage = tuple(step.step_id for step in fact.trace_steps)
+    status = _career_rule_status(fact.status)
+    # Missing strength is not adverse evidence. The historical zero-substitution
+    # remains in the factual batch for compatibility diagnostics, but inference
+    # receives a neutral unavailable baseline instead of a negative weight.
+    compatibility = config.career_compatibility
+    neutral = float(compatibility["baseline_neutral"])
+    base_weight = batch.base_score - neutral if status is RuleMatchStatus.MATCHED else 0.0
+    resolved = ResolvedRule(
+        system="parashara",
+        rule_id=compatibility["baseline_rule_id"],
+        rule_version=CAREER_FACT_VERSION,
+        rule_family="career_compatibility",
+        rule_set_version="v1",
+        category=compatibility["baseline_category"],
+        domains=("career",),
+        base_weight=base_weight,
+        priority=compatibility["baseline_priority"],
+        context="natal",
+        quality=None,
+        provenance={"source_identity": "career.fact.base_kendra_strength"},
+        metadata={
+            "inference_role": "compatibility_baseline",
+            "confidence_eligible": False,
+            "correlation_key": fact.fact_id,
+        },
+        evaluation_plan_position=0,
+    )
+    errors = tuple(RuleMatchError(
+        code=error.code,
+        message=error.message,
+        phase="career_fact_bridge",
+        recoverable=error.recoverable,
+        details=error.details,
+        source_predicate_id=error.predicate_id,
+        source_trace_id=trace_lineage[0] if trace_lineage else None,
+    ) for error in fact.errors)
+    references = tuple(RuleTraceReference(
+        trace_id=step_id,
+        trace_type="career_fact",
+        relation="compatibility_baseline",
+        order=index,
+    ) for index, step_id in enumerate(trace_lineage))
+    return _RULE_ENGINE.build_match(
+        resolved,
+        fact.backing_result,
+        evaluation_snapshot_digest=batch.prepared_facts_sha256,
+        evaluation_context={"domain": "career", "context": "natal"},
+        status_override=status,
+        evidence={
+            "fact_id": fact.fact_id,
+            "fact_kind": fact.fact_kind.value,
+            "base_score": batch.base_score if status is RuleMatchStatus.MATCHED else neutral,
+            "fact_trace_ids": trace_lineage,
+        },
+        errors=errors,
+        additional_trace_references=references,
+        trace_components=(
+            CAREER_EVALUATOR_VERSION, "career.base_kendra_strength",
+            batch.prepared_facts_sha256, status.value, *trace_lineage,
+        ),
     )
 
 
-def project_career_compatibility(batch: CareerEvaluationBatch) -> dict[str, Any]:
+def career_inference_rule_matches(
+    batch: CareerEvaluationBatch,
+    config: InferenceConfig | None = None,
+) -> tuple[Any, ...]:
+    if not isinstance(batch, CareerEvaluationBatch):
+        raise TypeError("batch must be CareerEvaluationBatch")
+    active_config = _CAREER_INFERENCE_CONFIG if config is None else config
+    baseline = _baseline_rule_match(batch, active_config)
+    values = (*batch.rule_matches, *((baseline,) if baseline is not None else ()))
+    return RuleEngine.order_matches(values)
+
+
+def career_data_completeness(
+    batch: CareerEvaluationBatch,
+    config: InferenceConfig | None = None,
+) -> DataCompleteness:
+    if not isinstance(batch, CareerEvaluationBatch):
+        raise TypeError("batch must be CareerEvaluationBatch")
+    active_config = _CAREER_INFERENCE_CONFIG if config is None else config
+    policy = active_config.completeness["career"]
+    checks = tuple(bool(batch.completeness[name]) for name in policy["legacy_checks"])
+    score = sum(checks) * float(policy["legacy_check_weight"])
+    d1 = (
+        CapabilityAvailability.AVAILABLE if all(checks)
+        else CapabilityAvailability.PARTIAL if any(checks)
+        else CapabilityAvailability.UNAVAILABLE
+    )
+    required = tuple(sorted(policy["required_capabilities"]))
+    optional = tuple(sorted(policy["optional_capabilities"]))
+    availability = {"d1": d1, "rule_pack": CapabilityAvailability.AVAILABLE}
+    missing_required = tuple(
+        name for name in required
+        if availability.get(name, CapabilityAvailability.NOT_REQUIRED)
+        in (CapabilityAvailability.PARTIAL, CapabilityAvailability.UNAVAILABLE)
+    )
+    missing_optional = tuple(
+        name for name in optional
+        if availability.get(name, CapabilityAvailability.NOT_REQUIRED)
+        in (CapabilityAvailability.PARTIAL, CapabilityAvailability.UNAVAILABLE)
+    )
+    return DataCompleteness(
+        domain="career",
+        d1=d1,
+        d9=CapabilityAvailability.NOT_REQUIRED,
+        d10=CapabilityAvailability.NOT_REQUIRED,
+        aspects=CapabilityAvailability.NOT_REQUIRED,
+        functional_roles=CapabilityAvailability.NOT_REQUIRED,
+        shadbala=CapabilityAvailability.NOT_REQUIRED,
+        dasha=CapabilityAvailability.NOT_REQUIRED,
+        transits=CapabilityAvailability.NOT_REQUIRED,
+        rule_pack=CapabilityAvailability.AVAILABLE,
+        required_capabilities=required,
+        missing_required=missing_required,
+        missing_optional=missing_optional,
+        completeness_score=score,
+        trace_id=f"career.completeness.{batch.prepared_facts_sha256[:24]}",
+    )
+
+
+def infer_career(
+    batch: CareerEvaluationBatch,
+    *,
+    config: InferenceConfig | None = None,
+    engine: InferenceEngine | None = None,
+) -> InferenceResult:
+    if not isinstance(batch, CareerEvaluationBatch):
+        raise TypeError("batch must be CareerEvaluationBatch")
+    active_config = _CAREER_INFERENCE_CONFIG if config is None else config
+    active_engine = InferenceEngine() if engine is None else engine
+    return active_engine.aggregate(
+        domain="career",
+        rule_matches=career_inference_rule_matches(batch, active_config),
+        timing_context=None,
+        data_completeness=career_data_completeness(batch, active_config),
+        config=active_config,
+    )
+
+
+def project_career_compatibility(
+    batch: CareerEvaluationBatch,
+    inference_result: InferenceResult | None = None,
+) -> dict[str, Any]:
     """Lossily project a typed batch into the unchanged public Career dict."""
 
     if not isinstance(batch, CareerEvaluationBatch):
         raise TypeError("batch must be CareerEvaluationBatch")
+    result = infer_career(batch) if inference_result is None else inference_result
+    if not isinstance(result, InferenceResult) or result.domain != "career":
+        raise TypeError("inference_result must be a Career InferenceResult")
+    compatibility = _CAREER_INFERENCE_CONFIG.career_compatibility
+    baseline_rule_id = compatibility["baseline_rule_id"]
+    contribution_by_rule = {
+        item.rule_id: item
+        for item in result.contributions
+        if item.rule_id != baseline_rule_id
+    }
     indicators = []
     evidence_rows = []
     contributions = []
     for item in batch.candidates:
-        if item.matched and item.adjusted_score > 0:
-            contribution = float(item.adjusted_score)
+        inferred = contribution_by_rule.get(item.definition.candidate_id)
+        if inferred is not None and inferred.final_contribution > 0:
+            contribution = float(inferred.final_contribution)
             contributions.append(contribution)
             context = thaw_ordered_compatibility(item.definition.compatibility_context)
             evidence = _legacy_evidence(item)
@@ -1021,17 +1182,23 @@ def project_career_compatibility(batch: CareerEvaluationBatch) -> dict[str, Any]
             "rule_id": item.get("rule_id"),
             "weight": round(float(item.get("contribution") or 0.0), 3),
         })
-    scoring = explainability.scoring_breakdown(batch.base_score, contributions)
-    final = scoring.get("final_score", batch.base_score)
-    confidence_rows = [
-        {"matched": True, "adjusted_score": item.get("contribution")}
-        for item in evidence_rows
-    ]
-    confidence = confidence_mod.compute_confidence(
-        confidence_rows,
-        max(1, batch.confidence_denominator),
-        _confidence_input(batch.completeness),
+    baseline = next(
+        (item for item in result.contributions if item.rule_id == baseline_rule_id),
+        None,
     )
+    base_score = round(
+        float(compatibility["baseline_neutral"])
+        + (baseline.final_contribution if baseline is not None else 0.0),
+        _CAREER_INFERENCE_CONFIG.normalization["precision"],
+    )
+    final = result.normalized_score
+    confidence = result.confidence
+    scoring = {
+        "base_score": base_score,
+        "total_contribution": round(float(sum(contributions)), 3),
+        "final_score": round(float(final), 3),
+        "formula": compatibility["public_formula"],
+    }
     summary_text = f"Career score {round(float(final),3)} (confidence {round(float(confidence),3)})"
     return {
         "summary": summary_text,
@@ -1041,7 +1208,7 @@ def project_career_compatibility(batch: CareerEvaluationBatch) -> dict[str, Any]
         "indicators": indicators,
         "evidence": evidence_rows,
         "scoring": scoring,
-        "trace_id": "career_001",
+        "trace_id": compatibility["public_trace_id"],
     }
 
 
@@ -1050,11 +1217,15 @@ def interpret_career(astro: AstroState) -> dict[str, Any]:
 
     prepared = prepare_career_facts(astro)
     batch = evaluate_career_batch(prepared)
-    return project_career_compatibility(batch)
+    result = infer_career(batch)
+    return project_career_compatibility(batch, result)
 
 
 __all__ = (
     "evaluate_career_batch",
+    "career_data_completeness",
+    "career_inference_rule_matches",
+    "infer_career",
     "interpret_career",
     "prepare_career_facts",
     "project_career_compatibility",

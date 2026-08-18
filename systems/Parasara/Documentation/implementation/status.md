@@ -2,7 +2,7 @@
 
 Status: CURRENT-STATE  
 Owner: Parāśara engine maintainers  
-Last verified: 2026-08-14
+Last verified: 2026-08-17
 
 ## Status rules
 
@@ -39,9 +39,9 @@ operational readiness.
 | Rule loader | PARTIAL | `loader.py`, `yoga_loader.py`, active definition validation | Active formats/order validated; universal compiler/governance/version selection absent |
 | RuleMatch | IMPLEMENTED | `engine/rules/rule_match.py`, `rule_engine.py`, Prompt-02 contract/integration tests | Scientific/public/release validation remains separate |
 | Yoga evaluation | IMPLEMENTED | RuleMatch-backed typed batch plus `project_yoga_compatibility`, Yoga/Prompt-02/WP17 tests | Public compatibility projection/state attachment remain until later typed-output work |
-| Career interpreter | PARTIAL | RuleMatch-backed typed factual bridge and compatibility projection in `career.py`/`career_models.py` | Preserved local scoring/confidence/public dictionary await shared inference/typed domains |
+| Career interpreter | PARTIAL | RuleMatch-backed typed factual bridge, one shared inference call, and compatibility projection in `career.py`/`career_models.py` | Public compatibility dictionary remains until Prompt-05 typed domains |
 | Other domain interpreters | MISSING | Placeholder Wealth output in `systems/Parasara/tools/generate_snapshot.py` | Typed Wealth, Marriage, Children, Health, and Safety interpreters absent |
-| Shared InferenceEngine | MISSING | No active module found | Required aggregation, normalization, conflicts, and confidence service absent |
+| Shared InferenceEngine | IMPLEMENTED | `engine/inference/`, versioned config, Prompt-03 contract/integration/architecture tests | Career is the first migrated domain; calibration and later domain policies remain separate |
 | Typed domain output | MISSING | Current interpreters return dictionaries | Approved DomainPrediction boundary absent |
 | OutputAssembler | MISSING | `systems/Parasara/tools/generate_snapshot.py` assembles dictionaries directly | Dedicated schema-validating serialization-only layer absent |
 | Rule-set selection | PARTIAL | Hardcoded `v1` paths in runtime/loaders and output metadata | No explicit EngineConfig, strict selection, or cache-safe version propagation |
@@ -53,8 +53,8 @@ operational readiness.
 
 ## Active architectural blockers
 
-1. Shared inference is the next separately authorized architecture stage.
-2. Domain thinning/public output stabilization depend on shared inference and
+1. Stable read-only AstroState access is the next architectural handoff.
+2. Domain thinning/public output stabilization depend on
    typed outputs.
 3. Release/privacy/security/licensing/publication work remains separate owner
    work.
