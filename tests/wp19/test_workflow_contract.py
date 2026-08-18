@@ -15,9 +15,10 @@ def test_blocking_workflow_is_safe_dual_lane_and_authoritative():
     assert "shell: pwsh" in text
     assert "python-version: ['3.11', '3.14']" in text
     assert "requirements-stage01.lock.txt" in text
-    assert "python tools/validate_prompt02.py full" in text
+    assert "python tools/validate_prompt03.py full" in text
+    assert "python tools/validate_prompt02.py full" not in text
     assert "python tools/validate_prompt01.py full" not in text
-    assert "Prompt-02 required gate" in text
+    assert "Prompt-03 required gate" in text
     assert "$env:VALIDATION_RESULT -ne 'success'" in text
     for forbidden in (
         "|| true",
