@@ -15,6 +15,15 @@ from uuid import UUID
 import yaml
 
 from systems.Parasara.engine.astrostate import AstroState, PlanetState
+from systems.Parasara.engine.astrostate_api import (
+    AstroCapabilitySupply,
+    AstroStateBuildFailure,
+    AstroStateSnapshot,
+    ConstructionIssue,
+    freeze_astrostate,
+    thaw_value,
+)
+from systems.Parasara.engine.capability import CapabilityReadiness
 from systems.Parasara.engine.enrichments import aspects as aspects_mod
 from systems.Parasara.engine.enrichments import functional_roles as functional_roles_mod
 from systems.Parasara.engine.rules.canonical import (
@@ -54,15 +63,15 @@ from systems.Parasara.engine.rules.models import (
     PredicateTraceStep,
 )
 from systems.Parasara.engine.rules.prepared_state import (
-    CapabilitySupply,
     PredicateEvaluationContext,
     PreparationIssue,
     PreparationOutcome,
     PreparedAstroState,
     context_canonical_projection,
-    prepare_predicate_state,
+    prepare_predicate_state as _prepare_mutable_predicate_state,
     prepared_state_sha256,
 )
+from systems.Parasara.engine.rules.snapshot_adapter import prepare_predicate_snapshot
 from systems.Parasara.engine.rules.rule_engine import ResolvedRule, RuleEngine
 from systems.Parasara.engine.rules.rule_match import (
     RuleMatch,
@@ -85,6 +94,14 @@ DEFAULT_YOGA_SOURCE_NAME = "rules/parashara/v1/yogas.yaml"
 _SEMVER = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _RULE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$")
+
+
+def prepare_predicate_state(value: Any, **kwargs: Any) -> PreparationOutcome:
+    """Instrumentable compatibility seam retained for the protected Yoga path."""
+
+    if isinstance(value, AstroStateSnapshot):
+        return prepare_predicate_snapshot(value, **kwargs)
+    return _prepare_mutable_predicate_state(value, **kwargs)
 
 
 def _planet_by_name(astro: AstroState, name: str) -> PlanetState:
@@ -369,14 +386,54 @@ def prepare_legacy_yoga_state(
     astro: AstroState,
     source: YogaRuleSource,
 ) -> YogaLegacyPreparation:
-    """Prepare current Yoga facts once on an isolated copy; never mutate the caller."""
+    """Compatibility adapter through an explicit construction/freeze run."""
 
     if not isinstance(source, YogaRuleSource):
         return _preparation_failure("invalid_yoga_source")
+    build = build_yoga_snapshot(astro, source)
+    if isinstance(build, AstroStateBuildFailure):
+        issue = build.issues[0]
+        return _preparation_failure(issue.code, issue.capability_id)
+    snapshot = build.snapshot
+    outcome = prepare_predicate_state(snapshot)
+    graph = None
+    graph_inspection = snapshot.inspect_capability("aspects.whole_sign_graph")
+    if graph_inspection.readiness in (
+        CapabilityReadiness.READY,
+        CapabilityReadiness.READY_EMPTY,
+    ):
+        result = snapshot.get_aspect_representation("whole_sign_graph")
+        graph = thaw_value(result.value) if result.value_present else None
     try:
-        isolated = deepcopy(astro)
-    except Exception:
-        return _preparation_failure("yoga_defensive_copy_failed")
+        frozen_graph = None if graph is None else FrozenMapping(graph, path="$.compatibility_graph")
+    except CanonicalValueError:
+        return _preparation_failure("yoga_compatibility_graph_unsafe", "aspects.whole_sign_graph")
+    return YogaLegacyPreparation(outcome=outcome, compatibility_graph=frozen_graph)
+
+
+def build_yoga_snapshot(
+    astro: AstroState,
+    source: YogaRuleSource,
+):
+    """Run existing Yoga-required producers before publishing one snapshot."""
+
+    if not isinstance(astro, AstroState) or not isinstance(source, YogaRuleSource):
+        return AstroStateBuildFailure(
+            issues=(ConstructionIssue(
+                code="invalid_yoga_construction_input", path="$",
+                recoverable=False, fatal=True,
+            ),)
+        )
+    try:
+        # This is a new bounded construction run, not evaluation-time isolation.
+        isolated = AstroState.model_validate(astro.model_dump(mode="python"))
+    except (TypeError, ValueError):
+        return AstroStateBuildFailure(
+            issues=(ConstructionIssue(
+                code="yoga_construction_copy_failed", path="$",
+                recoverable=False, fatal=True,
+            ),)
+        )
     predicate_types = tuple(
         item
         for record in source.records
@@ -389,19 +446,19 @@ def prepare_legacy_yoga_state(
             config_path = Path(__file__).resolve().parents[4] / "rules" / "parashara" / "aspects.yaml"
             graph = aspects_mod.compute_aspect_graph(isolated, config_path=config_path)
         except Exception:
-            return _preparation_failure("yoga_aspect_preparation_failed", "aspects.whole_sign_graph")
+            return AstroStateBuildFailure(
+                issues=(ConstructionIssue(
+                    code="yoga_aspect_preparation_failed", path="$.producers.aspects",
+                    capability_id="aspects.whole_sign_graph", recoverable=False, fatal=True,
+                ),)
+            )
 
-    supplies: tuple[CapabilitySupply, ...] = ()
+    supplies: tuple[AstroCapabilitySupply, ...] = ()
     if "FUNCTIONAL_ROLE" in predicate_types:
         try:
             roles = functional_roles_mod.compute_functional_roles(isolated)
-            derived = getattr(isolated, "derived", None)
-            if isinstance(derived, Mapping):
-                clean_derived = dict(derived)
-                clean_derived.pop("functional_roles", None)
-                isolated.derived = clean_derived
             supplies = (
-                CapabilitySupply(
+                AstroCapabilitySupply(
                     capability_id="roles.functional",
                     capability_version="1.0.0",
                     source_kind="legacy_yoga_adapter",
@@ -409,13 +466,39 @@ def prepare_legacy_yoga_state(
                 ),
             )
         except Exception:
-            return _preparation_failure("yoga_role_preparation_failed", "roles.functional")
-    outcome = prepare_predicate_state(isolated, capability_supplies=supplies)
-    try:
-        frozen_graph = None if graph is None else FrozenMapping(graph, path="$.compatibility_graph")
-    except CanonicalValueError:
-        return _preparation_failure("yoga_compatibility_graph_unsafe", "aspects.whole_sign_graph")
-    return YogaLegacyPreparation(outcome=outcome, compatibility_graph=frozen_graph)
+            return AstroStateBuildFailure(
+                issues=(ConstructionIssue(
+                    code="yoga_role_preparation_failed", path="$.producers.roles",
+                    capability_id="roles.functional", recoverable=False, fatal=True,
+                ),)
+            )
+    return freeze_astrostate(isolated, capability_supplies=supplies)
+
+
+def evaluate_yoga_snapshot(
+    snapshot: AstroStateSnapshot,
+    source: YogaRuleSource | None = None,
+) -> YogaEvaluationBatch:
+    """Canonical read-only Yoga evaluation from one published snapshot."""
+
+    if not isinstance(snapshot, AstroStateSnapshot):
+        raise TypeError("snapshot must be AstroStateSnapshot")
+    current_source = load_yoga_rule_source() if source is None else source
+    preparation = prepare_predicate_state(snapshot)
+    if not preparation.succeeded or preparation.state is None:
+        return yoga_batch_from_preparation_failure(current_source, preparation.issues)
+    graph = None
+    inspection = snapshot.inspect_capability("aspects.whole_sign_graph")
+    if inspection.readiness in (CapabilityReadiness.READY, CapabilityReadiness.READY_EMPTY):
+        result = snapshot.get_aspect_representation("whole_sign_graph")
+        graph = FrozenMapping(thaw_value(result.value), path="$.compatibility_graph")
+    return evaluate_yoga_batch(
+        preparation.state,
+        PredicateEvaluationContext(),
+        current_source,
+        predicate_evaluator=PredicateEvaluator(),
+        compatibility_graph=graph,
+    )
 
 
 def _result_logical_hash(result: PredicateResult | ConditionResult) -> str:
@@ -1178,17 +1261,15 @@ def evaluate_yoga_rules(astro: AstroState) -> List[Dict[str, Any]]:
     """Legacy mutable-AstroState wrapper over the typed WP13 pipeline."""
 
     source = load_yoga_rule_source()
-    preparation = prepare_legacy_yoga_state(astro, source)
-    if not preparation.outcome.succeeded or preparation.outcome.state is None:
-        batch = yoga_batch_from_preparation_failure(source, preparation.outcome.issues)
-    else:
-        batch = evaluate_yoga_batch(
-            preparation.outcome.state,
-            PredicateEvaluationContext(),
-            source,
-            predicate_evaluator=PredicateEvaluator(),
-            compatibility_graph=preparation.compatibility_graph,
+    build = build_yoga_snapshot(astro, source)
+    if isinstance(build, AstroStateBuildFailure):
+        issues = tuple(
+            PreparationIssue(code=item.code, path=item.path, capability_id=item.capability_id)
+            for item in build.issues
         )
+        batch = yoga_batch_from_preparation_failure(source, issues)
+    else:
+        batch = evaluate_yoga_snapshot(build.snapshot, source)
     projected = project_yoga_compatibility(batch)
     try:
         if getattr(astro, "enrichments", None) is None:
@@ -1209,7 +1290,9 @@ __all__ = (
     "YogaEvaluationRecord",
     "YogaLegacyPreparation",
     "YogaRuleSource",
+    "build_yoga_snapshot",
     "evaluate_yoga_batch",
+    "evaluate_yoga_snapshot",
     "evaluate_yoga_rules",
     "load_yoga_rule_source",
     "prepare_legacy_yoga_state",

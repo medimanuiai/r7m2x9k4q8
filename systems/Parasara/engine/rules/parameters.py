@@ -10,19 +10,9 @@ from typing import Any
 
 from systems.Parasara.engine.rules.canonical import FrozenMapping, freeze_canonical
 from systems.Parasara.engine.rules.models import PredicateError
+from systems.Parasara.engine.identities import CANONICAL_PLANETS
 
 
-CANONICAL_PLANETS = (
-    "Sun",
-    "Moon",
-    "Mars",
-    "Mercury",
-    "Jupiter",
-    "Venus",
-    "Saturn",
-    "Rahu",
-    "Ketu",
-)
 FUNCTIONAL_ROLE_VALUES = (
     "benefic",
     "functional_benefic",

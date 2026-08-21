@@ -2,7 +2,7 @@
 
 Status: CURRENT-STATE  
 Owner: Parāśara engine maintainers  
-Last verified: 2026-08-17
+Last verified: 2026-08-21
 
 ## Scope
 
@@ -18,14 +18,20 @@ The active model surface is split across:
 
 - `systems/Parasara/engine/models.py` for adapter-facing `Chart` models;
 - `systems/Parasara/engine/astrostate.py` for `AstroState` and `PlanetState`;
+- `systems/Parasara/engine/astrostate_api.py` for the immutable
+  `AstroStateSnapshot`, capability catalog, freeze boundary, and factual queries;
 - `systems/Parasara/engine/derived/models.py` for typed derived summaries;
 - `systems/Parasara/engine/rules/rule_match.py` for the immutable universal
   `RuleMatch` evaluation result.
 
-These are not one immutable end-to-end model boundary. Several chart/state
-models expose mutable dictionaries/lists or use mutable collection defaults.
-RuleMatch and its nested logical values are immutable; Yoga and Career retain
-only explicit one-way compatibility projections for existing public output.
+Adapter and construction models remain mutable. Evaluation publishes one
+deeply immutable snapshot; PreparedAstroState, RuleMatch, InferenceResult, and
+their nested logical values are immutable. Yoga and Career retain only
+explicit one-way compatibility projections for existing public output.
+Direct construction and `dataclasses.replace` cannot bypass snapshot-model
+validation or retain caller-owned mutable nested values. Capability records
+are catalog/version/core-path checked, and snapshot publication reconciles
+core-backed readiness with the referenced `AstroCore` fact.
 
 ### Normalization and AstroState construction
 
@@ -37,7 +43,9 @@ only explicit one-way compatibility projections for existing public output.
 - attaches canonical IDs and varga summaries;
 - invokes selected strength, house, aspect, and derived-state builders.
 
-The current `AstroState` is a mutable Pydantic container with nested mutable dictionaries and lists. Enrichment code may update it after construction.
+The current `AstroState` is a mutable Pydantic construction container.
+Enrichment code may update it only before `freeze_astrostate` publishes an
+immutable `AstroStateSnapshot`; evaluation consumers query that snapshot.
 
 ### Enrichments
 
@@ -72,8 +80,9 @@ coercion, Boolean houses, out-of-range houses, and unknown planet identifiers
 are rejected. The capability catalog distinguishes unsupported, missing,
 empty, malformed, and absent-entity facts from factual false.
 
-`prepare_predicate_state` creates a defensively frozen
-`PreparedAstroState` from the mutable compatibility AstroState. Its digest
+`rules/snapshot_adapter.py` projects canonical snapshot owners into the exact
+seven-capability `PreparedAstroState` view. The legacy
+`prepare_predicate_state` entry remains for compatibility. Its digest
 covers canonical predicate facts, readiness/content, producer/schema versions,
 and relevant explicit context; Yoga/domain output, telemetry, performance
 timing, random identity, and caller-owned mutable references are excluded.
@@ -93,7 +102,10 @@ It validates the active format, evaluates left to right, short-circuits
 deterministically, preserves evaluated typed children, and represents
 unevaluated children explicitly as skipped.
 
-Yoga retains a typed internal batch from one prepared state and one evaluator,
+Yoga explicitly runs its existing required whole-sign-aspect and
+functional-role producers in a separate construction run, freezes once, and
+evaluates from that snapshot. It retains a typed internal batch from one
+prepared state and one evaluator,
 with one universal RuleMatch per record, then uses a named one-way
 compatibility projection to preserve existing public
 keys, firing, and row order. Dormant tuple helpers were retired. The generic
@@ -102,19 +114,26 @@ enforces deterministic Yoga permutations and both loader trigger orders.
 
 ### Domain interpretation
 
-Career is the only substantive domain interpreter. Its factual checks use a
-typed Career-specific prepared/evaluation batch, canonical occupancy facts,
+Career is the only substantive domain interpreter. Its factual preparation
+composes typed snapshot queries for placement, dignity, strength, Lagna,
+house lord, and occupants. Evaluation uses a typed Career-specific batch,
 and universal RuleMatch values. Career supplies explicit completeness and a
 RuleMatch-backed compatibility baseline to the one shared InferenceEngine.
 The compatibility projection preserves candidate order, components,
 indicators, narrative, and the public dictionary, while final score and
-confidence come only from InferenceResult.
+confidence come only from InferenceResult. Canonical Career evaluation keeps
+expected factual unavailability typed and allows unexpected programming
+defects to propagate to strict callers and tests.
 
 Other domain outputs are absent or placeholders in the snapshot assembler.
 
 ### Timing and output
 
-A Vimshottari implementation exists but is not integrated into the primary snapshot output. Snapshot generation is performed by `systems/Parasara/tools/generate_snapshot.py`, which directly assembles public dictionaries.
+A Vimshottari implementation exists but is not integrated into the primary
+snapshot output, so `dasha.current` remains unavailable. Snapshot generation
+is performed by `systems/Parasara/tools/generate_snapshot.py`; its compatibility
+assembler queries one immutable snapshot while retaining the existing public
+dictionary until Prompt-05.
 
 There is one dedicated shared `InferenceEngine`; there is no serialization-only `OutputAssembler` in the active runtime.
 
@@ -129,12 +148,12 @@ loading, timing, and other legacy enrichments.
 
 ### Determinism risks
 
-Prompt-01 logical predicate/condition and Prompt-02 RuleMatch, Yoga, Career,
-tooling, serialization,
+Prompt-01 logical predicate/condition, Prompt-02 RuleMatch, Prompt-03
+InferenceResult, and Prompt-04 snapshot/query, Yoga, Career, tooling, serialization,
 loader-order, registry, and cache scenarios are deterministic across the
 supported Python lanes, hash seeds, safe working directories, and repetitions.
 Remaining non-Prompt risks include Vimshottari wall-clock fallback, mutable
-preparation/enrichment stages, some working-directory-dependent legacy table
+construction/enrichment stages, some working-directory-dependent legacy table
 discovery, and mutable compatibility rule registries.
 
 ## Current data flows
@@ -147,6 +166,8 @@ Surya JSON
   -> Chart
   -> chart_to_astrostate
   -> mutable enriched AstroState
+  -> freeze_astrostate
+  -> immutable AstroStateSnapshot and typed factual queries
   -> prepared Career factual boundary
   -> typed Career evaluation batch
   -> universal RuleMatch collection
@@ -158,8 +179,9 @@ Surya JSON
 Yoga flow:
 
 ```text
-AstroState
-  -> explicit Yoga preparation
+AstroState compatibility input
+  -> explicit Yoga producer construction
+  -> immutable AstroStateSnapshot
   -> immutable PreparedAstroState
   -> PredicateEvaluator and typed ConditionResult
   -> typed Yoga batch
@@ -169,7 +191,8 @@ AstroState
 
 ## Verified architectural gaps
 
-- No stable read-only AstroState query API.
+- Mutable construction compatibility and broad legacy producer fallbacks remain
+  before the freeze boundary.
 - No typed universal DomainPrediction boundary.
 - No OutputAssembler.
 - No fully wired engine/rule-set version selection.

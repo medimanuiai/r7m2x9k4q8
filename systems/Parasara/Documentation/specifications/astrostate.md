@@ -4,7 +4,7 @@ Status: APPROVED
 Authority: Master Architecture Specification  
 Approval basis: Master Architecture Specification and approved staged sequence  
 Owner: Parāśara engine maintainers  
-Last reviewed: 2026-07-17
+Last reviewed: 2026-08-21
 
 ## Contract
 
@@ -73,19 +73,65 @@ Changing normalization, relevant enrichment configuration, evaluation instant, s
 - Broad exception fallbacks must not make failed enrichment indistinguishable from an evaluated empty result.
 - Construction diagnostics remain factual and must not become domain interpretation.
 
-## Implemented Prompt-01 factual boundary
+## Implemented Prompt-04 boundary
 
-The adapter/normalizer-facing `AstroState` remains the mutable compatibility
-construction model. Prompt-01 adds an explicit `prepare_predicate_state`
-boundary that copies supported facts into an immutable `PreparedAstroState`
-with capability readiness, producer/schema versions, defensive freezing, and
-a deterministic digest.
+`engine/astrostate.py` remains the bounded mutable construction and legacy
+entry model. `engine/astrostate_api.py` implements the post-enrichment factual
+boundary:
 
-The digest includes canonical predicate-relevant facts, readiness/content,
-relevant versions, and explicit factual context. It excludes Yoga/domain
-outputs, cache telemetry, performance timing, random IDs, and caller-owned
-mutable identity. Predicate handlers receive only this prepared snapshot.
+```text
+mutable AstroState construction
+  -> explicit existing producers
+  -> freeze_astrostate
+  -> immutable AstroStateSnapshot
+  -> typed factual queries
+```
 
-This is not the future general AstroState query API. Other enrichments and
-domains may still use the mutable compatibility AstroState, and the broader
-construction/query redesign remains deferred.
+The snapshot contains versioned core facts, a composed capability catalog,
+safe deterministic construction issues, explicit evaluation context, and a
+SHA-256 logical digest. Canonical digest bytes exclude `logical_digest`
+itself, telemetry, cache state, rule/domain results, public output, random
+identity, and process-local data. Duplicate entities, unsafe core content, and
+contradictory legacy owners fail construction; optional missing capabilities
+remain queryable as typed unavailable states.
+
+Every public immutable model validates its invariants in direct construction
+and defensively freezes nested mappings and collections. Caller mutation and
+`dataclasses.replace` therefore cannot bypass catalog versions, core paths,
+readiness/content/empty-state rules, factual presence flags, core-backed
+readiness reconciliation, published equality, or digest identity. Core-backed
+capability supplies are rejected rather than stored as a second fact owner.
+Evaluation context is bounded to the implemented factual `instant`; telemetry,
+cache, logs, scores, confidence, domain results, raw requests, unknown keys,
+and mutable nested values are rejected.
+
+Query results reuse the established capability readiness/fact-state taxonomy.
+Planet and house collections use canonical ordering. Every aspect query
+requires an explicit `basic_conjunction_list` or `whole_sign_graph`
+representation. No query executes a producer or exposes a generic enrichment
+dictionary. Whole-sign facts preserve their target sign and house queries map
+that sign only through the canonical houses owned by the snapshot. Every
+published aspect source and planet target belongs to the snapshot's canonical
+planet set, and a whole-sign planet target must agree with its canonical sign.
+Missing entities remain distinct from present-empty aspect collections.
+Unsafe supplied aspect facts fail construction with a deterministic fatal issue
+before a snapshot is published; they are never discarded or converted into a
+malformed or ready-empty capability. A typed nonfatal `malformed` capability is
+reserved for bounded availability or producer outcomes that contain no invalid
+supplied factual content.
+
+The general catalog composes the protected seven Prompt-01 definitions without
+changing their versions or legacy manifest. `rules/snapshot_adapter.py`
+projects the same canonical owners into byte-identical `PreparedAstroState`
+values. Yoga, Career, confidence, and snapshot generation evaluate/query the
+immutable boundary; narrow mutable entry wrappers remain for compatibility and
+are owned for removal or further thinning in later approved stages.
+Canonical Career batch evaluation catches no arbitrary programming exception:
+unexpected defects propagate, while expected factual absence continues through
+the existing typed status/error contracts.
+
+Current Dasha and transit capabilities are unavailable because no integrated
+producer supplies them. Existing Shadbala payloads are exposed only with the
+truthful `legacy_partial_proxy` scope. Structural and deterministic validation
+does not imply scientific/SME, release, privacy, security, licensing, or
+operations approval.

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import builtins
 from copy import deepcopy
-import json
 import os
 from pathlib import Path
 import random
@@ -31,7 +30,6 @@ from systems.Parasara.engine.interpreters.career import (
     project_career_compatibility,
 )
 from systems.Parasara.engine.interpreters.career_models import (
-    career_evaluation_batch_logical_json_bytes,
     career_evaluation_batch_to_logical_data,
 )
 from systems.Parasara.engine.normalizer import chart_to_astrostate
@@ -340,7 +338,7 @@ class _ExplodingEvaluator(PredicateEvaluator):
         )
 
 
-def test_adversarial_exception_text_never_reaches_typed_or_public_diagnostics():
+def test_expected_diagnostics_are_safe_and_career_programming_defects_propagate():
     state = _prepared_predicate_state()
     condition = ConditionEvaluator(_ExplodingEvaluator()).evaluate(
         {"type": "PLANET_IN_HOUSE", "params": {"planet": "Mars", "house": 1}},
@@ -349,16 +347,12 @@ def test_adversarial_exception_text_never_reaches_typed_or_public_diagnostics():
     )
     assert condition.status is PredicateStatus.ERROR
 
-    career = evaluate_career_batch(
-        prepare_career_facts(_astro("golden_chart_01.json")),
-        evaluator=_ExplodingEvaluator(),
-    )
-    public = project_career_compatibility(career)
-    payloads = (
-        predicate_result_full_json_bytes(condition),
-        career_evaluation_batch_logical_json_bytes(career),
-        json.dumps(public, ensure_ascii=False).encode("utf-8"),
-    )
+    with pytest.raises(RuntimeError, match="WP17_FAKE_TOKEN"):
+        evaluate_career_batch(
+            prepare_career_facts(_astro("golden_chart_01.json")),
+            evaluator=_ExplodingEvaluator(),
+        )
+    payloads = (predicate_result_full_json_bytes(condition),)
     forbidden = (
         b"temporary",
         b"owner",

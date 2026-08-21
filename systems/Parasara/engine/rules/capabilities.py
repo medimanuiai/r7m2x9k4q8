@@ -24,6 +24,11 @@ from systems.Parasara.engine.rules.parameters import (
     CANONICAL_PLANETS,
     FUNCTIONAL_ROLE_VALUES,
 )
+from systems.Parasara.engine.capability import (
+    CapabilityFactState,
+    CapabilityInspection,
+    CapabilityReadiness,
+)
 
 
 _CAPABILITY_ID = re.compile(r"^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$")
@@ -65,24 +70,6 @@ class ContentKind(str, Enum):
 class EmptyPolicy(str, Enum):
     READY_EMPTY = "ready_empty"
     EMPTY_NOT_READY = "empty_not_ready"
-
-
-class CapabilityReadiness(str, Enum):
-    READY = "ready"
-    READY_EMPTY = "ready_empty"
-    MISSING = "missing"
-    MALFORMED = "malformed"
-    VERSION_MISMATCH = "version_mismatch"
-    UNSUPPORTED = "unsupported"
-
-
-class CapabilityFactState(str, Enum):
-    PRESENT = "present"
-    ABSENT_ENTITY = "absent_entity"
-    CAPABILITY_UNAVAILABLE = "capability_unavailable"
-    MALFORMED_CAPABILITY = "malformed_capability"
-    VERSION_MISMATCH = "version_mismatch"
-    UNSUPPORTED_CAPABILITY = "unsupported_capability"
 
 
 def _valid_capability_id(value: Any, *, error_type: type[ValueError]) -> str:
@@ -293,46 +280,6 @@ def validate_registry_capabilities(registry: Any, catalog: CapabilityCatalog | N
         for issue in validate_predicate_capabilities(definition, catalog).issues
     )
     return CapabilityCompatibilityResult(compatible=not issues, issues=issues)
-
-
-@dataclass(frozen=True, slots=True, kw_only=True)
-class CapabilityInspection:
-    capability_id: str
-    expected_version: str
-    observed_version: str | None
-    readiness: CapabilityReadiness
-    source_kind: str | None
-    content_empty: bool
-    issues: tuple[str, ...]
-
-    def __post_init__(self) -> None:
-        _valid_capability_id(self.capability_id, error_type=ValueError)
-        _valid_version(self.expected_version, error_type=ValueError)
-        if self.observed_version is not None:
-            _valid_version(self.observed_version, error_type=ValueError)
-        if not isinstance(self.readiness, CapabilityReadiness):
-            raise TypeError("readiness must be CapabilityReadiness")
-        if self.source_kind is not None and (
-            not isinstance(self.source_kind, str) or not _SAFE_CODE.fullmatch(self.source_kind)
-        ):
-            raise ValueError("source_kind must be a safe non-empty identifier")
-        if type(self.content_empty) is not bool or not isinstance(self.issues, tuple) or any(
-            type(item) is not str or not _SAFE_CODE.fullmatch(item) for item in self.issues
-        ):
-            raise TypeError("inspection content_empty/issues have invalid types")
-        if self.readiness is CapabilityReadiness.READY and self.content_empty:
-            raise ValueError("ready content must be nonempty")
-        if self.readiness is CapabilityReadiness.READY_EMPTY and not self.content_empty:
-            raise ValueError("ready_empty content must be explicitly empty")
-        if self.readiness in (CapabilityReadiness.MISSING, CapabilityReadiness.UNSUPPORTED):
-            if self.observed_version is not None or self.source_kind is not None or self.content_empty:
-                raise ValueError("missing/unsupported inspection cannot claim observed content")
-        elif self.source_kind is None:
-            raise ValueError("present or malformed content requires a safe source kind")
-        if self.readiness is CapabilityReadiness.VERSION_MISMATCH and self.observed_version is None:
-            raise ValueError("version mismatch requires an observed version")
-        if self.readiness in (CapabilityReadiness.READY, CapabilityReadiness.READY_EMPTY) and self.issues:
-            raise ValueError("ready inspections cannot contain issues")
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
