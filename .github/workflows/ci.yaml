@@ -1,4 +1,4 @@
-name: Prompt-03 InferenceEngine
+name: Prompt-04 AstroState API
 
 on:
   push:
@@ -35,11 +35,13 @@ jobs:
         run: |
           python -m pip install --disable-pip-version-check -r systems/Parasara/Documentation/Engine/Prompt-01/WorkPackage/Reports/WP00/requirements-stage01.lock.txt
           python -m pip install --disable-pip-version-check --no-deps -e systems/SuryaSiddhanta
-      - name: Run authoritative Prompt-03 validation
+      - name: Run preserved Prompt-03 validation
         run: python tools/validate_prompt03.py full
+      - name: Run authoritative Prompt-04 validation
+        run: python tools/validate_prompt04.py full
 
   required:
-    name: Prompt-03 required gate
+    name: Prompt-03 required gate / Prompt-04 aggregate
     runs-on: windows-latest
     needs: validate
     if: always()
@@ -49,5 +51,5 @@ jobs:
           VALIDATION_RESULT: ${{ needs.validate.result }}
         run: |
           if ($env:VALIDATION_RESULT -ne 'success') {
-            throw 'Both required Prompt-03 Python validation lanes must succeed.'
+            throw 'Both required Prompt-04 Python validation lanes must succeed.'
           }

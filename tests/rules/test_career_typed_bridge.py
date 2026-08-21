@@ -335,7 +335,7 @@ def test_safe_catastrophic_preparation_policy_preserves_public_schema():
     }
 
 
-def test_injected_evaluator_defects_are_safe_typed_and_keep_every_candidate(monkeypatch):
+def test_injected_evaluator_programming_defects_propagate(monkeypatch):
     astro = load_astro("surya_test_chart.json")
     prepared = prepare_career_facts(astro)
 
@@ -343,17 +343,8 @@ def test_injected_evaluator_defects_are_safe_typed_and_keep_every_candidate(monk
         raise RuntimeError("secret raw exception and path must not escape")
 
     monkeypatch.setattr(PredicateEvaluator, "evaluate", fail)
-    batch = evaluate_career_batch(prepared, evaluator=PredicateEvaluator())
-    public = project_career_compatibility(batch)
-
-    assert len(batch.candidates) == batch.confidence_denominator == 11
-    assert all(item.status is PredicateStatus.ERROR for item in batch.candidates[:9])
-    assert all(item.contribution == 0.0 for item in batch.candidates[:9])
-    assert batch.candidates[0].fact.errors[0].code == "career_candidate_evaluation_failed"
-    assert "secret" not in career_evaluation_batch_full_json_bytes(batch).decode("utf-8")
-    assert [row["rule_id"] for row in public["indicators"]] == [
-        "10th_lord_Venus", "rajayoga_naive"
-    ]
+    with pytest.raises(RuntimeError, match="secret raw exception"):
+        evaluate_career_batch(prepared, evaluator=PredicateEvaluator())
 
 
 def test_career_static_architecture_rejects_legacy_runtime_loader_raw_provider_and_direct_handlers():

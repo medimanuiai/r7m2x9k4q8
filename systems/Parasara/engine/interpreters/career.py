@@ -10,6 +10,12 @@ from typing import Any
 
 from systems.Parasara.engine import explainability
 from systems.Parasara.engine.astrostate import AstroState
+from systems.Parasara.engine.astrostate_api import (
+    AstroStateBuildFailure,
+    AstroStateSnapshot,
+    freeze_astrostate,
+)
+from systems.Parasara.engine.capability import CapabilityFactState, CapabilityReadiness
 from systems.Parasara.engine.inference import (
     CapabilityAvailability,
     DataCompleteness,
@@ -125,17 +131,47 @@ def _failed_preparation() -> CareerPreparedFacts:
     )
 
 
-def prepare_career_facts(astro: AstroState) -> CareerPreparedFacts:
-    """Defensively snapshot exactly the mutable facts read by Career today."""
+def prepare_career_facts(astro: AstroState | AstroStateSnapshot) -> CareerPreparedFacts:
+    """Compatibility adapter into canonical snapshot-based Career preparation."""
 
-    try:
+    if isinstance(astro, AstroStateSnapshot):
+        return prepare_career_snapshot(astro)
+    if not isinstance(astro, AstroState):
+        return _failed_preparation()
+    build = freeze_astrostate(astro)
+    if isinstance(build, AstroStateBuildFailure):
+        return _failed_preparation()
+    return prepare_career_snapshot(build.snapshot)
+
+
+def prepare_career_snapshot(snapshot: AstroStateSnapshot) -> CareerPreparedFacts:
+    """Build the protected Career bridge only from typed factual queries."""
+
+    if not isinstance(snapshot, AstroStateSnapshot):
+        return _failed_preparation()
+
+    def prepare() -> CareerPreparedFacts:
         # Supply only the exact occupancy boundary needed by Career.  Signs,
         # Aspects, roles, dignity, Yoga output, and all other enrichments are
         # intentionally absent from this canonical predicate state.
+        planets_result = snapshot.get_planets()
+        if planets_result.state is not CapabilityFactState.PRESENT:
+            return _failed_preparation()
+        # The stable query uses canonical catalog order.  Current production
+        # construction order is the same protected Career source order.
+        queried_planets = planets_result.value
         predicate_source = SimpleNamespace(
             planets=[
-                SimpleNamespace(name=planet.name, house=planet.house, sign=None)
-                for planet in astro.planets
+                SimpleNamespace(
+                    name=planet.planet_id,
+                    house=(
+                        snapshot.get_planet_house(planet.planet_id).value
+                        if snapshot.get_planet_house(planet.planet_id).value_present
+                        else None
+                    ),
+                    sign=None,
+                )
+                for planet in queried_planets
             ],
             lagna_sign=None,
             enrichments={},
@@ -146,61 +182,82 @@ def prepare_career_facts(astro: AstroState) -> CareerPreparedFacts:
         if not outcome.succeeded or outcome.state is None:
             return _failed_preparation()
 
-        enrichments = astro.enrichments
-        strengths = enrichments.get("planet_strengths", {})
-        strength_map = strengths if isinstance(strengths, Mapping) else {}
         planets = []
         by_id = {}
-        for index, planet in enumerate(astro.planets):
-            info = strength_map.get(planet.name)
-            info_map = info if isinstance(info, Mapping) else {}
-            enriched_strength_present = "strength" in info_map
-            enriched_dignity_present = "dignity" in info_map
+        for index, planet in enumerate(queried_planets):
+            placement = snapshot.get_planet_house(planet.planet_id)
+            strength_result = snapshot.get_planet_strength(planet.planet_id)
+            dignity_result = snapshot.get_planet_dignity(planet.planet_id)
+            strength_map = (
+                strength_result.value.value
+                if strength_result.value_present else {}
+            )
+            dignity = dignity_result.value if dignity_result.value_present else None
+            base_strength = strength_map.get("value") if isinstance(strength_map, Mapping) else None
+            strength_present = bool(
+                isinstance(strength_map, Mapping) and strength_map.get("value_present")
+            )
+            enriched_strength = strength_map.get("enriched_value") if isinstance(strength_map, Mapping) else None
+            enriched_strength_present = bool(
+                isinstance(strength_map, Mapping) and strength_map.get("enriched_value_present")
+            )
+            base_dignity = dignity.value if dignity is not None else None
+            dignity_present = dignity.value_present if dignity is not None else False
+            enriched_dignity = dignity.enriched_value if dignity is not None else None
+            enriched_dignity_present = dignity.enriched_value_present if dignity is not None else False
             item = CareerPlanetFact(
-                planet_id=planet.name,
+                planet_id=planet.planet_id,
                 source_index=index,
-                house=planet.house,
-                strength=planet.strength,
-                strength_present=planet.strength is not None,
-                enriched_strength=info_map.get("strength"),
+                house=placement.value if placement.value_present else None,
+                strength=base_strength,
+                strength_present=strength_present,
+                enriched_strength=enriched_strength,
                 enriched_strength_present=enriched_strength_present,
-                dignity=planet.dignity,
-                dignity_present=planet.dignity is not None,
-                enriched_dignity=info_map.get("dignity"),
+                dignity=base_dignity,
+                dignity_present=dignity_present,
+                enriched_dignity=enriched_dignity,
                 enriched_dignity_present=enriched_dignity_present,
             )
             planets.append(item)
-            by_id[planet.name] = {
+            by_id[planet.planet_id] = {
                 "source_index": index,
-                "house": planet.house,
-                "strength": planet.strength,
-                "strength_present": planet.strength is not None,
-                "enriched_strength": info_map.get("strength"),
+                "house": placement.value if placement.value_present else None,
+                "strength": base_strength,
+                "strength_present": strength_present,
+                "enriched_strength": enriched_strength,
                 "enriched_strength_present": enriched_strength_present,
-                "dignity": planet.dignity,
-                "dignity_present": planet.dignity is not None,
-                "enriched_dignity": info_map.get("dignity"),
+                "dignity": base_dignity,
+                "dignity_present": dignity_present,
+                "enriched_dignity": enriched_dignity,
                 "enriched_dignity_present": enriched_dignity_present,
             }
 
-        summaries = enrichments.get("house_summaries", [])
-        house10_source = next((item for item in summaries if item.get("number") == 10), None)
+        lord_result = snapshot.get_house_lord(10)
+        occupants_result = snapshot.get_occupants(10)
+        summary_result = snapshot.get_house_summary(10)
+        summary = summary_result.value if summary_result.value_present else {}
+        lord_present = lord_result.value_present or "lord" in summary
+        occupants_present = occupants_result.value_present or "occupants" in summary
         house10 = None
-        if house10_source is not None:
-            occupants_present = "occupants" in house10_source
-            occupants = house10_source.get("occupants", [])
+        if lord_present or occupants_present:
             house10 = CareerHouse10Fact(
-                lord=house10_source.get("lord"),
-                lord_present="lord" in house10_source,
-                occupants=tuple(occupants),
+                lord=lord_result.value if lord_result.value_present else None,
+                lord_present=lord_present,
+                occupants=(
+                    tuple(occupants_result.value)
+                    if occupants_result.value_present else tuple(summary.get("occupants", ()))
+                ),
                 occupants_present=occupants_present,
             )
 
-        metadata = astro.metadata or {}
+        lagna = snapshot.get_lagna()
+        houses = snapshot.get_houses()
+        metadata_result = snapshot.get_chart_metadata()
+        metadata = metadata_result.value if metadata_result.value_present else {}
         completeness = {
-            "lagna_present": bool(astro.lagna_sign),
-            "planets_present": bool(astro.planets and len(astro.planets) >= 1),
-            "houses_present": bool(astro.houses and len(astro.houses) >= 1),
+            "lagna_present": lagna.value_present,
+            "planets_present": bool(queried_planets),
+            "houses_present": bool(houses.value_present and houses.value),
             "birth_datetime_present": bool(metadata.get("birth_datetime_utc")),
         }
         return CareerPreparedFacts(
@@ -213,10 +270,7 @@ def prepare_career_facts(astro: AstroState) -> CareerPreparedFacts:
             completeness=completeness,
             preparation_errors=(),
         )
-    except Exception:
-        # This boundary records a typed safe preparation failure; it never
-        # converts a failed fact into factual ``unmatched``.
-        return _failed_preparation()
+    return prepare()
 
 
 def _strong_context(candidate_id: str, planet: str) -> dict[str, Any]:
@@ -923,25 +977,14 @@ def evaluate_career_batch(
     context = PredicateEvaluationContext()
     evaluations = []
     for definition in _candidate_catalog(prepared_facts):
-        try:
-            if definition.rule_type == "strong_in_10":
-                result = _strong_evaluation(definition, prepared_facts, active_evaluator, context, digest)
-            elif definition.rule_type == "lord_status":
-                result = _lord_evaluation(definition, prepared_facts, context, digest)
-            else:
-                result = _rajayoga_evaluation(definition, prepared_facts, context, digest)
-        except Exception:
-            # Safe typed recovery retains the candidate and denominator.  No
-            # exception text/type/path is copied and status is never relabeled
-            # as factual unmatched.
-            result = _failed_candidate_evaluation(definition, context, digest)
+        if definition.rule_type == "strong_in_10":
+            result = _strong_evaluation(definition, prepared_facts, active_evaluator, context, digest)
+        elif definition.rule_type == "lord_status":
+            result = _lord_evaluation(definition, prepared_facts, context, digest)
+        else:
+            result = _rajayoga_evaluation(definition, prepared_facts, context, digest)
         evaluations.append(result)
-    batch_errors = ()
-    try:
-        base_evaluation = _base_and_component_facts(prepared_facts)
-    except Exception:
-        base_evaluation = _failed_base_evaluation()
-        batch_errors = (base_evaluation.error,)
+    base_evaluation = _base_and_component_facts(prepared_facts)
     return CareerEvaluationBatch(
         schema_version=CAREER_SCHEMA_VERSION,
         evaluator_version=CAREER_EVALUATOR_VERSION,
@@ -952,7 +995,7 @@ def evaluate_career_batch(
         base_score=base_evaluation.base_score,
         confidence_denominator=len(evaluations),
         completeness=prepared_facts.completeness,
-        batch_errors=batch_errors,
+        batch_errors=(),
         evaluation_time_ms=None,
     )
 
@@ -1221,12 +1264,23 @@ def interpret_career(astro: AstroState) -> dict[str, Any]:
     return project_career_compatibility(batch, result)
 
 
+def interpret_career_snapshot(snapshot: AstroStateSnapshot) -> dict[str, Any]:
+    """Canonical Career evaluation from one immutable factual snapshot."""
+
+    prepared = prepare_career_snapshot(snapshot)
+    batch = evaluate_career_batch(prepared)
+    result = infer_career(batch)
+    return project_career_compatibility(batch, result)
+
+
 __all__ = (
     "evaluate_career_batch",
     "career_data_completeness",
     "career_inference_rule_matches",
     "infer_career",
     "interpret_career",
+    "interpret_career_snapshot",
+    "prepare_career_snapshot",
     "prepare_career_facts",
     "project_career_compatibility",
 )

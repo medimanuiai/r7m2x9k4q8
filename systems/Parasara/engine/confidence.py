@@ -1,29 +1,43 @@
 from typing import List, Dict, Any
 
+from systems.Parasara.engine.astrostate_api import (
+    AstroStateBuildFailure,
+    AstroStateSnapshot,
+    freeze_astrostate,
+)
+
 
 def compute_data_completeness(astro) -> float:
     """Simple completeness metric (0..1) for M1.
 
     Checks presence of key fields (lagna, planets, houses, metadata.birth_datetime_utc).
     """
-    score = 0.0
+    if not isinstance(astro, AstroStateSnapshot):
+        build = freeze_astrostate(astro)
+        if isinstance(build, AstroStateBuildFailure):
+            return 0.0
+        astro = build.snapshot
+
     checks = 0
     passed = 0
 
     checks += 1
-    if getattr(astro, 'lagna_sign', None):
+    if astro.get_lagna().value_present:
         passed += 1
 
     checks += 1
-    if getattr(astro, 'planets', None) and len(astro.planets) >= 1:
+    planets = astro.get_planets()
+    if planets.value_present and planets.value:
         passed += 1
 
     checks += 1
-    if getattr(astro, 'houses', None) and len(astro.houses) >= 1:
+    houses = astro.get_houses()
+    if houses.value_present and houses.value:
         passed += 1
 
     checks += 1
-    md = getattr(astro, 'metadata', {}) or {}
+    metadata = astro.get_chart_metadata()
+    md = metadata.value if metadata.value_present else {}
     if md.get('birth_datetime_utc'):
         passed += 1
 
