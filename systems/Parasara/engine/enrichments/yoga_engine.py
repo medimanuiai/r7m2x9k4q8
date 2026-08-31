@@ -24,6 +24,13 @@ from systems.Parasara.engine.astrostate_api import (
     thaw_value,
 )
 from systems.Parasara.engine.capability import CapabilityReadiness
+from systems.Parasara.engine.domain import (
+    YogaDiagnostic,
+    YogaDiagnosticFactory,
+)
+from systems.Parasara.engine.output_assembler import (
+    project_yoga_diagnostics_compatibility,
+)
 from systems.Parasara.engine.enrichments import aspects as aspects_mod
 from systems.Parasara.engine.enrichments import functional_roles as functional_roles_mod
 from systems.Parasara.engine.rules.canonical import (
@@ -800,21 +807,6 @@ def evaluate_yoga_batch(
             if result is None
             else _result_logical_hash(result)
         )
-        rule_match = _build_yoga_rule_match(
-            rule_engine,
-            raw_record,
-            yoga_id=yoga_id,
-            name=name,
-            version=version,
-            source_name=source.source_name,
-            source_index=index,
-            disposition=disposition,
-            issues=issues,
-            result=result,
-            state_digest=digest,
-            result_hash=result_hash,
-            evaluation_context=context,
-        )
         if result is None:
             compatibility_evidence = FrozenMapping()
         else:
@@ -833,6 +825,21 @@ def evaluate_yoga_batch(
             raw_houses = condition["params"].get("houses")
             if isinstance(raw_houses, (list, tuple)):
                 houses = tuple(raw_houses)
+        rule_match = _build_yoga_rule_match(
+            rule_engine,
+            raw_record,
+            yoga_id=yoga_id,
+            name=name,
+            version=version,
+            source_name=source.source_name,
+            source_index=index,
+            disposition=disposition,
+            issues=issues,
+            result=result,
+            state_digest=digest,
+            result_hash=result_hash,
+            evaluation_context=context,
+        )
         records.append(
             YogaEvaluationRecord(
                 rule_match=rule_match,
@@ -932,6 +939,7 @@ def yoga_batch_from_preparation_failure(
         yoga_id, name, version = _safe_record_identity(raw_record, index)
         definition_issues = issues_by_index.get(index, ())
         condition = raw_record.get("conditions") if isinstance(raw_record, Mapping) else None
+        compatibility_evidence = _failure_compatibility_evidence(condition)
         records.append(
             YogaEvaluationRecord(
                 rule_match=_build_yoga_rule_match(
@@ -967,7 +975,7 @@ def yoga_batch_from_preparation_failure(
                 ),
                 definition_issues=definition_issues,
                 condition_result=result,
-                compatibility_evidence=_failure_compatibility_evidence(condition),
+                compatibility_evidence=compatibility_evidence,
                 compatibility_houses=(),
                 evaluation_time_ms=None,
             )
@@ -1021,42 +1029,62 @@ def _first_seen(values: Sequence[Any]) -> list[Any]:
     return result
 
 
-def project_yoga_compatibility(batch: YogaEvaluationBatch) -> list[dict[str, Any]]:
-    """Project typed Yoga records one way into the locked eight-key dictionaries."""
+def _build_yoga_diagnostics(
+    batch: YogaEvaluationBatch,
+) -> tuple[YogaDiagnostic, ...]:
+    """Project existing RuleMatch-backed records to Prompt-05 diagnostics."""
 
     if not isinstance(batch, YogaEvaluationBatch):
         raise TypeError("batch must be YogaEvaluationBatch")
-    output: list[dict[str, Any]] = []
+    output = []
     for record in batch.records:
+        output.append(YogaDiagnosticFactory._from_evaluation_record(
+            record,
+            strength=None,
+        ))
+    return tuple(output)
+
+
+def build_yoga_diagnostics(
+    batch: YogaEvaluationBatch,
+) -> tuple[YogaDiagnostic, ...]:
+    """Closed legacy name: diagnostic batches cannot mint Yoga authority."""
+
+    if not isinstance(batch, YogaEvaluationBatch):
+        raise TypeError("batch must be YogaEvaluationBatch")
+    raise ValueError(
+        "authoritative Yoga diagnostics are built inside canonical evaluation"
+    )
+
+
+def project_yoga_compatibility(batch: YogaEvaluationBatch) -> list[dict[str, Any]]:
+    """Project a public diagnostic batch without minting Prompt-05 authority."""
+
+    if not isinstance(batch, YogaEvaluationBatch):
+        raise TypeError("batch must be YogaEvaluationBatch")
+    output = []
+    for record in batch.records:
+        match = record.rule_match
         evidence = _thaw(record.compatibility_evidence)
-        planets: list[Any] = []
+        planets = []
         if isinstance(evidence.get("matched_planets"), list):
             planets.extend(evidence["matched_planets"])
         if not planets and isinstance(evidence.get("children"), list):
             for child in evidence["children"]:
-                if isinstance(child, dict) and isinstance(child.get("matched_planets"), list):
+                if isinstance(child, dict) and isinstance(
+                    child.get("matched_planets"), list
+                ):
                     planets.extend(child["matched_planets"])
-        aspects_used = evidence.get("matched_edges", [])
-        output.append(
-            {
-                "yoga_id": record.yoga_id,
-                "name": record.name,
-                # The legacy projection historically exposed the evaluated
-                # condition Boolean even for a definition retained only for
-                # diagnostics. RuleMatch remains authoritative internally;
-                # this one-way compatibility seam preserves public behavior.
-                "matched": bool(
-                    record.condition_result.matched
-                    if record.condition_result is not None
-                    else record.matched
-                ),
-                "planets": _first_seen(planets),
-                "houses": _thaw(record.compatibility_houses),
-                "aspects_used": deepcopy(aspects_used),
-                "evidence": evidence,
-                "trace_id": record.trace_reference,
-            }
-        )
+        output.append({
+            "yoga_id": match.rule_id,
+            "name": record.name,
+            "matched": match.matched,
+            "planets": _first_seen(planets),
+            "houses": _thaw(record.compatibility_houses),
+            "aspects_used": deepcopy(evidence.get("matched_edges", [])),
+            "evidence": evidence,
+            "trace_id": match.trace_id,
+        })
     return output
 
 
@@ -1257,9 +1285,11 @@ def yoga_batch_from_full_json(payload: str | bytes) -> YogaEvaluationBatch:
     return _batch_from_data(_load_json(payload), full=True)
 
 
-def evaluate_yoga_rules(astro: AstroState) -> List[Dict[str, Any]]:
-    """Legacy mutable-AstroState wrapper over the typed WP13 pipeline."""
+def evaluate_yoga_diagnostics(astro: AstroState) -> tuple[YogaDiagnostic, ...]:
+    """Canonical AstroState entry point for internally constructed diagnostics."""
 
+    if not isinstance(astro, AstroState):
+        raise TypeError("astro must be AstroState")
     source = load_yoga_rule_source()
     build = build_yoga_snapshot(astro, source)
     if isinstance(build, AstroStateBuildFailure):
@@ -1270,7 +1300,14 @@ def evaluate_yoga_rules(astro: AstroState) -> List[Dict[str, Any]]:
         batch = yoga_batch_from_preparation_failure(source, issues)
     else:
         batch = evaluate_yoga_snapshot(build.snapshot, source)
-    projected = project_yoga_compatibility(batch)
+    return _build_yoga_diagnostics(batch)
+
+
+def evaluate_yoga_rules(astro: AstroState) -> List[Dict[str, Any]]:
+    """Legacy mutable-AstroState wrapper over the authoritative typed pipeline."""
+
+    diagnostics = evaluate_yoga_diagnostics(astro)
+    projected = project_yoga_diagnostics_compatibility(diagnostics)
     try:
         if getattr(astro, "enrichments", None) is None:
             astro.enrichments = {}
@@ -1292,6 +1329,7 @@ __all__ = (
     "YogaRuleSource",
     "build_yoga_snapshot",
     "evaluate_yoga_batch",
+    "evaluate_yoga_diagnostics",
     "evaluate_yoga_snapshot",
     "evaluate_yoga_rules",
     "load_yoga_rule_source",

@@ -53,7 +53,7 @@ export default function LoginVariantA() {
         </form>
 
         <p className="mt-4 text-sm text-gray-600"><a href="/forgot-password" className="text-indigo-600 underline">Forgot password?</a></p>
-        <p className="mt-3 text-sm text-gray-600">Don't have an account? <a href="/register" className="text-indigo-600 underline">Create one</a></p>
+        <p className="mt-3 text-sm text-gray-600">Don&apos;t have an account? <a href="/register" className="text-indigo-600 underline">Create one</a></p>
       </div>
     </div>
   );

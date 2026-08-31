@@ -74,9 +74,16 @@ def test_manifest_matches_across_repeats_processes_hash_seeds_and_safe_cwds(tmp_
     assert payload.endswith(b"\n")
     assert b"\r" not in payload
     assert str(ROOT).encode("utf-8") not in payload
+    assert manifest["scenarios"][5] == {
+        "logical_byte_length": 532,
+        "logical_sha256": "697e4e4dd7d5b383572b24449e713078f17ab135afa1fd6c202752eb6304cb4e",
+        "name": "06.yoga.explicit_permutations",
+        "public_byte_length": 527,
+        "public_sha256": "1c49e3aa9c25d67b39681980c335ab9dc7287a22c6cfb6c666a5651c6df29f5f",
+    }
     assert (len(payload), hashlib.sha256(payload).hexdigest()) == (
         1899,
-        "75b65d2cd1420c6261aadbb8159d10fb8c641137ce08d29f2a651952e5cdfaf7",
+        "06330b43cac062239e0670d1e48ab00c328ee270af64023b2017b819dc7b3017",
     )
     assert {
         path: path.read_bytes() if path.exists() else None for path in fixed_paths

@@ -336,6 +336,7 @@ def _yoga_scenario(_artifact_dir: Path):
     )
     logical_rows = []
     public_rows = []
+    rulematch_authority_conflicts = []
     for label, indexes in permutations:
         records = tuple(original.records[index] for index in indexes)
         source_name = f"wp17-{label}.yaml"
@@ -355,12 +356,34 @@ def _yoga_scenario(_artifact_dir: Path):
             compatibility_graph=preparation.compatibility_graph,
         )
         logical_bytes = yoga_batch_logical_json_bytes(batch)
-        public_bytes = _public_bytes(project_yoga_compatibility(batch))
+        public_projection = project_yoga_compatibility(batch)
+        for record, public_row in zip(batch.records, public_projection, strict=True):
+            if public_row["matched"] is not record.rule_match.matched:
+                raise AssertionError(
+                    f"Yoga projection bypassed RuleMatch truth: {label} "
+                    f"{record.rule_match.rule_id}"
+                )
+            if (
+                record.condition_result is not None
+                and record.condition_result.matched is True
+                and record.rule_match.status.value == "invalid"
+                and record.rule_match.matched is False
+            ):
+                rulematch_authority_conflicts.append(
+                    (label, record.rule_match.rule_id)
+                )
+        public_bytes = _public_bytes(public_projection)
         logical_rows.append(
             {"label": label, "bytes": len(logical_bytes), "sha256": _sha(logical_bytes)}
         )
         public_rows.append(
             {"label": label, "bytes": len(public_bytes), "sha256": _sha(public_bytes)}
+        )
+    if tuple(rulematch_authority_conflicts) != tuple(
+        (label, "rajayoga_naive") for label, _ in permutations
+    ):
+        raise AssertionError(
+            "WP17 Yoga RuleMatch-authority fixture no longer has its exact conflict set"
         )
     return _record(
         SCENARIO_ORDER[5],

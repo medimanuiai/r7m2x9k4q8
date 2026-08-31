@@ -22,12 +22,16 @@ The active model surface is split across:
   `AstroStateSnapshot`, capability catalog, freeze boundary, and factual queries;
 - `systems/Parasara/engine/derived/models.py` for typed derived summaries;
 - `systems/Parasara/engine/rules/rule_match.py` for the immutable universal
-  `RuleMatch` evaluation result.
+  `RuleMatch` evaluation result;
+- `systems/Parasara/engine/domain/models.py` for immutable domain, Yoga
+  diagnostic, Dasha, and transit output contracts;
+- `systems/Parasara/engine/output_assembler.py` for typed public serialization.
 
 Adapter and construction models remain mutable. Evaluation publishes one
-deeply immutable snapshot; PreparedAstroState, RuleMatch, InferenceResult, and
-their nested logical values are immutable. Yoga and Career retain only
-explicit one-way compatibility projections for existing public output.
+deeply immutable snapshot; PreparedAstroState, RuleMatch, InferenceResult,
+DomainPrediction, YogaDiagnostic, and their nested logical values are
+immutable. Yoga and Career retain only explicit one-way compatibility
+projections for existing public output.
 Direct construction and `dataclasses.replace` cannot bypass snapshot-model
 validation or retain caller-owned mutable nested values. Capability records
 are catalog/version/core-path checked, and snapshot publication reconciles
@@ -106,9 +110,10 @@ Yoga explicitly runs its existing required whole-sign-aspect and
 functional-role producers in a separate construction run, freezes once, and
 evaluates from that snapshot. It retains a typed internal batch from one
 prepared state and one evaluator,
-with one universal RuleMatch per record, then uses a named one-way
-compatibility projection to preserve existing public
-keys, firing, and row order. Dormant tuple helpers were retired. The generic
+with one universal RuleMatch per record. Prompt-05 maps each record to a
+`YogaDiagnostic` that retains the authoritative RuleMatch, source order, and
+compatibility evidence, then uses a named one-way compatibility projection to
+preserve existing public keys, firing, and row order. Dormant tuple helpers were retired. The generic
 rule loader remains a compatibility registry for current rule records; WP17
 enforces deterministic Yoga permutations and both loader trigger orders.
 
@@ -119,25 +124,51 @@ composes typed snapshot queries for placement, dignity, strength, Lagna,
 house lord, and occupants. Evaluation uses a typed Career-specific batch,
 and universal RuleMatch values. Career supplies explicit completeness and a
 RuleMatch-backed compatibility baseline to the one shared InferenceEngine.
-The compatibility projection preserves candidate order, components,
-indicators, narrative, and the public dictionary, while final score and
-confidence come only from InferenceResult. Canonical Career evaluation keeps
+Prompt-05 maps that one InferenceResult to a closed typed build outcome and
+one immutable `DomainPrediction`. Components, indicators, narrative, issues,
+versions, and traces validate against the retained inference and parent Career
+evaluation batch. The sealed inference-owned compatibility projection supplies
+base score and total contribution; `OutputAssembler` only selects and
+serializes those values. The compatibility projection preserves candidate
+order, components, indicators, narrative, and the public dictionary, while
+final score, confidence, agreement, completeness, contributions, and conflicts
+come only from InferenceResult. Canonical Career evaluation keeps
 expected factual unavailability typed and allows unexpected programming
 defects to propagate to strict callers and tests.
 
-Other domain outputs are absent or placeholders in the snapshot assembler.
+Wealth, Marriage, Children, Health, and Safety have shared `DomainId` and model
+readiness but no interpreter. The old Wealth row exists only in the outward
+compatibility profile and is not a typed evaluated domain.
 
 ### Timing and output
 
 A Vimshottari implementation exists but is not integrated into the primary
 snapshot output, so `dasha.current` remains unavailable. Snapshot generation
-is performed by `systems/Parasara/tools/generate_snapshot.py`; its compatibility
-assembler queries one immutable snapshot while retaining the existing public
-dictionary until Prompt-05.
+is orchestrated by `systems/Parasara/tools/generate_snapshot.py`. Prompt-05
+publishes immutable availability-bearing Dasha/transit output contracts but
+does not call or repair a calculator; the primary path constructs truthful
+unavailable values.
 
-There is one dedicated shared `InferenceEngine`; there is no serialization-only `OutputAssembler` in the active runtime.
+There is one dedicated shared `InferenceEngine` and one serialization-only
+`OutputAssembler`. The assembler accepts only typed metadata, diagnostics,
+Yoga diagnostics, domain predictions, timing contracts, explainability, and
+typed issues. It has no adapter, AstroState, predicate, rule-engine, inference,
+interpreter, or calculator dependency.
 
-The snapshot assembler currently emits a substantive Career dictionary, a placeholder Wealth dictionary, empty Dasha and transit collections, and skeletal explainability policy sections.
+Prompt-02/WP17 Yoga baseline contradiction reconciled; Prompt-05 R4 validation
+completed; independent Final R4 Review pending. RuleMatch remains the sole
+Yoga rule-truth, status, evidence, and trace authority. The corrected current
+Prompt-02/WP17 manifest is `06330b43...b3017`; the superseded `75b65d2c...dfaf7`
+hash remains historical evidence. The exact lineage is recorded in
+`Engine/Prompt-02/Reports/Prompt-02-WP17-Yoga-Contract-Reconciliation.md` and
+`Engine/Prompt-05/Reports/Prompt-05-Remediation-R4.md`. Prompt-05 remains
+unaccepted and commit authorization remains separate.
+
+The `parasara_snapshot_v1` compatibility profile emits the unchanged
+substantive Career dictionary, compatibility-only Wealth dictionary, empty
+Dasha/transit arrays, and skeletal explainability sections. The approved
+snapshot remains 4,041 bytes with SHA-256
+`da2059ba3cfb92eed267f93d1e41585dac1422d68f685022c8609cfd04ad57af`.
 
 ### Error and fallback behavior
 
@@ -149,7 +180,8 @@ loading, timing, and other legacy enrichments.
 ### Determinism risks
 
 Prompt-01 logical predicate/condition, Prompt-02 RuleMatch, Prompt-03
-InferenceResult, and Prompt-04 snapshot/query, Yoga, Career, tooling, serialization,
+InferenceResult, Prompt-04 snapshot/query, and Prompt-05 domain/Yoga/timing/
+assembly, Career, tooling, serialization,
 loader-order, registry, and cache scenarios are deterministic across the
 supported Python lanes, hash seeds, safe working directories, and repetitions.
 Remaining non-Prompt risks include Vimshottari wall-clock fallback, mutable
@@ -172,8 +204,10 @@ Surya JSON
   -> typed Career evaluation batch
   -> universal RuleMatch collection
   -> shared InferenceEngine and immutable InferenceResult
-  -> preserved one-way Career public projection
-  -> snapshot dictionary/JSON
+  -> closed Career build outcome and immutable DomainPrediction
+  -> typed OutputAssemblyInput with unavailable Dasha/transit contracts
+  -> OutputAssembler / parasara_snapshot_v1
+  -> unchanged snapshot dictionary/JSON
 ```
 
 Yoga flow:
@@ -186,6 +220,7 @@ AstroState compatibility input
   -> PredicateEvaluator and typed ConditionResult
   -> typed Yoga batch
   -> universal RuleMatch collection
+  -> RuleMatch-backed YogaDiagnostic collection
   -> one-way compatibility projection
 ```
 
@@ -193,13 +228,13 @@ AstroState compatibility input
 
 - Mutable construction compatibility and broad legacy producer fallbacks remain
   before the freeze boundary.
-- No typed universal DomainPrediction boundary.
-- No OutputAssembler.
 - No fully wired engine/rule-set version selection.
 - No complete DSL compiler or dependency graph.
 - No production rule-governance workflow.
 - No persistent/distributed cache or broad concurrency architecture.
 - No deterministic error/fallback policy shared across non-Prompt layers.
+- No typed Wealth, Marriage, Children, Health, or Safety interpreter.
+- No integrated Dasha or transit producer in the primary pipeline.
 
 ## Interpretation rule
 

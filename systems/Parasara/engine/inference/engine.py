@@ -18,11 +18,14 @@ from systems.Parasara.engine.inference.models import (
     EvidenceReference,
     ExplanationFactor,
     INFERENCE_SCHEMA_VERSION,
+    InferenceCompatibilityProjection,
     InferenceComponent,
     InferenceError,
     InferenceResult,
     InferenceStatus,
     TimingContext,
+    _build_inference_compatibility_projection,
+    inference_result_logical_sha256,
 )
 from systems.Parasara.engine.rules.canonical import canonical_json_bytes
 from systems.Parasara.engine.rules.rule_match import (
@@ -381,6 +384,50 @@ def _rule_errors(rules: Sequence[RuleMatch]) -> tuple[InferenceError, ...]:
 
 class InferenceEngine:
     """Aggregate already-evaluated universal rules without chart access."""
+
+    def _compatibility_projection(
+        self,
+        result: InferenceResult,
+        config: InferenceConfig,
+    ) -> InferenceCompatibilityProjection:
+        """Private same-run projection used by the Career interpreter boundary."""
+
+        if not isinstance(result, InferenceResult):
+            raise TypeError("result must be InferenceResult")
+        if not isinstance(config, InferenceConfig):
+            raise TypeError("config must be InferenceConfig")
+        if result.domain != "career":
+            raise ValueError("compatibility projection is configured only for Career")
+        if result.system != config.system or result.inference_version != config.inference_version:
+            raise ValueError("InferenceResult does not reconcile to InferenceConfig")
+        compatibility = config.career_compatibility
+        baseline_category = str(compatibility["baseline_category"])
+        baseline_components = tuple(
+            item for item in result.components if item.category == baseline_category
+        )
+        if len(baseline_components) > 1:
+            raise ValueError("Career compatibility baseline is ambiguous")
+        base_score = (
+            baseline_components[0].normalized_value
+            if baseline_components
+            else float(config.normalization["neutral_score"])
+        )
+        baseline_rule_id = str(compatibility["baseline_rule_id"])
+        total_contribution = math.fsum(
+            item.final_contribution
+            for item in result.contributions
+            if item.rule_id != baseline_rule_id
+        )
+        return _build_inference_compatibility_projection(
+            profile_id="career_public_v1",
+            source_result_digest=inference_result_logical_sha256(result),
+            source_config_digest=_config_digest(config),
+            base_score=base_score,
+            total_contribution=total_contribution,
+            formula=str(compatibility["public_formula"]),
+            public_trace_id=str(compatibility["public_trace_id"]),
+            precision=int(config.normalization["precision"]),
+        )
 
     def aggregate(
         self,

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import InitVar, dataclass, field
 from enum import Enum
 import hashlib
 import json
@@ -356,6 +356,74 @@ class InferenceResult:
         )
 
 
+_COMPATIBILITY_PROJECTION_TOKEN = object()
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class InferenceCompatibilityProjection:
+    """Sealed post-inference values owned and calculated by InferenceEngine."""
+
+    profile_id: str
+    source_result_digest: str
+    source_config_digest: str
+    base_score: float
+    total_contribution: float
+    formula: str
+    public_trace_id: str
+    precision: int
+    _factory_token: InitVar[object | None] = None
+
+    def __post_init__(self, _factory_token: object | None) -> None:
+        if _factory_token is not _COMPATIBILITY_PROJECTION_TOKEN:
+            raise ValueError(
+                "compatibility projection requires the authoritative InferenceEngine"
+            )
+        for name in ("profile_id", "formula", "public_trace_id"):
+            _text(name, getattr(self, name))
+        for name in ("source_result_digest", "source_config_digest"):
+            value = getattr(self, name)
+            if not isinstance(value, str) or len(value) != 64:
+                raise ValueError(f"{name} must be lowercase SHA-256")
+            try:
+                int(value, 16)
+            except ValueError as exc:
+                raise ValueError(f"{name} must be lowercase SHA-256") from exc
+            if value != value.lower():
+                raise ValueError(f"{name} must be lowercase SHA-256")
+        object.__setattr__(
+            self, "base_score", _finite("base_score", self.base_score, lower=0.0, upper=1.0)
+        )
+        object.__setattr__(
+            self, "total_contribution", _finite("total_contribution", self.total_contribution)
+        )
+        if type(self.precision) is not int or not 0 <= self.precision <= 12:
+            raise ValueError("precision must be an integer in [0, 12]")
+
+
+def _build_inference_compatibility_projection(
+    *,
+    profile_id: str,
+    source_result_digest: str,
+    source_config_digest: str,
+    base_score: float,
+    total_contribution: float,
+    formula: str,
+    public_trace_id: str,
+    precision: int,
+) -> InferenceCompatibilityProjection:
+    return InferenceCompatibilityProjection(
+        profile_id=profile_id,
+        source_result_digest=source_result_digest,
+        source_config_digest=source_config_digest,
+        base_score=base_score,
+        total_contribution=total_contribution,
+        formula=formula,
+        public_trace_id=public_trace_id,
+        precision=precision,
+        _factory_token=_COMPATIBILITY_PROJECTION_TOKEN,
+    )
+
+
 def _data(value: Any) -> Any:
     if isinstance(value, Enum):
         return value.value
@@ -499,7 +567,7 @@ def inference_result_from_logical_json(payload: str | bytes) -> InferenceResult:
 __all__ = (
     "INFERENCE_SCHEMA_VERSION", "CapabilityAvailability", "ConflictRecord", "ConflictSide",
     "Contribution", "ContributionSign", "DataCompleteness", "EvidenceReference",
-    "ExplanationFactor", "InferenceComponent", "InferenceError", "InferenceResult",
+    "ExplanationFactor", "InferenceCompatibilityProjection", "InferenceComponent", "InferenceError", "InferenceResult",
     "InferenceStatus", "TimingContext", "inference_result_from_logical_data",
     "inference_model_logical_json_bytes", "inference_model_to_logical_data",
     "inference_result_from_logical_json", "inference_result_logical_json_bytes",
