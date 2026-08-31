@@ -8,7 +8,6 @@ from pathlib import PureWindowsPath
 from types import SimpleNamespace
 from typing import Any
 
-from systems.Parasara.engine import explainability
 from systems.Parasara.engine.astrostate import AstroState
 from systems.Parasara.engine.astrostate_api import (
     AstroStateBuildFailure,
@@ -16,12 +15,33 @@ from systems.Parasara.engine.astrostate_api import (
     freeze_astrostate,
 )
 from systems.Parasara.engine.capability import CapabilityFactState, CapabilityReadiness
+from systems.Parasara.engine.domain import (
+    CareerCompatibilityProjection,
+    CareerComponentCompatibility,
+    CareerComponentKind,
+    CareerIndicatorCompatibility,
+    DomainBuildOutcome,
+    DomainBuildProduced,
+    DomainBuildRejected,
+    DomainComponent,
+    DomainId,
+    DomainIndicator,
+    DomainIssue,
+    DomainIssueSeverity,
+    DomainPrediction,
+    DomainPredictionFactory,
+    NarrativeSection,
+    NarrativeSectionType,
+    compatibility_value,
+)
 from systems.Parasara.engine.inference import (
     CapabilityAvailability,
     DataCompleteness,
     InferenceConfig,
     InferenceEngine,
+    InferenceCompatibilityProjection,
     InferenceResult,
+    inference_config_logical_sha256,
     load_inference_config,
 )
 from systems.Parasara.engine.interpreters.career_models import (
@@ -40,6 +60,10 @@ from systems.Parasara.engine.interpreters.career_models import (
     freeze_ordered_compatibility,
     thaw_ordered_compatibility,
 )
+from systems.Parasara.engine.output_assembler import (
+    project_career_prediction_compatibility,
+)
+from systems.Parasara.engine.domain.models import _build_domain_indicator
 from systems.Parasara.engine.rules.canonical import canonical_json_data
 from systems.Parasara.engine.rules.evaluator import PredicateEvaluator
 from systems.Parasara.engine.rules.models import (
@@ -54,9 +78,11 @@ from systems.Parasara.engine.rules.prepared_state import (
 )
 from systems.Parasara.engine.rules.rule_engine import ResolvedRule, RuleEngine
 from systems.Parasara.engine.rules.rule_match import (
+    RuleMatch,
     RuleMatchError,
     RuleMatchStatus,
     RuleTraceReference,
+    rule_match_logical_sha256,
 )
 
 
@@ -389,6 +415,45 @@ class _ObservedValue:
 
 _RULE_ENGINE = RuleEngine()
 _CAREER_INFERENCE_CONFIG = load_inference_config()
+
+
+@dataclass(frozen=True, slots=True)
+class _CareerRuleMatchLedger:
+    """Private complete RuleMatch membership and contribution lineage."""
+
+    rule_matches: tuple[RuleMatch, ...]
+    rule_match_digests: tuple[str, ...]
+    contribution_lineage: tuple[tuple[str, str, str, str], ...]
+
+    def resolve(self, rule_match: RuleMatch) -> RuleMatch:
+        identity = (rule_match.rule_id, rule_match.rule_version, rule_match.trace_id)
+        for authoritative in self.rule_matches:
+            if (
+                authoritative.rule_id,
+                authoritative.rule_version,
+                authoritative.trace_id,
+            ) == identity:
+                if rule_match_logical_sha256(rule_match) != rule_match_logical_sha256(
+                    authoritative
+                ):
+                    raise ValueError("Career RuleMatch differs from its ledger member")
+                return authoritative
+        raise ValueError("Career RuleMatch is not a member of the evaluator ledger")
+
+
+@dataclass(frozen=True, slots=True)
+class _CareerInferenceEvaluation:
+    """Private one-run authority consumed only by Career domain construction."""
+
+    batch: CareerEvaluationBatch
+    config: InferenceConfig
+    config_fingerprint: str
+    ledger: _CareerRuleMatchLedger
+    inference_result: InferenceResult
+    compatibility_projection: InferenceCompatibilityProjection
+    components: tuple[DomainComponent, ...]
+    indicators: tuple[DomainIndicator, ...]
+    career_compatibility: CareerCompatibilityProjection
 
 
 def _career_rule_status(status: PredicateStatus) -> RuleMatchStatus:
@@ -1158,6 +1223,27 @@ def career_data_completeness(
     )
 
 
+def _aggregate_career(
+    batch: CareerEvaluationBatch,
+    config: InferenceConfig,
+    engine: InferenceEngine,
+    *,
+    rule_matches: tuple[RuleMatch, ...] | None = None,
+) -> InferenceResult:
+    matches = (
+        career_inference_rule_matches(batch, config)
+        if rule_matches is None
+        else rule_matches
+    )
+    return engine.aggregate(
+        domain="career",
+        rule_matches=matches,
+        timing_context=None,
+        data_completeness=career_data_completeness(batch, config),
+        config=config,
+    )
+
+
 def infer_career(
     batch: CareerEvaluationBatch,
     *,
@@ -1168,26 +1254,55 @@ def infer_career(
         raise TypeError("batch must be CareerEvaluationBatch")
     active_config = _CAREER_INFERENCE_CONFIG if config is None else config
     active_engine = InferenceEngine() if engine is None else engine
-    return active_engine.aggregate(
-        domain="career",
-        rule_matches=career_inference_rule_matches(batch, active_config),
-        timing_context=None,
-        data_completeness=career_data_completeness(batch, active_config),
-        config=active_config,
-    )
+    return _aggregate_career(batch, active_config, active_engine)
 
 
-def project_career_compatibility(
+def _career_domain_components(
     batch: CareerEvaluationBatch,
-    inference_result: InferenceResult | None = None,
-) -> dict[str, Any]:
-    """Lossily project a typed batch into the unchanged public Career dict."""
+    result: InferenceResult,
+) -> tuple[DomainComponent, ...]:
+    """Map locked Career component rows without creating component scores."""
 
-    if not isinstance(batch, CareerEvaluationBatch):
-        raise TypeError("batch must be CareerEvaluationBatch")
-    result = infer_career(batch) if inference_result is None else inference_result
-    if not isinstance(result, InferenceResult) or result.domain != "career":
-        raise TypeError("inference_result must be a Career InferenceResult")
+    compatibility = _CAREER_INFERENCE_CONFIG.career_compatibility
+    baseline_rule_id = compatibility["baseline_rule_id"]
+    source = next(
+        (item for item in result.components if baseline_rule_id in item.rule_ids),
+        None,
+    )
+    if source is None:
+        return ()
+    public_rows = _public_components(batch)
+    if len(public_rows) != len(batch.component_facts):
+        raise ValueError("Career compatibility component rows lost source identity")
+    output = []
+    for order, (fact, public_row) in enumerate(zip(batch.component_facts, public_rows)):
+        label = (
+            str(public_row["planet"])
+            if public_row["type"] == "planet"
+            else f"House {public_row['house']}"
+        )
+        output.append(DomainComponent(
+            component_id=fact.fact_id,
+            domain=DomainId.CAREER,
+            label=label,
+            score=source.normalized_value,
+            weight=float(public_row["weight"]),
+            confidence=None,
+            source_inference_component_id=source.component_id,
+            contribution_ids=source.contribution_ids,
+            contributing_rule_ids=source.rule_ids,
+            evidence_references=source.evidence_references,
+            trace_id=source.trace_id,
+            order=order,
+        ))
+    return tuple(output)
+
+
+def _career_domain_indicators(
+    batch: CareerEvaluationBatch,
+    result: InferenceResult,
+    ledger: _CareerRuleMatchLedger,
+) -> tuple[DomainIndicator, ...]:
     compatibility = _CAREER_INFERENCE_CONFIG.career_compatibility
     baseline_rule_id = compatibility["baseline_rule_id"]
     contribution_by_rule = {
@@ -1195,89 +1310,382 @@ def project_career_compatibility(
         for item in result.contributions
         if item.rule_id != baseline_rule_id
     }
-    indicators = []
-    evidence_rows = []
-    contributions = []
+    rule_match_by_id = {item.rule_id: item for item in batch.rule_matches}
+    output = []
     for item in batch.candidates:
-        inferred = contribution_by_rule.get(item.definition.candidate_id)
-        if inferred is not None and inferred.final_contribution > 0:
-            contribution = float(inferred.final_contribution)
-            contributions.append(contribution)
-            context = thaw_ordered_compatibility(item.definition.compatibility_context)
-            evidence = _legacy_evidence(item)
-            indicators.append({
-                "rule_id": item.definition.candidate_id,
-                "contribution": contribution,
-                "evidence": evidence,
-                "context": context,
-            })
-            evidence_rows.append(explainability.evidence_for_rule(
-                item.definition.candidate_id,
-                thaw_ordered_compatibility(item.definition.compatibility_context),
-                {"match": True, "evidence": _legacy_evidence(item)},
-                contribution,
-            ))
+        contribution = contribution_by_rule.get(item.definition.candidate_id)
+        if contribution is None or contribution.final_contribution <= 0:
+            continue
+        rule_match = rule_match_by_id.get(item.definition.candidate_id)
+        if rule_match is None:
+            raise ValueError("Career indicator lost its authoritative RuleMatch")
+        rule_match = ledger.resolve(rule_match)
+        context = thaw_ordered_compatibility(item.definition.compatibility_context)
+        evidence = _legacy_evidence(item)
+        output.append(_build_domain_indicator(
+            indicator_id=f"career.indicator.{item.definition.candidate_id}",
+            domain=DomainId.CAREER,
+            source_rule_id=contribution.rule_id,
+            source_rule_version=contribution.rule_version,
+            source_contribution_id=contribution.contribution_id,
+            label=item.definition.candidate_id,
+            direction=contribution.sign,
+            contribution=contribution.final_contribution,
+            context=contribution.context,
+            priority=contribution.priority,
+            evidence_summary={
+                "legacy_context_ordered": item.definition.compatibility_context,
+                "legacy_evidence_ordered": freeze_ordered_compatibility(evidence),
+            },
+            evidence_references=contribution.evidence_references,
+            source_rule_trace_id=contribution.source_rule_trace_id,
+            trace_id=contribution.trace_id,
+            order=item.definition.source_index,
+            source_rule_match=rule_match,
+        ))
+    return tuple(output)
 
-    components = _public_components(batch)
-    for item in indicators:
-        components.append({
-            "type": "rule",
-            "rule_id": item.get("rule_id"),
-            "weight": round(float(item.get("contribution") or 0.0), 3),
-        })
+
+def _career_domain_narrative(
+    result: InferenceResult,
+    indicators: tuple[DomainIndicator, ...],
+    summary: str,
+) -> tuple[NarrativeSection, ...]:
+    return (NarrativeSection(
+        section_id="career.narrative.headline",
+        section_type=NarrativeSectionType.HEADLINE,
+        text=summary,
+        source_rule_ids=tuple(dict.fromkeys(item.rule_id for item in result.contributions)),
+        source_indicator_ids=tuple(item.indicator_id for item in indicators),
+        source_issue_ids=(),
+        source_trace_ids=(result.trace_id,),
+        template_id="career.compatibility.summary",
+        template_version=CAREER_EVALUATOR_VERSION,
+        order=0,
+    ),)
+
+
+def _career_compatibility_projection(
+    batch: CareerEvaluationBatch,
+    inference_projection: InferenceCompatibilityProjection,
+    components: tuple[DomainComponent, ...],
+    indicators: tuple[DomainIndicator, ...],
+) -> CareerCompatibilityProjection:
+    """Capture the locked public shape as validated, typed source data."""
+
+    public_rows = _public_components(batch)
+    component_projection = tuple(
+        CareerComponentCompatibility(
+            component_id=component.component_id,
+            kind=CareerComponentKind(row["type"]),
+            planet=(str(row["planet"]) if row["type"] == "planet" else None),
+            house=int(row["house"]),
+            weight=float(row["weight"]),
+            occupants=tuple(str(item) for item in row.get("occupants", ())),
+            source_fact_trace_ids=tuple(step.step_id for step in fact.trace_steps),
+            order=component.order,
+        )
+        for component, fact, row in zip(components, batch.component_facts, public_rows)
+    )
+    candidates = {
+        f"career.indicator.{item.definition.candidate_id}": item
+        for item in batch.candidates
+    }
+    indicator_projection = tuple(
+        CareerIndicatorCompatibility(
+            indicator_id=indicator.indicator_id,
+            context=compatibility_value(thaw_ordered_compatibility(
+                candidates[indicator.indicator_id].definition.compatibility_context
+            )),
+            evidence=compatibility_value(
+                _legacy_evidence(candidates[indicator.indicator_id])
+            ),
+            order=indicator.order,
+        )
+        for indicator in indicators
+    )
+    return CareerCompatibilityProjection(
+        profile_id=inference_projection.profile_id,
+        source_batch_digest=batch.logical_digest,
+        base_score=inference_projection.base_score,
+        total_contribution=inference_projection.total_contribution,
+        formula=inference_projection.formula,
+        public_trace_id=inference_projection.public_trace_id,
+        precision=inference_projection.precision,
+        components=component_projection,
+        indicators=indicator_projection,
+    )
+
+
+def _evaluate_career_inference(
+    batch: CareerEvaluationBatch,
+) -> _CareerInferenceEvaluation:
+    """Aggregate once and bind every Career authority value in the same run."""
+
+    if not isinstance(batch, CareerEvaluationBatch):
+        raise TypeError("batch must be CareerEvaluationBatch")
+    config = _CAREER_INFERENCE_CONFIG
+    rule_matches = career_inference_rule_matches(batch, config)
+    engine = InferenceEngine()
+    result = _aggregate_career(
+        batch,
+        config,
+        engine,
+        rule_matches=rule_matches,
+    )
+    contribution_lineage = tuple(
+        (
+            item.contribution_id,
+            item.rule_id,
+            item.rule_version,
+            item.source_rule_trace_id,
+        )
+        for item in result.contributions
+    )
+    ledger = _CareerRuleMatchLedger(
+        rule_matches=rule_matches,
+        rule_match_digests=tuple(
+            rule_match_logical_sha256(item) for item in rule_matches
+        ),
+        contribution_lineage=contribution_lineage,
+    )
+    for contribution in result.contributions:
+        matching = next(
+            (
+                item
+                for item in rule_matches
+                if item.rule_id == contribution.rule_id
+                and item.rule_version == contribution.rule_version
+                and item.trace_id == contribution.source_rule_trace_id
+            ),
+            None,
+        )
+        if matching is None:
+            raise ValueError("Career contribution is detached from the evaluator ledger")
+        ledger.resolve(matching)
+    compatibility_projection = engine._compatibility_projection(result, config)
+    components = _career_domain_components(batch, result)
+    indicators = _career_domain_indicators(batch, result, ledger)
+    career_compatibility = _career_compatibility_projection(
+        batch,
+        compatibility_projection,
+        components,
+        indicators,
+    )
+    return _CareerInferenceEvaluation(
+        batch=batch,
+        config=config,
+        config_fingerprint=inference_config_logical_sha256(config),
+        ledger=ledger,
+        inference_result=result,
+        compatibility_projection=compatibility_projection,
+        components=components,
+        indicators=indicators,
+        career_compatibility=career_compatibility,
+    )
+
+
+def _career_rejection(
+    batch: CareerEvaluationBatch,
+    result: InferenceResult,
+    *,
+    code: str,
+    message: str,
+) -> DomainBuildRejected:
+    trace_id = f"career.reject.{batch.prepared_facts_sha256[:24]}"
+    return DomainBuildRejected(
+        domain=DomainId.CAREER,
+        issues=(DomainIssue(
+            issue_id=f"career.issue.{code.lower()}",
+            code=code,
+            severity=DomainIssueSeverity.FATAL,
+            phase="domain_mapping",
+            message=message,
+            recoverable=False,
+            source_trace_id=result.trace_id,
+            details={},
+        ),),
+        trace_id=trace_id,
+    )
+
+
+def _build_career_prediction(
+    evaluation: _CareerInferenceEvaluation,
+) -> DomainBuildOutcome:
+    """Consume only the private same-run Career authority value."""
+
+    if not isinstance(evaluation, _CareerInferenceEvaluation):
+        raise TypeError("evaluation must be _CareerInferenceEvaluation")
+    batch = evaluation.batch
+    result = evaluation.inference_result
+    components = evaluation.components
+    indicators = evaluation.indicators
+    summary = (
+        f"Career score {round(float(result.normalized_score),3)} "
+        f"(confidence {round(float(result.confidence),3)})"
+    )
+    try:
+        prediction = DomainPredictionFactory._from_career_evaluation(
+            evaluation,
+            domain=DomainId.CAREER,
+            summary=summary,
+            components=components,
+            indicators=indicators,
+            narrative_sections=(
+                ()
+                if result.status.value == "failed" or not result.contributions
+                else _career_domain_narrative(result, indicators, summary)
+            ),
+            engine_version="0.1.0",
+            interpreter_version=CAREER_EVALUATOR_VERSION,
+            narrative_version=CAREER_EVALUATOR_VERSION,
+        )
+    except ValueError:
+        return _career_rejection(
+            batch,
+            result,
+            code="INVALID_STATUS_COMBINATION",
+            message="The Career presentation could not reconcile to its inference result.",
+        )
+    return DomainBuildProduced(prediction=prediction)
+
+
+def build_career_prediction(
+    batch: CareerEvaluationBatch,
+    result: InferenceResult | None,
+) -> DomainBuildOutcome:
+    """Closed legacy name: caller-owned values cannot mint Career authority."""
+
+    if not isinstance(batch, CareerEvaluationBatch):
+        raise TypeError("batch must be CareerEvaluationBatch")
+    if result is None:
+        return DomainPredictionFactory.missing_inference(domain=DomainId.CAREER)
+    raise ValueError(
+        "authoritative Career construction begins with AstroState or AstroStateSnapshot"
+    )
+
+
+def interpret_career_domain(astro: AstroState) -> DomainBuildOutcome:
+    """Strict mutable-input wrapper returning the typed Career outcome."""
+
+    prepared = prepare_career_facts(astro)
+    batch = evaluate_career_batch(prepared)
+    return _build_career_prediction(_evaluate_career_inference(batch))
+
+
+def interpret_career_domain_snapshot(
+    snapshot: AstroStateSnapshot,
+) -> DomainBuildOutcome:
+    """Canonical typed Career interpretation from one immutable snapshot."""
+
+    prepared = prepare_career_snapshot(snapshot)
+    batch = evaluate_career_batch(prepared)
+    return _build_career_prediction(_evaluate_career_inference(batch))
+
+
+def project_career_compatibility(
+    batch: CareerEvaluationBatch,
+    inference_result: InferenceResult | None = None,
+) -> dict[str, Any]:
+    """Named one-way wrapper from the typed domain result to public Career."""
+
+    if not isinstance(batch, CareerEvaluationBatch):
+        raise TypeError("batch must be CareerEvaluationBatch")
+    result = infer_career(batch) if inference_result is None else inference_result
+    if not isinstance(result, InferenceResult) or result.domain != "career":
+        raise TypeError("inference_result must be a Career InferenceResult")
+    compatibility = _CAREER_INFERENCE_CONFIG.career_compatibility
+    baseline_rule_id = str(compatibility["baseline_rule_id"])
+    baseline_category = str(compatibility["baseline_category"])
     baseline = next(
-        (item for item in result.contributions if item.rule_id == baseline_rule_id),
+        (item for item in result.components if item.category == baseline_category),
         None,
     )
-    base_score = round(
-        float(compatibility["baseline_neutral"])
-        + (baseline.final_contribution if baseline is not None else 0.0),
-        _CAREER_INFERENCE_CONFIG.normalization["precision"],
+    base_score = (
+        baseline.normalized_value
+        if baseline is not None
+        else float(_CAREER_INFERENCE_CONFIG.normalization["neutral_score"])
     )
-    final = result.normalized_score
-    confidence = result.confidence
-    scoring = {
-        "base_score": base_score,
-        "total_contribution": round(float(sum(contributions)), 3),
-        "final_score": round(float(final), 3),
-        "formula": compatibility["public_formula"],
-    }
-    summary_text = f"Career score {round(float(final),3)} (confidence {round(float(confidence),3)})"
+    total = 0.0
+    for item in result.contributions:
+        if item.rule_id != baseline_rule_id:
+            total += item.final_contribution
+    precision = int(_CAREER_INFERENCE_CONFIG.normalization["precision"])
+    components = _public_components(batch)
+    candidates = {item.definition.candidate_id: item for item in batch.candidates}
+    indicators = []
+    evidence_rows = []
+    for contribution in result.contributions:
+        if contribution.rule_id == baseline_rule_id or contribution.final_contribution <= 0:
+            continue
+        candidate = candidates[contribution.rule_id]
+        context = thaw_ordered_compatibility(
+            candidate.definition.compatibility_context
+        )
+        evidence = _legacy_evidence(candidate)
+        indicators.append({
+            "rule_id": contribution.rule_id,
+            "contribution": contribution.final_contribution,
+            "evidence": evidence,
+            "context": context,
+        })
+        evidence_rows.append({
+            "rule_id": contribution.rule_id,
+            "rule": context,
+            "match": True,
+            "evidence": evidence,
+            "contribution": round(contribution.final_contribution, precision),
+        })
+        components.append({
+            "type": "rule",
+            "rule_id": contribution.rule_id,
+            "weight": round(contribution.final_contribution, precision),
+        })
+    summary = (
+        f"Career score {round(float(result.normalized_score),3)} "
+        f"(confidence {round(float(result.confidence),3)})"
+    )
     return {
-        "summary": summary_text,
-        "score": round(float(final), 3),
-        "confidence": round(float(confidence), 3),
+        "summary": summary,
+        "score": round(float(result.normalized_score), precision),
+        "confidence": round(float(result.confidence), precision),
         "components": components,
         "indicators": indicators,
         "evidence": evidence_rows,
-        "scoring": scoring,
-        "trace_id": compatibility["public_trace_id"],
+        "scoring": {
+            "base_score": round(base_score, precision),
+            "total_contribution": round(total, precision),
+            "final_score": round(float(result.normalized_score), precision),
+            "formula": str(compatibility["public_formula"]),
+        },
+        "trace_id": str(compatibility["public_trace_id"]),
     }
 
 
 def interpret_career(astro: AstroState) -> dict[str, Any]:
-    """Existing public wrapper over the one-way WP15 typed bridge."""
+    """Existing public wrapper over the Prompt-05 typed Career boundary."""
 
-    prepared = prepare_career_facts(astro)
-    batch = evaluate_career_batch(prepared)
-    result = infer_career(batch)
-    return project_career_compatibility(batch, result)
+    outcome = interpret_career_domain(astro)
+    if isinstance(outcome, DomainBuildRejected):
+        raise ValueError("Career DomainPrediction construction was rejected")
+    return project_career_prediction_compatibility(outcome.prediction)
 
 
 def interpret_career_snapshot(snapshot: AstroStateSnapshot) -> dict[str, Any]:
-    """Canonical Career evaluation from one immutable factual snapshot."""
+    """Public compatibility wrapper over canonical typed Career evaluation."""
 
-    prepared = prepare_career_snapshot(snapshot)
-    batch = evaluate_career_batch(prepared)
-    result = infer_career(batch)
-    return project_career_compatibility(batch, result)
+    outcome = interpret_career_domain_snapshot(snapshot)
+    if isinstance(outcome, DomainBuildRejected):
+        raise ValueError("Career DomainPrediction construction was rejected")
+    return project_career_prediction_compatibility(outcome.prediction)
 
 
 __all__ = (
     "evaluate_career_batch",
     "career_data_completeness",
     "career_inference_rule_matches",
-    "infer_career",
+    "interpret_career_domain",
+    "interpret_career_domain_snapshot",
     "interpret_career",
     "interpret_career_snapshot",
     "prepare_career_snapshot",

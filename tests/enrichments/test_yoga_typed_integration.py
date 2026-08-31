@@ -179,7 +179,7 @@ def test_invalid_unknown_or_leaf_remains_error_but_later_match_is_decisive():
     assert dhana.status is PredicateStatus.INVALID_PARAMETERS and not dhana.matched
     assert dhana.rule_match.status.value == "invalid"
     assert dhana.condition_result.status is PredicateStatus.MATCHED
-    assert project_yoga_compatibility(batch)[1]["matched"] is True
+    assert project_yoga_compatibility(batch)[1]["matched"] is False
     assert dhana.condition_result.children[0].result.status is PredicateStatus.ERROR
     assert dhana.condition_result.children[1].result.status is PredicateStatus.MATCHED
 

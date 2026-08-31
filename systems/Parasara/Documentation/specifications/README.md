@@ -21,6 +21,7 @@ implemented compatibility behavior remain separate.
 | Rules and RuleMatch | [Rules](rules.md) |
 | Inference | [Inference](inference.md) |
 | Timing | [Timing](timing.md) |
+| Typed domain prediction | [DomainPrediction](domain-prediction.md) |
 | Domain and public output | [Output](output.md) |
 
 Specifications describe required contracts. Implementation maturity is recorded in `../implementation/status.md`.

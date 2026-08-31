@@ -23,7 +23,7 @@ from tools import validate_prompt01 as base
 
 
 EXPECTED_PROMPT02_MANIFEST_SHA256 = (
-    "75b65d2cd1420c6261aadbb8159d10fb8c641137ce08d29f2a651952e5cdfaf7"
+    "06330b43cac062239e0670d1e48ab00c328ee270af64023b2017b819dc7b3017"
 )
 
 

@@ -2,8 +2,6 @@
 
 This is a lightweight assembler used for snapshot verification in tests/SME review.
 """
-import json
-from datetime import datetime, timezone
 from pathlib import Path
 
 from systems.Parasara.engine.adapter.surya_adapter import SuryaAdapter
@@ -15,12 +13,28 @@ from systems.Parasara.engine.astrostate_api import (
     thaw_value,
 )
 from systems.Parasara.engine.capability import CapabilityReadiness
+from systems.Parasara.engine.domain import (
+    DashaTimelineFactory,
+    DomainBuildRejected,
+    TransitSummaryFactory,
+)
 from systems.Parasara.engine.normalizer import chart_to_astrostate
-from systems.Parasara.engine.interpreters.career import interpret_career_snapshot
+from systems.Parasara.engine.interpreters.career import (
+    interpret_career_domain_snapshot,
+)
+from systems.Parasara.engine.output_assembler import (
+    OUTPUT_SCHEMA_VERSION,
+    SNAPSHOT_COMPATIBILITY_PROFILE,
+    AstroDiagnostics,
+    EngineMetadata,
+    ExplainabilityBundle,
+    OutputAssembler,
+    OutputAssemblyInput,
+)
 
 
-def assemble_snapshot_output(snapshot: AstroStateSnapshot):
-    """Compatibility JSON assembler reading one immutable factual snapshot."""
+def _snapshot_assembly_input(snapshot: AstroStateSnapshot) -> OutputAssemblyInput:
+    """Orchestrate the validated typed input for the sole OutputAssembler."""
 
     planet_strengths = {}
     planets = snapshot.get_planets()
@@ -37,35 +51,43 @@ def assemble_snapshot_output(snapshot: AstroStateSnapshot):
         name: ({key: value for key, value in row.items() if key != 'shadbala'} if isinstance(row, dict) else row)
         for name, row in planet_strengths.items()
     }
-    return {
-        "engine": {
-            "name": "jyothishyam-parashara",
-            "engine_version": "0.1.0",
-            "rule_set_family": "parashara",
-            "rule_set_version": "v1",
-        },
-        "meta": {
-            "engine_version": "jyothishyam-parashara@0.1.0",
-            "generated_at": None,
-        },
-        "diagnostics": {
-            "lagna_summary": (
+    career = interpret_career_domain_snapshot(snapshot)
+    if isinstance(career, DomainBuildRejected):
+        raise ValueError("Career DomainPrediction construction was rejected")
+    return OutputAssemblyInput(
+        engine_metadata=EngineMetadata(
+            name="jyothishyam-parashara",
+            engine_version="0.1.0",
+            rule_set_family="parashara",
+            rule_set_version="v1",
+            public_meta_engine_version="jyothishyam-parashara@0.1.0",
+            generated_at=None,
+        ),
+        astro_diagnostics=AstroDiagnostics(
+            lagna_summary=(
                 thaw_value(snapshot.get_lagna_summary().value)
                 if snapshot.get_lagna_summary().value_present else {}
             ),
-            "planet_strengths": public_planet_strengths,
-            "houses": _snapshot_houses(snapshot),
-            "aspects": _snapshot_aspects(snapshot),
-            "yogas": [],
-        },
-        "domains": {
-            "career": interpret_career_snapshot(snapshot),
-            "wealth": {"summary": "", "score": 0.5, "confidence": 0.5, "components": [], "indicators": []},
-        },
-        "dasha_timeline": [],
-        "transits": [],
-        "explainability": {"indicators_legend": {}, "scoring_formula": {}, "conflict_resolution_policy": {}},
-    }
+            planet_strengths=public_planet_strengths,
+            houses=tuple(_snapshot_houses(snapshot)),
+            aspects=_snapshot_aspects(snapshot),
+        ),
+        yogas=(),
+        domains=(career.prediction,),
+        dasha_timeline=DashaTimelineFactory.unavailable(),
+        transit_summary=TransitSummaryFactory.unavailable(),
+        explainability=ExplainabilityBundle(),
+        warnings=(),
+        errors=(),
+        output_schema_version=OUTPUT_SCHEMA_VERSION,
+        compatibility_profile=SNAPSHOT_COMPATIBILITY_PROFILE,
+    )
+
+
+def assemble_snapshot_output(snapshot: AstroStateSnapshot):
+    """Invoke the sole OutputAssembler for a public dictionary."""
+
+    return OutputAssembler().assemble(_snapshot_assembly_input(snapshot))
 
 
 def _snapshot_houses(snapshot: AstroStateSnapshot):
@@ -106,11 +128,14 @@ def assemble_output(astro: AstroState | AstroStateSnapshot):
 def generate(input_path: str, out_path: str):
     chart = SuryaAdapter.load(input_path)
     astro = chart_to_astrostate(chart)
-    out = assemble_output(astro)
-    # keep generated_at deterministic (None) for snapshot comparisons
-    out.setdefault('meta', {})['generated_at'] = None
-    Path(out_path).write_text(json.dumps(out, indent=2, sort_keys=True))
-    return out
+    build = freeze_astrostate(astro)
+    if isinstance(build, AstroStateBuildFailure):
+        raise ValueError("AstroState snapshot construction failed")
+    assembly_input = _snapshot_assembly_input(build.snapshot)
+    assembler = OutputAssembler()
+    output = assembler.assemble(assembly_input)
+    Path(out_path).write_bytes(assembler.snapshot_json_bytes(assembly_input))
+    return output
 
 
 def main():

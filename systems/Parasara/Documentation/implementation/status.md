@@ -2,7 +2,7 @@
 
 Status: CURRENT-STATE  
 Owner: Parāśara engine maintainers  
-Last verified: 2026-08-21
+Last verified: 2026-08-29
 
 ## Status rules
 
@@ -39,43 +39,74 @@ operational readiness.
 | Generic condition evaluator | IMPLEMENTED | `conditions.py`, typed condition/definition/WP17 tests | Full compiler/DSL/dependency graph is deferred |
 | Rule loader | PARTIAL | `loader.py`, `yoga_loader.py`, active definition validation | Active formats/order validated; universal compiler/governance/version selection absent |
 | RuleMatch | IMPLEMENTED | `engine/rules/rule_match.py`, `rule_engine.py`, Prompt-02 contract/integration tests | Scientific/public/release validation remains separate |
-| Yoga evaluation | IMPLEMENTED | Snapshot-based producer orchestration, RuleMatch-backed typed batch, compatibility projection, Prompt-04/Prompt-02/WP17 tests | Public compatibility projection/state attachment remain until later typed-output work |
-| Career interpreter | PARTIAL | Snapshot-query factual bridge, one shared inference call, and compatibility projection in `career.py`/`career_models.py` | Public compatibility dictionary remains until Prompt-05 typed domains |
-| Other domain interpreters | MISSING | Placeholder Wealth output in `systems/Parasara/tools/generate_snapshot.py` | Typed Wealth, Marriage, Children, Health, and Safety interpreters absent |
+| Yoga evaluation | IMPLEMENTED | Snapshot-based producer orchestration, RuleMatch-backed typed batch, Prompt-05 YogaDiagnostic mapping, exact compatibility projection | Public compatibility projection/state attachment remains until consumers migrate to an approved typed/public schema |
+| Career interpreter | IMPLEMENTED | Snapshot-query factual bridge, one shared inference call, closed typed build outcome, DomainPrediction, exact compatibility projection | Public compatibility dictionary remains until consumers migrate through an approved schema change |
+| Other domain interpreters | MISSING | Shared DomainId/model readiness only; compatibility-only Wealth row in OutputAssembler | Typed Wealth, Marriage, Children, Health, and Safety interpreters absent by Prompt-05 design |
 | Shared InferenceEngine | IMPLEMENTED | `engine/inference/`, versioned config, Prompt-03 contract/integration/architecture tests | Career is the first migrated domain; calibration and later domain policies remain separate |
-| Typed domain output | MISSING | Current interpreters return dictionaries | Approved DomainPrediction boundary absent |
-| OutputAssembler | MISSING | `systems/Parasara/tools/generate_snapshot.py` assembles dictionaries directly | Dedicated schema-validating serialization-only layer absent |
+| Typed domain output | IMPLEMENTED | `engine/domain/`, Prompt-05 model/factory/adversarial/determinism tests | Only Career is substantively implemented; public typed schema migration remains separate |
+| OutputAssembler | IMPLEMENTED | `engine/output_assembler.py`, typed assembly input, purity/architecture/exact snapshot tests | Current outward profile intentionally preserves the unversioned legacy public shape |
 | Rule-set selection | PARTIAL | Hardcoded `v1` paths in runtime/loaders and output metadata | No explicit EngineConfig, strict selection, or cache-safe version propagation |
 | Rule governance | MISSING | Metadata fragments and proposed policy only | No promotion, rollback, approval enforcement, or audit service |
 | Prompt-01 validation/CI | IMPLEMENTED | `tools/validate_prompt01.py`, `tests/wp19`, Windows dual-Python CI workflow, WP19 | Linux portability, external required-check setting, and release/compliance gates are separate |
 | Prompt-04 validation/CI | IMPLEMENTED | `tools/validate_prompt04.py`, deterministic snapshot/query manifest, dual-Python Windows workflow | External required-check setting and release/compliance gates remain separate |
+| Prompt-05 validation/CI | IMPLEMENTED | `tools/validate_prompt05.py`, typed-domain manifest, composed predecessor gates, dual-Python Windows workflow | External required-check setting and release/compliance gates remain separate |
 | Snapshot/testing harness | PARTIAL | Prompt-01 gate, snapshots, testing framework | Prompt-01 compatibility validated; scientific/production acceptance remains |
 | Public engine API | MISSING | Tool-level entry points only | Versioned service/facade contract absent |
 | Production operations | MISSING | Documentation checklist only | Monitoring, deployment, retention automation, and operational evidence absent |
 
 ## Active architectural blockers
 
-1. Domain thinning/public output stabilization depend on
-   typed outputs.
-2. Release/privacy/security/licensing/publication work remains separate owner
+1. Additional domain implementations and a richer public schema require
+   separately approved domain/public migration work.
+2. Rule-set selection/governance remains Prompt-06.
+3. Release/privacy/security/licensing/publication work remains separate owner
    work.
 
 ## Validation status
 
-Prompt-04 focused and full dual-lane validation passed on Windows on 2026-08-21 with
-912 collected nodes, 910 passed and 2 skipped per full lane, 62 Prompt-04
-tests, 38 remediation tests, fatal rejection of unsafe supplied aspect facts,
-strict canonical Career exception visibility, and
-identical snapshot/query manifest `440a459cc60e9575874341e7c6673e714585ae79123957c9c19ccd175cb7930b`,
-current WP17/Prompt-02/Prompt-03 manifests, protected artifacts and exports,
-public Career/Yoga behavior, and the approved snapshot. Linux
+Prompt-02/WP17 Yoga baseline contradiction reconciled; Prompt-05 R4 validation
+completed; independent Final R4 Review pending. The reconciled current
+Prompt-02/WP17 manifest is
+`06330b43cac062239e0670d1e48ab00c328ee270af64023b2017b819dc7b3017`;
+the old `75b65d2cd1420c6261aadbb8159d10fb8c641137ce08d29f2a651952e5cdfaf7`
+remains historical baseline evidence. RuleMatch remains the sole Yoga
+truth/status/evidence/trace authority and all 14 R4 attack classes pass.
+
+R4 validation passed under Windows Python 3.11.9 and 3.14.6. Each full
+Prompt-05 lane collected 1,005 nodes, with 1,003 passed, 2 optional-dependency
+skips, and 0 failed; 93 focused Prompt-05 tests passed. Prompt-03, Prompt-04,
+and Prompt-05 manifests remain exact at `f57bc285...a563786e`,
+`440a459c...b7930b`, and `f6d90db7...3c393ba92`. Public Career and unaffected
+Yoga behavior, Yoga order, 24 protected artifacts, four personal exports, and
+the 4,041-byte approved snapshot remain exact. Frontend lint, nonincremental
+type-check, 12-route production build, and 14 static generation units passed.
+Prompt-05 remains unaccepted until independent Final R4 Review; commit
+authorization and Prompt-06 remain blocked.
+
+Prompt-05 remediation R3 focused and full dual-lane validation passed on
+Windows on 2026-08-23 with 985 collected nodes, 983 passed and 2 skipped per
+full lane, 73 focused Prompt-05 tests (including 13 R3 adversarial tests), all
+Prompt-02/03/04 and WP17 gates, and identical Prompt-05 manifest
+`f6d90db74309127e99d55e17c542214b05bb385b8ec62447c1baef53c393ba92`.
+The Prompt-02/WP17, Prompt-03, and Prompt-04 manifests remain
+`75b65d2cd1420c6261aadbb8159d10fb8c641137ce08d29f2a651952e5cdfaf7`,
+`f57bc28504988ecf5ccfbf82de4bc495d2e69a91dfd476997cda5c89a563786e`,
+and `440a459cc60e9575874341e7c6673e714585ae79123957c9c19ccd175cb7930b`.
+Public Career/Yoga hashes, 24 protected artifacts, four present personal
+exports, and the 4,041-byte approved snapshot remain exact. Frontend lint,
+non-incremental type-check, and production build passed; the build listed 12
+routes and completed 14 static page-generation units without leaving a
+TypeScript build-info cache. Final R2 failed; R3 is implementation-validated
+but is not accepted until an independent Final R3 Review passes.
+Linux
 is not a supported or validated Prompt-01 platform. Scientific
 correctness, SME approval, public schema approval, privacy/security/licensing,
 and production operations remain separate gates.
 
-Remaining non-Prompt risks include Dasha wall-clock fallback, mutable
-construction compatibility state, some legacy discovery/fallback paths, and
-incomplete public/output and release architecture.
+Remaining non-Prompt risks include Dasha wall-clock fallback, unavailable
+integrated transit/Dasha output, mutable construction compatibility state,
+some legacy discovery/fallback paths, additional missing domains, unexposed
+public schema version, rule governance, and release architecture.
 
 All Prompt-04 remediation findings R1-R10 are verified. Invalid supplied aspect
 facts fail before snapshot publication; nonfatal malformed capability

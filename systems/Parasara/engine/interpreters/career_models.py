@@ -419,6 +419,12 @@ class CareerEvaluationBatch:
     def rule_matches(self) -> tuple[RuleMatch, ...]:
         return RuleEngine.order_matches(tuple(item.rule_match for item in self.candidates))
 
+    @property
+    def logical_digest(self) -> str:
+        """Bind downstream projections to the complete immutable evaluation batch."""
+
+        return career_evaluation_batch_logical_sha256(self)
+
 
 def _planet_to_data(item: CareerPlanetFact) -> dict[str, Any]:
     return {
