@@ -851,6 +851,16 @@ class AstroStateSnapshot:
         capability_id = _aspect_capability_id(representation)
         if not any(item.planet_id == canonical for item in self.core.planets):
             return self._entity_result(capability_id, "planet", canonical, None)
+        capability = self._capability(capability_id)
+        if (capability.source_kind == "strict_classical_whole_sign_graph"
+            and canonical in ("Rahu", "Ketu")
+            and capability.readiness in (CapabilityReadiness.READY, CapabilityReadiness.READY_EMPTY)):
+            return AstroQueryResult(
+                capability_id=capability_id, capability_version=capability.capability_version,
+                state=CapabilityFactState.UNSUPPORTED_CAPABILITY,
+                entity_kind="planet", entity_id=canonical, value_present=False,
+                value=None, issues=("node_aspects_unavailable",),
+            )
         return self._aspect_result(capability_id, "planet", canonical, lambda item: item.source_id == canonical)
 
     def get_aspects_to_planet(self, planet_id: Any, representation: Any) -> AstroQueryResult[tuple[AspectFact, ...]]:
@@ -1602,9 +1612,25 @@ def freeze_astrostate(
                     "$.enrichments.aspects",
                     "aspects.whole_sign_graph",
                 )
+            source_kind = "legacy_whole_sign_graph"
+            factual_scope = _GENERAL_DEFINITION_BY_ID["aspects.whole_sign_graph"].factual_scope
+            # Explicit producer scope travels with the graph through copies and
+            # shared publication. It never selects construction or a rule set.
+            strict_evidence = any(
+                isinstance(row.get("trace"), Mapping)
+                and row["trace"].get("producer") == "fwp01.strict_aspects"
+                for row in edges
+            )
+            if strict_evidence or aspect_value.get("source_kind") == "strict_classical_whole_sign_graph":
+                if (aspect_value.get("source_kind") != "strict_classical_whole_sign_graph"
+                    or aspect_value.get("factual_scope") != "seven_classical_planets"
+                    or any(row["source"] in ("Rahu", "Ketu") for row in edges)):
+                    raise _fatal("invalid_strict_aspect_scope", "$.enrichments.aspects", "aspects.whole_sign_graph")
+                source_kind = "strict_classical_whole_sign_graph"
+                factual_scope = "seven_classical_planets"
             capability_by_id["aspects.whole_sign_graph"] = _ready_capability(
                 "aspects.whole_sign_graph", aspect_value,
-                source_kind="legacy_whole_sign_graph", empty=not edges,
+                source_kind=source_kind, factual_scope=factual_scope, empty=not edges,
             )
         elif aspect_value is not _MISSING and aspect_value is not None:
             raise _fatal("invalid_aspect_representation", "$.enrichments.aspects")
@@ -1663,6 +1689,10 @@ def freeze_astrostate(
                     "core_capability_supply_not_allowed", "$.capability_supplies",
                     supply.capability_id,
                 )
+            existing = capability_by_id[supply.capability_id]
+            if (existing.source_kind == "strict_classical_whole_sign_graph"
+                and (supply.source_kind != existing.source_kind or supply.factual_scope != existing.factual_scope)):
+                raise _fatal("contradictory_strict_aspect_scope", "$.capability_supplies", supply.capability_id)
             if supply.capability_version != definition.capability_version:
                 capability_by_id[supply.capability_id] = CapabilitySnapshot(
                     capability_id=supply.capability_id,
@@ -1685,6 +1715,30 @@ def freeze_astrostate(
             if existing.readiness in (CapabilityReadiness.READY, CapabilityReadiness.READY_EMPTY) and existing.content != supplied.content:
                 raise _fatal("contradictory_capability_supply", "$.capability_supplies", supply.capability_id)
             capability_by_id[supply.capability_id] = supplied
+
+        # Producers can explicitly declare existing non-core capabilities
+        # unavailable. This only removes readiness, never promotes legacy data,
+        # and changes no catalog, snapshot type, query or version.
+        unavailable = enrichments.get("unavailable_capabilities", {})
+        if not isinstance(unavailable, Mapping):
+            raise _fatal("invalid_unavailability_declaration", "$.enrichments")
+        for capability_id, declaration in unavailable.items():
+            definition = _GENERAL_DEFINITION_BY_ID.get(capability_id)
+            if definition is None or definition.core_path is not None or not isinstance(declaration, Mapping):
+                raise _fatal("invalid_unavailability_declaration", "$.enrichments")
+            try:
+                readiness = CapabilityReadiness(declaration["readiness"])
+                if readiness not in (CapabilityReadiness.MISSING, CapabilityReadiness.MALFORMED, CapabilityReadiness.UNSUPPORTED):
+                    raise ValueError("unavailability_only")
+                capability_by_id[capability_id] = CapabilitySnapshot(
+                    capability_id=capability_id, capability_version=definition.capability_version,
+                    readiness=readiness,
+                    source_kind=declaration.get("source_kind", "producer_unavailable") if readiness is CapabilityReadiness.MALFORMED else None,
+                    content=None, content_empty=False,
+                    issues=tuple(sorted(set(declaration["issues"]))), factual_scope=definition.factual_scope,
+                )
+            except (KeyError, TypeError, ValueError):
+                raise _fatal("invalid_unavailability_declaration", "$.enrichments", capability_id)
 
         try:
             context = _evaluation_context({} if evaluation_context is None else evaluation_context)

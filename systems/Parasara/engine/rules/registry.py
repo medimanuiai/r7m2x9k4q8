@@ -14,6 +14,7 @@ from systems.Parasara.engine.rules.canonical import (
     canonical_json_bytes,
 )
 from systems.Parasara.engine.rules.capabilities import (
+    CapabilityCatalog,
     CapabilityRequirement,
     get_production_capability_catalog,
     validate_registry_capabilities,
@@ -152,9 +153,12 @@ def _normalize_lookup_id(value: Any) -> str:
 class PredicateRegistry:
     """Validated registry with explicit build and frozen/read-only phases."""
 
-    __slots__ = ("__definitions", "__aliases", "__handler_ids", "__frozen", "__ready")
+    __slots__ = ("__definitions", "__aliases", "__handler_ids", "__frozen", "__ready", "__catalog")
 
-    def __init__(self) -> None:
+    def __init__(self, *, catalog: CapabilityCatalog | None = None) -> None:
+        if catalog is not None and not isinstance(catalog, CapabilityCatalog):
+            raise TypeError("catalog must be a CapabilityCatalog or None")
+        self.__catalog = catalog
         self.__definitions: dict[str, PredicateDefinition] = {}
         self.__aliases: dict[str, str] = {}
         self.__handler_ids: dict[int, str] = {}
@@ -244,7 +248,7 @@ class PredicateRegistry:
                 seen.add(current)
                 current = self.__definitions[current].replacement
 
-        compatibility = validate_registry_capabilities(self, get_production_capability_catalog())
+        compatibility = validate_registry_capabilities(self, self.__catalog)
         if not compatibility.compatible:
             raise PredicateRegistryError(
                 "predicate capability requirements are statically incompatible: "

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from copy import deepcopy
-from dataclasses import dataclass, field, replace
+from dataclasses import InitVar, dataclass, field, replace
 from enum import Enum
 import hashlib
 import json
@@ -87,6 +87,13 @@ from systems.Parasara.engine.rules.rule_match import (
     rule_match_from_logical_data,
     rule_match_to_logical_data,
 )
+from systems.Parasara.engine.versioning import (
+    EngineConfig,
+    ResolvedEvaluationVersions,
+    RuleVersionResolver,
+    compatibility_v1_config,
+    evaluation_instant_from_snapshot,
+)
 
 
 YOGA_SCHEMA_VERSION = "1.0.0"
@@ -111,6 +118,28 @@ def prepare_predicate_state(value: Any, **kwargs: Any) -> PreparationOutcome:
     return _prepare_mutable_predicate_state(value, **kwargs)
 
 
+def _resolve_yoga_versions(
+    *,
+    snapshot: AstroStateSnapshot | None = None,
+    engine_config: EngineConfig | None = None,
+    resolved_versions: ResolvedEvaluationVersions | None = None,
+) -> ResolvedEvaluationVersions:
+    if engine_config is not None and resolved_versions is not None:
+        raise ValueError("provide EngineConfig or resolved_versions, not both")
+    if resolved_versions is not None:
+        if not isinstance(resolved_versions, ResolvedEvaluationVersions):
+            raise TypeError("resolved_versions must be ResolvedEvaluationVersions")
+        if snapshot is not None:
+            resolved_versions.authorize_snapshot(snapshot)
+        return resolved_versions
+    config = engine_config or compatibility_v1_config(
+        evaluation_instant_from_snapshot(snapshot)
+        if snapshot is not None
+        else compatibility_v1_config().evaluation_instant
+    )
+    return RuleVersionResolver().resolve(config, snapshot=snapshot)
+
+
 def _planet_by_name(astro: AstroState, name: str) -> PlanetState:
     return next((p for p in getattr(astro, 'planets', []) if p.name == name), None)
 
@@ -127,6 +156,8 @@ class YogaRuleSource:
     source_name: str
     records: tuple[Any, ...]
     validation: YogaRuleSetValidationOutcome
+    artifact_path: str | None = field(default=None, repr=False, compare=False)
+    semantic_content_sha256: str | None = field(default=None, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         if not isinstance(self.source_name, str) or not self.source_name:
@@ -135,6 +166,16 @@ class YogaRuleSource:
             raise TypeError("records must be an immutable tuple")
         if not isinstance(self.validation, YogaRuleSetValidationOutcome):
             raise TypeError("validation must be a WP12 Yoga outcome")
+        if (self.artifact_path is None) != (self.semantic_content_sha256 is None):
+            raise ValueError("Yoga source artifact path and semantic digest must be paired")
+        if self.artifact_path is not None and (
+            not isinstance(self.artifact_path, str) or not self.artifact_path
+        ):
+            raise ValueError("artifact_path must be a nonempty string")
+        if self.semantic_content_sha256 is not None and not _SHA256.fullmatch(
+            self.semantic_content_sha256
+        ):
+            raise ValueError("semantic_content_sha256 must be lowercase SHA-256")
         object.__setattr__(self, "records", freeze_canonical(self.records, path="$.records"))
 
 
@@ -158,8 +199,16 @@ class YogaLegacyPreparation:
             )
 
 
+class _YogaAuthorityBinding:
+    __slots__ = ("_resolved_versions",)
+
+    @property
+    def resolved_versions(self) -> ResolvedEvaluationVersions | None:
+        return self._resolved_versions
+
+
 @dataclass(frozen=True, slots=True, kw_only=True, eq=False)
-class YogaEvaluationRecord:
+class YogaEvaluationRecord(_YogaAuthorityBinding):
     rule_match: RuleMatch
     name: str
     source: RuleSourceIdentity
@@ -169,10 +218,12 @@ class YogaEvaluationRecord:
     compatibility_evidence: FrozenMapping = field(default_factory=FrozenMapping)
     compatibility_houses: tuple[Any, ...] = ()
     evaluation_time_ms: float | None = None
+    authority: InitVar[ResolvedEvaluationVersions | None] = None
 
     __hash__ = None
 
-    def __post_init__(self) -> None:
+    def __post_init__(self, authority: ResolvedEvaluationVersions | None) -> None:
+        object.__setattr__(self, "_resolved_versions", authority)
         if not isinstance(self.rule_match, RuleMatch):
             raise TypeError("rule_match must be the universal RuleMatch")
         if not _RULE_ID.fullmatch(self.rule_match.rule_id):
@@ -226,6 +277,10 @@ class YogaEvaluationRecord:
             or self.evaluation_time_ms < 0
         ):
             raise ValueError("evaluation_time_ms must be finite and nonnegative")
+        if authority is not None and not isinstance(
+            authority, ResolvedEvaluationVersions
+        ):
+            raise TypeError("authority must be ResolvedEvaluationVersions or None")
 
     def _logical_values(self) -> tuple[Any, ...]:
         return (
@@ -340,10 +395,11 @@ def load_yoga_rule_source(
     path: str | Path = DEFAULT_YOGA_RULE_PATH,
     *,
     source_name: str = DEFAULT_YOGA_SOURCE_NAME,
+    resolved_versions: ResolvedEvaluationVersions | None = None,
 ) -> YogaRuleSource:
     """Load one explicit file and validate its records through WP12 without registration."""
 
-    supplied = Path(path)
+    supplied = Path(path).resolve()
     file_outcome = validate_yoga_rule_file(supplied, source_name=source_name)
     if not supplied.is_absolute() or not supplied.is_file():
         return YogaRuleSource(source_name=source_name, records=(), validation=file_outcome)
@@ -357,11 +413,22 @@ def load_yoga_rule_source(
         records = freeze_canonical(parsed, path="$.records")
     except CanonicalValueError:
         return YogaRuleSource(source_name=source_name, records=(), validation=file_outcome)
-    return YogaRuleSource(
+    semantic_digest = hashlib.sha256(canonical_json_bytes(records)).hexdigest()
+    source = YogaRuleSource(
         source_name=source_name,
         records=records,
         validation=validate_yoga_rules(parsed, source_name=source_name),
+        artifact_path=str(supplied),
+        semantic_content_sha256=semantic_digest,
     )
+    if resolved_versions is not None:
+        artifact = resolved_versions.authorize_source_artifact(
+            artifact_path=source.artifact_path,
+            semantic_content_sha256=source.semantic_content_sha256,
+        )
+        if artifact["artifact_id"] != "yogas.active":
+            raise ValueError("selected source is not the authoritative Yoga artifact")
+    return source
 
 
 def _condition_types(node: Any) -> tuple[str, ...]:
@@ -485,15 +552,32 @@ def build_yoga_snapshot(
 def evaluate_yoga_snapshot(
     snapshot: AstroStateSnapshot,
     source: YogaRuleSource | None = None,
+    *,
+    engine_config: EngineConfig | None = None,
+    resolved_versions: ResolvedEvaluationVersions | None = None,
 ) -> YogaEvaluationBatch:
     """Canonical read-only Yoga evaluation from one published snapshot."""
 
     if not isinstance(snapshot, AstroStateSnapshot):
         raise TypeError("snapshot must be AstroStateSnapshot")
-    current_source = load_yoga_rule_source() if source is None else source
+    authority = _resolve_yoga_versions(
+        snapshot=snapshot,
+        engine_config=engine_config,
+        resolved_versions=resolved_versions,
+    )
+    current_source = (
+        load_yoga_rule_source(resolved_versions=authority)
+        if source is None else source
+    )
+    authority.authorize_source_artifact(
+        artifact_path=current_source.artifact_path,
+        semantic_content_sha256=current_source.semantic_content_sha256,
+    )
     preparation = prepare_predicate_state(snapshot)
     if not preparation.succeeded or preparation.state is None:
-        return yoga_batch_from_preparation_failure(current_source, preparation.issues)
+        return yoga_batch_from_preparation_failure(
+            current_source, preparation.issues, resolved_versions=authority
+        )
     graph = None
     inspection = snapshot.inspect_capability("aspects.whole_sign_graph")
     if inspection.readiness in (CapabilityReadiness.READY, CapabilityReadiness.READY_EMPTY):
@@ -503,8 +587,9 @@ def evaluate_yoga_snapshot(
         preparation.state,
         PredicateEvaluationContext(),
         current_source,
-        predicate_evaluator=PredicateEvaluator(),
+        predicate_evaluator=PredicateEvaluator(resolved_versions=authority),
         compatibility_graph=graph,
+        resolved_versions=authority,
     )
 
 
@@ -763,6 +848,7 @@ def evaluate_yoga_batch(
     *,
     predicate_evaluator: PredicateEvaluator | None = None,
     compatibility_graph: Mapping[str, Any] | None = None,
+    resolved_versions: ResolvedEvaluationVersions | None = None,
 ) -> YogaEvaluationBatch:
     """Evaluate every source row through one WP09/WP10 instance pair."""
 
@@ -772,16 +858,23 @@ def evaluate_yoga_batch(
         raise TypeError("context must be PredicateEvaluationContext")
     if not isinstance(source, YogaRuleSource):
         raise TypeError("source must be YogaRuleSource")
+    if resolved_versions is not None:
+        resolved_versions.authorize_source_artifact(
+            artifact_path=source.artifact_path,
+            semantic_content_sha256=source.semantic_content_sha256,
+        )
     if predicate_evaluator is None:
-        predicate_evaluator = PredicateEvaluator()
+        predicate_evaluator = PredicateEvaluator(resolved_versions=resolved_versions)
     elif not isinstance(predicate_evaluator, PredicateEvaluator):
         raise TypeError("predicate_evaluator must be PredicateEvaluator")
+    elif resolved_versions is not None:
+        predicate_evaluator.require_authority(resolved_versions)
     condition_evaluator = ConditionEvaluator(predicate_evaluator)
     digest = prepared_state_sha256(state)
     valid_by_index = {item.source.rule_index: item for item in source.validation.rules}
     issues_by_index = _issues_by_index(source)
     records: list[YogaEvaluationRecord] = []
-    rule_engine = RuleEngine()
+    rule_engine = RuleEngine(resolved_versions=resolved_versions)
 
     for index, raw_record in enumerate(source.records):
         yoga_id, name, version = _safe_record_identity(raw_record, index)
@@ -855,6 +948,7 @@ def evaluate_yoga_batch(
                 compatibility_evidence=compatibility_evidence,
                 compatibility_houses=houses,
                 evaluation_time_ms=None,
+                authority=resolved_versions,
             )
         )
     batch_issues = tuple(
@@ -919,6 +1013,8 @@ def _failure_compatibility_evidence(node: Any) -> FrozenMapping:
 def yoga_batch_from_preparation_failure(
     source: YogaRuleSource,
     issues: tuple[PreparationIssue, ...],
+    *,
+    resolved_versions: ResolvedEvaluationVersions | None = None,
 ) -> YogaEvaluationBatch:
     """Preserve all source rows when legacy preparation cannot produce a state."""
 
@@ -926,6 +1022,11 @@ def yoga_batch_from_preparation_failure(
         not isinstance(item, PreparationIssue) for item in issues
     ):
         raise TypeError("a Yoga source and nonempty PreparationIssue tuple are required")
+    if resolved_versions is not None:
+        resolved_versions.authorize_source_artifact(
+            artifact_path=source.artifact_path,
+            semantic_content_sha256=source.semantic_content_sha256,
+        )
     digest = hashlib.sha256(
         canonical_json_bytes(tuple(_issue_to_data(item) for item in issues))
     ).hexdigest()
@@ -934,7 +1035,7 @@ def yoga_batch_from_preparation_failure(
     result = _preparation_error_result(issues[0])
     result_hash = predicate_result_logical_sha256(result)
     records = []
-    rule_engine = RuleEngine()
+    rule_engine = RuleEngine(resolved_versions=resolved_versions)
     for index, raw_record in enumerate(source.records):
         yoga_id, name, version = _safe_record_identity(raw_record, index)
         definition_issues = issues_by_index.get(index, ())
@@ -978,6 +1079,7 @@ def yoga_batch_from_preparation_failure(
                 compatibility_evidence=compatibility_evidence,
                 compatibility_houses=(),
                 evaluation_time_ms=None,
+                authority=resolved_versions,
             )
         )
     return YogaEvaluationBatch(
@@ -1031,16 +1133,30 @@ def _first_seen(values: Sequence[Any]) -> list[Any]:
 
 def _build_yoga_diagnostics(
     batch: YogaEvaluationBatch,
+    *,
+    resolved_versions: ResolvedEvaluationVersions | None = None,
 ) -> tuple[YogaDiagnostic, ...]:
     """Project existing RuleMatch-backed records to Prompt-05 diagnostics."""
 
     if not isinstance(batch, YogaEvaluationBatch):
         raise TypeError("batch must be YogaEvaluationBatch")
+    authority = resolved_versions
+    for record in batch.records:
+        record_authority = record.resolved_versions
+        if record_authority is None:
+            raise ValueError("authoritative Yoga diagnostics require resolved records")
+        if authority is None:
+            authority = record_authority
+        else:
+            authority.require_same(record_authority)
+    if authority is None:
+        raise ValueError("authoritative Yoga diagnostics require a resolved authority")
     output = []
     for record in batch.records:
         output.append(YogaDiagnosticFactory._from_evaluation_record(
             record,
             strength=None,
+            resolved_versions=authority,
         ))
     return tuple(output)
 
@@ -1285,22 +1401,35 @@ def yoga_batch_from_full_json(payload: str | bytes) -> YogaEvaluationBatch:
     return _batch_from_data(_load_json(payload), full=True)
 
 
-def evaluate_yoga_diagnostics(astro: AstroState) -> tuple[YogaDiagnostic, ...]:
+def evaluate_yoga_diagnostics(
+    astro: AstroState,
+    *,
+    engine_config: EngineConfig | None = None,
+    resolved_versions: ResolvedEvaluationVersions | None = None,
+) -> tuple[YogaDiagnostic, ...]:
     """Canonical AstroState entry point for internally constructed diagnostics."""
 
     if not isinstance(astro, AstroState):
         raise TypeError("astro must be AstroState")
-    source = load_yoga_rule_source()
+    resolved_versions = _resolve_yoga_versions(
+        engine_config=engine_config,
+        resolved_versions=resolved_versions,
+    )
+    source = load_yoga_rule_source(resolved_versions=resolved_versions)
     build = build_yoga_snapshot(astro, source)
     if isinstance(build, AstroStateBuildFailure):
         issues = tuple(
             PreparationIssue(code=item.code, path=item.path, capability_id=item.capability_id)
             for item in build.issues
         )
-        batch = yoga_batch_from_preparation_failure(source, issues)
+        batch = yoga_batch_from_preparation_failure(
+            source, issues, resolved_versions=resolved_versions
+        )
     else:
-        batch = evaluate_yoga_snapshot(build.snapshot, source)
-    return _build_yoga_diagnostics(batch)
+        batch = evaluate_yoga_snapshot(
+            build.snapshot, source, resolved_versions=resolved_versions
+        )
+    return _build_yoga_diagnostics(batch, resolved_versions=resolved_versions)
 
 
 def evaluate_yoga_rules(astro: AstroState) -> List[Dict[str, Any]]:

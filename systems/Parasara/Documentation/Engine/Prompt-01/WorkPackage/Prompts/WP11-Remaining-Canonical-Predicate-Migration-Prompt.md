@@ -1,4 +1,14 @@
 
+
+> **Historical Python-policy notice - 2026-11-06:** [Root policy](../../../../../../../AGENTS.md) selects Python 3.11.9 only
+> for development, tests, and CI and explicitly supersedes every dual-version
+> requirement below. Retained Python 3.14 results/commands are historical, not
+> current instructions. Run appropriate checks once on the selected runtime;
+> keep correctness, regression, end-to-end, and same-runtime determinism checks.
+> Missing second-version evidence is never a defect or blocker. Future specs,
+> prompts, and handoffs must carry this policy; only an explicit user request
+> can reinstate multiple Python versions.
+
 Implement **WP11 — migrate the remaining registered predicates to the canonical WP02–WP10 execution boundary** for Prompt-01.
 
 Do not merely review this specification. Implement all permitted work, validate it in both locked Python lanes, and create the WP11 completion report. **Do not proceed to WP12.**

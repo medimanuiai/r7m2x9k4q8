@@ -42,14 +42,14 @@ Last verified: 2026-08-17
 | P01-I02 | Migrate predicate registry and cache | COMPLETE | WP04-WP09 and cache/registry determinism tests |
 | P01-I03 | Migrate active predicates and condition evaluation | COMPLETE | WP08-WP12 and typed condition tests |
 | P01-I04 | Migrate callers and verify compatibility | COMPLETE | WP13-WP16; Yoga/Career/tooling compatibility |
-| P01-I05 | Complete validation and CI/docs sign-off | COMPLETE | WP17-WP19 and authoritative dual-lane gate |
+| P01-I05 | Complete validation and CI/docs sign-off | COMPLETE | WP17-WP19 and authoritative Python 3.11.9 gate |
 
 ## Deferred architecture work
 
 | ID | Task | Status | Dependency |
 |---|---|---|---|
-| P02-001 | Universal RuleMatch | COMPLETE / PENDING COMMIT REVIEW | Prompt-02 contract, migrations, dual-lane validation |
-| P03-001 | Shared InferenceEngine | IMPLEMENTED / PENDING COMMIT REVIEW | Prompt-03 contracts, Career migration, validator, and dual-lane evidence |
+| P02-001 | Universal RuleMatch | COMPLETE / PENDING COMMIT REVIEW | Prompt-02 contract, migrations, Python 3.11.9 validation |
+| P03-001 | Shared InferenceEngine | IMPLEMENTED / PENDING COMMIT REVIEW | Prompt-03 contracts, Career migration, validator, and historical validation evidence |
 | P04-001 | Stable AstroState query API | DEFERRED | Approved stage entry |
 | P05-001 | Typed domain outputs and thin Career interpreter | DEFERRED | Shared inference complete |
 | P05-002 | OutputAssembler | DEFERRED | Typed output contracts approved |

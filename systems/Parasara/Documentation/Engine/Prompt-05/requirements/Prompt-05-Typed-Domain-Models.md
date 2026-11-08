@@ -1,5 +1,14 @@
 # Prompt-05 — Typed Domain Models
 
+> **Current Python policy - 2026-11-06:** [Root policy](../../../../../../AGENTS.md) selects Python 3.11.9 only
+> for development, tests, and CI and explicitly supersedes every dual-version
+> requirement below. Retained Python 3.14 results/commands are historical, not
+> current instructions. Run appropriate checks once on the selected runtime;
+> keep correctness, regression, end-to-end, and same-runtime determinism checks.
+> Missing second-version evidence is never a defect or blocker. Future specs,
+> prompts, and handoffs must carry this policy; only an explicit user request
+> can reinstate multiple Python versions.
+
 Status: IMPLEMENTED — REMEDIATION R1 COMPLETE; PENDING INDEPENDENT FINAL R1 REVIEW  
 Owner: Parāśara engine maintainers  
 Starting commit: `c719a1bf686e1e37eb8542f9323fc279b670250e`  

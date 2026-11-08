@@ -1,5 +1,11 @@
 # Prompt-01 Final Audit Consolidation
 
+> **Historical Python-policy notice - 2026-11-06:** [Root policy](../../../../../../AGENTS.md)
+> selects Python 3.11.9 only and supersedes any multi-version validation
+> recommendation or requirement below. The absence of another Python lane or
+> version matrix is not a defect, incomplete validation, or release blocker.
+> Preserve all functional and same-runtime determinism checks.
+
 Status: EVIDENCE  
 Owner: Parāśara engine maintainers  
 Authority: Jyothishyam Master Architecture Specification v1.0 and Prompt-01  

@@ -56,4 +56,4 @@ def test_aspects_on_golden_chart():
     # Mars is in house 1 in fixture; expect Mars aspects house 4 and 7 and 8 occupants
     mars_edges = [e for e in aspects if e['source'] == 'Mars']
     targets = {e['target'] for e in mars_edges}
-    assert 'Moon' in targets or True  # Moon in house 4 expected
+    assert 'Moon' in targets  # Moon in house 4 expected

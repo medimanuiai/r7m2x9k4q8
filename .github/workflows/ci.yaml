@@ -15,18 +15,14 @@ defaults:
 
 jobs:
   validate:
-    name: Python ${{ matrix.python-version }}
+    name: Python validation
     runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ['3.11', '3.14']
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up project Python
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version-file: '.python-version'
           cache: pip
           cache-dependency-path: systems/Parasara/Documentation/Engine/Prompt-01/WorkPackage/Reports/WP00/requirements-stage01.lock.txt
       - name: Print resolved Python version
@@ -46,10 +42,10 @@ jobs:
     needs: validate
     if: always()
     steps:
-      - name: Require both Python lanes
+      - name: Require Python validation
         env:
           VALIDATION_RESULT: ${{ needs.validate.result }}
         run: |
           if ($env:VALIDATION_RESULT -ne 'success') {
-            throw 'Both required Prompt-05 Python validation lanes must succeed.'
+            throw 'Required Prompt-05 Python validation must succeed.'
           }

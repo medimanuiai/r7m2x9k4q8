@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "FWP01 explicit strict factual input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["metadata", "lagna", "planets", "houses"],
+  "properties": {
+    "metadata": {
+      "type": "object", "additionalProperties": false,
+      "required": ["birth_datetime_utc", "birth_location", "ayanamsa", "sidereal", "house_system", "house_numbering"],
+      "properties": {
+        "birth_datetime_utc": {"type": "string"},
+        "birth_location": {
+          "type": "object",
+          "required": ["latitude", "longitude", "timezone_offset_minutes"],
+          "additionalProperties": false,
+          "properties": {
+            "latitude": {"type": "number", "minimum": -90, "maximum": 90},
+            "longitude": {"type": "number", "minimum": -180, "maximum": 180},
+            "timezone_offset_minutes": {"type": "integer", "minimum": -840, "maximum": 840},
+            "timezone": {"type": "string"}, "place_label": {"type": "string"}, "place": {"type": "string"}
+          }
+        },
+        "ayanamsa": {"const": "lahiri"}, "sidereal": {"const": true, "type": "boolean"},
+        "house_system": {"const": "whole_sign"}, "house_numbering": {"const": "ascendant_relative"},
+        "ayanamsa_degrees": {"type": "number"}, "longitude_source": {"type": "string"},
+        "ephemeris_source": {"type": "string"}
+      }
+    },
+    "lagna": {"$ref": "#/definitions/position"},
+    "planets": {
+      "type": "array", "minItems": 9, "maxItems": 9,
+      "items": {"allOf": [
+        {"$ref": "#/definitions/position"},
+        {"required": ["name", "house", "nakshatra", "motion"],
+         "properties": {"name": {"type": "string"}, "motion": {
+           "type": "object", "additionalProperties": false,
+           "properties": {"retrograde": {"type": "boolean"}, "speed": {"type": "number"}}
+         }, "flags": {"type": "object"}}}
+      ]}
+    },
+    "houses": {"type": "array", "items": {"type": "object"}},
+    "aspects": {"type": "array", "items": {"type": "object"}},
+    "vargas": {"type": "object"}, "current_transits": {"type": "object"}
+  },
+  "definitions": {
+    "position": {
+      "type": "object", "required": ["sidereal_longitude", "sign", "degree"],
+      "properties": {
+        "sidereal_longitude": {"type": "number", "minimum": 0, "exclusiveMaximum": 360},
+        "sign": {"enum": ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"]},
+        "degree": {"type": "number", "minimum": 0, "exclusiveMaximum": 30},
+        "house": {"type": "integer", "minimum": 1, "maximum": 12},
+        "nakshatra": {"type": "object", "additionalProperties": false,
+          "required": ["name", "index", "pada"],
+          "properties": {"name": {"type": "string"}, "index": {"type": "integer", "minimum": 1, "maximum": 27}, "pada": {"type": "integer", "minimum": 1, "maximum": 4}}
+        }
+      }
+    }
+  }
+}

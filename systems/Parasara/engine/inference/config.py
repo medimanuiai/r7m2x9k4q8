@@ -163,10 +163,39 @@ def inference_config_from_data(value: Any) -> InferenceConfig:
     return InferenceConfig(**value)
 
 
-def load_inference_config(path: str | Path = DEFAULT_INFERENCE_CONFIG) -> InferenceConfig:
+def load_inference_config(
+    path: str | Path = DEFAULT_INFERENCE_CONFIG,
+    *,
+    expected_content_sha256: str | None = None,
+    resolved_versions: Any | None = None,
+) -> InferenceConfig:
     supplied = Path(path)
+    if resolved_versions is not None:
+        from systems.Parasara.engine.versioning import (
+            REPOSITORY_ROOT,
+            ResolvedEvaluationVersions,
+        )
+
+        if not isinstance(resolved_versions, ResolvedEvaluationVersions):
+            raise TypeError("resolved_versions must be ResolvedEvaluationVersions or None")
+        manifest_path = resolved_versions.manifest.inference.artifact_path
+        if manifest_path is None:
+            raise ValueError("selected manifest has no inference configuration path")
+        selected = (REPOSITORY_ROOT / manifest_path).resolve()
+        if path != DEFAULT_INFERENCE_CONFIG and supplied.resolve() != selected:
+            raise ValueError("caller-selected inference path disagrees with run authority")
+        supplied = selected
+        expected_content_sha256 = resolved_versions.manifest.inference.content_sha256
     try:
-        payload = supplied.read_text(encoding="utf-8")
+        raw = supplied.read_bytes()
+        if expected_content_sha256 is not None:
+            if (
+                not isinstance(expected_content_sha256, str)
+                or len(expected_content_sha256) != 64
+                or hashlib.sha256(raw).hexdigest() != expected_content_sha256
+            ):
+                raise ValueError("inference configuration content digest mismatch")
+        payload = raw.decode("utf-8")
         value = json.loads(
             payload,
             object_pairs_hook=_unique_object,
@@ -174,7 +203,10 @@ def load_inference_config(path: str | Path = DEFAULT_INFERENCE_CONFIG) -> Infere
         )
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         raise ValueError("unable to load inference configuration") from exc
-    return inference_config_from_data(value)
+    result = inference_config_from_data(value)
+    if resolved_versions is not None:
+        resolved_versions.authorize_inference_config(result)
+    return result
 
 
 def inference_config_to_data(value: InferenceConfig) -> dict[str, Any]:

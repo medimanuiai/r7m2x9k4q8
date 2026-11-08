@@ -14,6 +14,80 @@ KENDRAS = {1,4,7,10}
 TRIKONAS = {1,5,9}
 
 
+def load_pinned_knowledge(identity, *, resolved_versions=None):
+    """Read the selected manifest's exact knowledge bundle, without resolving a run."""
+    import hashlib
+    import json
+    from systems.Parasara.engine.adapter.surya_adapter import StrictInputError
+    from systems.Parasara.engine.models import StrictInputIssue
+    from systems.Parasara.engine.versioning import (
+        ResolvedEvaluationVersions, manifest_from_data, manifest_fingerprint_sha256,
+        _knowledge_bundle_sha256, _resolve_repository_path, _semantic_data_artifact,
+    )
+    root = Path(__file__).resolve().parents[4]
+    try:
+        if resolved_versions is None:
+            manifest = manifest_from_data(json.loads((root / "systems/Parasara/rules/parashara/v1/rule-set-manifest.json").read_text(encoding="utf-8")))
+            if manifest.manifest_fingerprint_sha256 != "3e942f97cec7c24079faabc3db358b84177b752a8eb35a7b0d909f84a92d1220":
+                raise ValueError("unexpected_v1_manifest")
+        else:
+            if not isinstance(resolved_versions, ResolvedEvaluationVersions):
+                raise ValueError("invalid_authority")
+            manifest = resolved_versions.manifest
+        if manifest_fingerprint_sha256(manifest) != manifest.manifest_fingerprint_sha256:
+            raise ValueError("manifest_fingerprint_mismatch")
+        bundles = [item for item in manifest.knowledge_data if item.identity == identity]
+        if len(bundles) != 1:
+            raise ValueError("knowledge_bundle_missing")
+        bundle = bundles[0]
+        if _knowledge_bundle_sha256(root, bundle.artifacts) != bundle.content_sha256:
+            raise ValueError("knowledge_bundle_mismatch")
+        artifacts = {}
+        for pin in bundle.artifacts:
+            path = _resolve_repository_path(root, pin["path"])
+            value = _semantic_data_artifact(path)
+            # Recheck the exact value handed to producers, not a cached prior read.
+            from systems.Parasara.engine.rules.prepared_state import canonical_json_bytes
+            if hashlib.sha256(canonical_json_bytes(value)).hexdigest() != pin["content_sha256"]:
+                raise ValueError("knowledge_artifact_mismatch")
+            artifacts[pin["path"]] = value
+        evidence = dict(identity=bundle.identity, version=bundle.version,
+            bundle_sha256=bundle.content_sha256,
+            manifest_sha256=manifest.manifest_fingerprint_sha256,
+            artifacts=[dict(pin) for pin in bundle.artifacts])
+        return artifacts, evidence
+    except (OSError, ValueError, TypeError, KeyError):
+        raise StrictInputError((StrictInputIssue("$.knowledge", "knowledge_artifact_mismatch"),)) from None
+
+
+def compute_functional_roles_strict(astro, *, resolved_versions=None):
+    from systems.Parasara.engine.identities import CANONICAL_PLANETS, SIGNS as signs, SIGN_LORD
+    artifacts, evidence = load_pinned_knowledge("functional-roles-compatibility", resolved_versions=resolved_versions)
+    issues = set()
+    permitted = {"functional_benefic", "functional_malefic", "neutral", "yogakaraka", "benefic", "malefic"}
+    for lagna_index, sign in enumerate(signs):
+        key = f"systems/Parasara/enrichment_tables/functional_roles/{sign}.yaml"
+        rows = artifacts.get(key)
+        if not isinstance(rows, dict) or set(rows) != set(CANONICAL_PLANETS):
+            issues.add("role_table_incomplete")
+        if not isinstance(rows, dict):
+            continue
+        for planet, row in rows.items():
+            if planet not in CANONICAL_PLANETS or not isinstance(row, dict):
+                issues.add("role_row_malformed")
+                continue
+            score = row.get("functional_score")
+            if row.get("functional_role") not in permitted or type(score) not in (int, float) or not 0 <= score <= 1:
+                issues.add("role_row_malformed")
+            owned = [number for number in range(1, 13)
+                     if SIGN_LORD[signs[(lagna_index + number - 1) % 12]] == planet]
+            if "owns_houses" in row and row["owns_houses"] != owned:
+                issues.add("role_ownership_mismatch")
+    return dict(readiness="malformed" if issues else "unsupported",
+        issues=sorted(issues) if issues else ["astrology_sme_approval_required"],
+        evidence=evidence, lagna=astro.lagna_sign, astrology_sme_approved=False)
+
+
 def _load_table_for_lagna(lagna: str) -> Dict[str, Dict[str, Any]]:
     """Load a YAML table override for a given lagna if present.
 

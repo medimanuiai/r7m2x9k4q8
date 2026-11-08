@@ -13,6 +13,14 @@ This policy keeps Parāśara documentation distinguishable by authority, lifecyc
 
 ## Authority hierarchy
 
+The user's 2026-11-06 Python decision in [root AGENTS.md](../../../../AGENTS.md)
+supersedes earlier dual-version requirements at every level below. Use Python
+3.11.9 only. Future specifications, prompts, and session handoffs must include
+this policy, retain functional and same-runtime determinism checks, and never
+treat missing second-version evidence as a defect or blocker. Only an explicit
+user request can reinstate multiple Python versions. Resolve concrete runtime
+compatibility problems individually without expanding the version matrix.
+
 1. Jyothishyam Master Architecture Specification.
 2. Approved stage prompts.
 3. Approved audit decisions.

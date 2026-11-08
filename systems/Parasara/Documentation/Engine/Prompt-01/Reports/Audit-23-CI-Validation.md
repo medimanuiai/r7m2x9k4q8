@@ -1,5 +1,11 @@
 # Prompt-01 Audit-23: CI and Validation
 
+> **Historical Python-policy notice - 2026-11-06:** [Root policy](../../../../../../AGENTS.md)
+> selects Python 3.11.9 only and supersedes any multi-version validation
+> recommendation or requirement below. The absence of another Python lane or
+> version matrix is not a defect, incomplete validation, or release blocker.
+> Preserve all functional and same-runtime determinism checks.
+
 ## 1. Executive Summary
 
 Audit-23 is **COMPLETE**. The authoritative Master Architecture and Prompt-01 DOCX files and all twenty-two prerequisite reports were present. Two GitHub Actions workflow files contain two Prompt-01-relevant jobs. Their main pytest and snapshot steps are failure-propagating when the workflows run, so both are `BLOCKING_BUT_REQUIREMENT_UNKNOWN`; repository evidence does not establish branch-protection or required-check status.

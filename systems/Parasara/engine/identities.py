@@ -15,6 +15,15 @@ CANONICAL_PLANETS = (
     "Ketu",
 )
 
+SIGNS = (
+    "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
+    "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces",
+)
+SIGN_LORD = dict(zip(SIGNS, (
+    "Mars", "Venus", "Mercury", "Moon", "Sun", "Mercury",
+    "Venus", "Mars", "Jupiter", "Saturn", "Saturn", "Jupiter",
+)))
+
 _PLANET_BY_ASCII_CASE = {value.lower(): value for value in CANONICAL_PLANETS}
 _PLANET_ALIASES = {"kethu": "Ketu"}
 

@@ -1,0 +1,31 @@
+dsl: parasara-rule-dsl
+dsl_version: "1.0.0"
+system: synthetic
+rule_set:
+  family: prompt07_fixture
+  version: fixture-v1
+macros: []
+rules:
+  - id: synthetic.mars_in_tenth
+    revision: "1.0.0"
+    family: synthetic
+    category: placement
+    domains: [synthetic]
+    label: "Synthetic placement fixture"
+    priority: 10
+    base_weight: 0.25
+    context: natal
+    requires:
+      - id: planets.house_placement
+        version: "1.0.0"
+      - id: planets.normalized
+        version: "1.0.0"
+    evidence:
+      mode: predicate_trace_references
+    when:
+      predicate:
+        id: PLANET_IN_HOUSE
+        version: "1.0.0"
+        arguments:
+          planet: Mars
+          house: 10

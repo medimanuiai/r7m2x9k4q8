@@ -185,6 +185,14 @@ class DomainPredictionFactory:
             raise TypeError("evaluation must be the private Career same-run value")
         if domain is not DomainId.CAREER:
             raise ValueError("Career producer boundary accepts only Career")
+        authority = evaluation.resolved_versions
+        authority.require_same(evaluation.ledger.resolved_versions)
+        authority.authorize_inference_config(evaluation.config)
+        authority.authorize_inference_result(evaluation.inference_result)
+        for rule_match in evaluation.ledger.rule_matches:
+            authority.authorize_rule(rule_match)
+        if engine_version != authority.manifest.engine.version:
+            raise ValueError("Career engine version disagrees with run authority")
         return DomainPredictionFactory._from_inference_internal(
             evaluation.inference_result,
             domain=domain,
@@ -421,6 +429,7 @@ class YogaDiagnosticFactory:
         record: Any,
         *,
         strength: float | None = None,
+        resolved_versions: Any | None = None,
     ) -> YogaDiagnostic:
         if (
             record.__class__.__module__
@@ -431,6 +440,12 @@ class YogaDiagnosticFactory:
         rule_match = record.rule_match
         if not isinstance(rule_match, RuleMatch):
             raise TypeError("record.rule_match must be RuleMatch")
+        record_authority = getattr(record, "resolved_versions", None)
+        if record_authority is None:
+            raise ValueError("authoritative Yoga records require a resolved authority")
+        if resolved_versions is not None:
+            resolved_versions.require_same(record_authority)
+        record_authority.authorize_rule(rule_match)
         try:
             domains = tuple(
                 sorted(

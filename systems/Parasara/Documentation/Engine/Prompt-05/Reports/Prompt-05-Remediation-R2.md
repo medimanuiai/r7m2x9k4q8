@@ -1,5 +1,14 @@
 # Prompt-05 Remediation R2 Record
 
+> **Historical Python-policy notice - 2026-11-06:** [Root policy](../../../../../../AGENTS.md) selects Python 3.11.9 only
+> for development, tests, and CI and explicitly supersedes every dual-version
+> requirement below. Retained Python 3.14 results/commands are historical, not
+> current instructions. Run appropriate checks once on the selected runtime;
+> keep correctness, regression, end-to-end, and same-runtime determinism checks.
+> Missing second-version evidence is never a defect or blocker. Future specs,
+> prompts, and handoffs must carry this policy; only an explicit user request
+> can reinstate multiple Python versions.
+
 Status: **IMPLEMENTATION AND VALIDATION COMPLETE; INDEPENDENT FINAL R2 REVIEW PENDING**
 
 Prompt-05 Remediation R2 is the single remediation record for the seven

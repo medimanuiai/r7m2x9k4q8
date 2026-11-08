@@ -1,0 +1,54 @@
+{
+  "catalog_schema_version": "1.0.0",
+  "entries": [
+    {
+      "system": "parashara",
+      "family": "parashara",
+      "version": "v1",
+      "manifest_path": "systems/Parasara/rules/parashara/v1/rule-set-manifest.json",
+      "manifest_file_sha256": "687c7bb19ce03671882e989db267d588a3c9beace1c42df25390ab643ebae265",
+      "lifecycle": "VALIDATED",
+      "technical_validation_evidence": "prompt06-dual-python-validation",
+      "astrology_sme_approved": false,
+      "astrology_sme_approval_evidence": null,
+      "available": true,
+      "replay_available": true,
+      "rollback_authorized": false,
+      "warning": "Experimental compatibility rule set; astrology SME approval is absent.",
+      "allowed_modes": ["EXPERIMENTAL"],
+      "allowed_purposes": ["NEW_EVALUATION", "REPLAY"]
+    }
+  ],
+  "migration_inventory": [
+    {
+      "path": "systems/Parasara/rules/parashara/v1/m1_rules.yaml",
+      "sha256": "1cef3e2b030b67fb29db484225f6a542dc5620605d805ebb240ba1aa98775a52",
+      "disposition": "source-for-materialization; inactive seed rows and shadowed rajayoga row remain inactive"
+    },
+    {
+      "path": "systems/Parasara/rules/parashara/v1/derived_rules.yml",
+      "sha256": "c46f9616ac5e25b6f4ed73f453212ec86e81558f43c5c3984333a45dd38ad854",
+      "disposition": "lord_status_10th source-for-materialization; remaining rows dormant"
+    },
+    {
+      "path": "systems/Parasara/rules/parashara/v1/primitives.yml",
+      "sha256": "644022b548cd04b9a7f5bd4b7a36cbd2f1b6cbf8348e520d5a3bd9cdc1da1a8f",
+      "disposition": "dormant legacy seeds"
+    },
+    {
+      "path": "systems/Parasara/rules/parashara/v1/yogas.yaml",
+      "sha256": "861f4da0de228f2b61f37936475ae5bc39b701654f19b76994d6fa5dfab2ab82",
+      "disposition": "active Yoga source; rajayoga_naive also supplies Career projection"
+    },
+    {
+      "path": "systems/Parasara/rules/parashara/v1/macros.yaml",
+      "sha256": "1652f9b31b673dee6162be5134b7580c34284fa58d99a078ae08b86c9226fceb",
+      "disposition": "placeholder; not executable"
+    },
+    {
+      "path": "systems/Parasara/rules/parashara/v1/calibration.json",
+      "sha256": "3aad2198cd1de8929db71c8f4e56a13238519259a271490707edb8030334e4ec",
+      "disposition": "non-authoritative calibration data; not executable"
+    }
+  ]
+}

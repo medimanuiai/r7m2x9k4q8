@@ -1,0 +1,278 @@
+{
+  "manifest_schema_version": "1.0.0",
+  "system": "parashara",
+  "engine": {
+    "identity": "jyothishyam-parashara",
+    "version": "0.1.0",
+    "compatibility_contract": "1.0.0"
+  },
+  "rule_set": {
+    "family": "parashara",
+    "version": "v1",
+    "ordered_rule_revisions": [
+      {
+        "rule_id": "strong_in_10_{planet}",
+        "revision": "1.0",
+        "semantic_content_sha256": "c69246c1775a1cb63dd7295135b698bac27ae8f46b3ada264f09a58e60349a4b",
+        "source_artifact_id": "m1.strong_planet_in_10",
+        "source_artifact_semantic_sha256": "db4c78927e3b99c4366d675fefc29ae1ad6098306000f0b198ca22ba669dd517",
+        "source_order": 0,
+        "materialization_contract_id": "career-planet-materialization@1.0.0",
+        "materialization_bindings": {
+          "planet": ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"]
+        },
+        "execution_projections": ["career"],
+        "semantic_contract": {
+          "materialization": {
+            "binding": "planet",
+            "allowed": ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"]
+          },
+          "projections": [
+            {
+              "rule_family": "parashara",
+              "category": "strong_in_10",
+              "domains": ["career"],
+              "base_weight": 0.2,
+              "priority": 10,
+              "context": "natal"
+            }
+          ]
+        }
+      },
+      {
+        "rule_id": "10th_lord_{lord}",
+        "revision": "legacy-unversioned",
+        "semantic_content_sha256": "915cee83987290512efd6ee568c75e9e39a26484a6f84b01df369a0baa4338bd",
+        "source_artifact_id": "derived.lord_status_10th",
+        "source_artifact_semantic_sha256": "6ceee97d4649ec60daf3015d45014b24c2e83562459db685b675fc84354d1b96",
+        "source_order": 1,
+        "materialization_contract_id": "career-lord-materialization@1.0.0",
+        "materialization_bindings": {
+          "lord": ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"]
+        },
+        "execution_projections": ["career"],
+        "semantic_contract": {
+          "materialization": {
+            "binding": "lord",
+            "allowed": ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"]
+          },
+          "projections": [
+            {
+              "rule_family": "lord_status",
+              "category": "lord_status",
+              "domains": ["career"],
+              "base_weight": 0.18,
+              "priority": 0,
+              "context": "natal"
+            }
+          ]
+        }
+      },
+      {
+        "rule_id": "rajayoga_naive",
+        "revision": "1",
+        "semantic_content_sha256": "a808a14fcb99df9ceb707a802e0724e30c8ce7f9a4288589e30a067ff8574e28",
+        "source_artifact_id": "yogas.active",
+        "source_artifact_semantic_sha256": "52aad095a24efdf5b89a7032c140bb6eff684fbb47c7ec3695ade2c9479b61d5",
+        "source_order": 2,
+        "materialization_contract_id": null,
+        "materialization_bindings": null,
+        "execution_projections": ["career", "yoga"],
+        "semantic_contract": {
+          "projections": [
+            {
+              "rule_family": "rajayoga_naive",
+              "category": "rajayoga",
+              "domains": ["career"],
+              "base_weight": 1.0,
+              "priority": 0,
+              "context": "natal"
+            },
+            {
+              "rule_family": "yoga",
+              "category": "rajayoga",
+              "domains": [],
+              "base_weight": 1.0,
+              "priority": 0,
+              "context": "natal"
+            }
+          ]
+        }
+      },
+      {
+        "rule_id": "dhana_naive",
+        "revision": "1",
+        "semantic_content_sha256": "0612b55d837bf803053b23e6783bb275341e840af3b92652773251dc62609ea1",
+        "source_artifact_id": "yogas.active",
+        "source_artifact_semantic_sha256": "52aad095a24efdf5b89a7032c140bb6eff684fbb47c7ec3695ade2c9479b61d5",
+        "source_order": 3,
+        "materialization_contract_id": null,
+        "materialization_bindings": null,
+        "execution_projections": ["yoga"],
+        "semantic_contract": {
+          "projections": [
+            {
+              "rule_family": "yoga",
+              "category": "dhana",
+              "domains": [],
+              "base_weight": 0.8,
+              "priority": 0,
+              "context": "natal"
+            }
+          ]
+        }
+      },
+      {
+        "rule_id": "arishta_naive",
+        "revision": "1",
+        "semantic_content_sha256": "78969978f4f3cb00f50980ff350093c49696c0ba76042f6406a01d627eda43f8",
+        "source_artifact_id": "yogas.active",
+        "source_artifact_semantic_sha256": "52aad095a24efdf5b89a7032c140bb6eff684fbb47c7ec3695ade2c9479b61d5",
+        "source_order": 4,
+        "materialization_contract_id": null,
+        "materialization_bindings": null,
+        "execution_projections": ["yoga"],
+        "semantic_contract": {
+          "projections": [
+            {
+              "rule_family": "yoga",
+              "category": "arishta",
+              "domains": [],
+              "base_weight": -1.0,
+              "priority": 0,
+              "context": "natal"
+            }
+          ]
+        }
+      },
+      {
+        "rule_id": "career.base_kendra_strength",
+        "revision": "1.0.0",
+        "semantic_content_sha256": "3ad1b92607b15211a9ba3414007fcabb09e57400cb0fdd0f2de950d6f30531af",
+        "source_artifact_id": "career.base_kendra_strength",
+        "source_artifact_semantic_sha256": "5daf4e28e29584ff453e7b7f2d95dfacc70afab95873735c35c01a068a6926c4",
+        "source_order": 5,
+        "materialization_contract_id": null,
+        "materialization_bindings": null,
+        "execution_projections": ["career"],
+        "semantic_contract": {
+          "projections": [
+            {
+              "rule_family": "career_compatibility",
+              "category": "career_baseline",
+              "domains": ["career"],
+              "base_weight": "runtime_derived",
+              "priority": 100,
+              "context": "natal"
+            }
+          ]
+        }
+      }
+    ],
+    "ordered_source_artifacts": [
+      {
+        "artifact_id": "m1.strong_planet_in_10",
+        "path": "systems/Parasara/rules/parashara/v1/m1_rules.yaml",
+        "format": "yaml",
+        "record_ids": ["strong_planet_in_10"],
+        "semantic_content_sha256": "db4c78927e3b99c4366d675fefc29ae1ad6098306000f0b198ca22ba669dd517"
+      },
+      {
+        "artifact_id": "derived.lord_status_10th",
+        "path": "systems/Parasara/rules/parashara/v1/derived_rules.yml",
+        "format": "yaml",
+        "record_ids": ["lord_status_10th"],
+        "semantic_content_sha256": "6ceee97d4649ec60daf3015d45014b24c2e83562459db685b675fc84354d1b96"
+      },
+      {
+        "artifact_id": "yogas.active",
+        "path": "systems/Parasara/rules/parashara/v1/yogas.yaml",
+        "format": "yaml",
+        "record_ids": ["rajayoga_naive", "dhana_naive", "arishta_naive"],
+        "semantic_content_sha256": "52aad095a24efdf5b89a7032c140bb6eff684fbb47c7ec3695ade2c9479b61d5"
+      },
+      {
+        "artifact_id": "career.base_kendra_strength",
+        "path": "systems/Parasara/engine/interpreters/career.py",
+        "format": "engine-contract",
+        "record_ids": ["1.0.0"],
+        "semantic_content_sha256": "5daf4e28e29584ff453e7b7f2d95dfacc70afab95873735c35c01a068a6926c4"
+      }
+    ]
+  },
+  "predicate_library": {
+    "identity": "parashara-predicate-library",
+    "version": "1.0.0",
+    "compatibility_contract": "predicate-result@1.0.0",
+    "content_sha256": "937c9adf281b6db53815eaf08d1d687de07cc3aa0fccc178e5b777e596aa2a32"
+  },
+  "condition_evaluator": {
+    "identity": "parashara-condition-evaluator",
+    "version": "1.0.0",
+    "compatibility_contract": "condition-result@1.0.0",
+    "content_sha256": "23392015e5a5d75be8f15ef9fd6aeb79073ab1a60b2c3bca4f5cd3fcc25b4068"
+  },
+  "inference": {
+    "identity": "career-inference",
+    "version": "career-compat-1.0.0",
+    "compatibility_contract": "inference-result@1.0.0",
+    "content_sha256": "85a18d93c37b8614d2ad30059f182af3791d3d5207599cfbc59f498f9f3cbee9",
+    "artifact_path": "systems/Parasara/config/inference/career_compat_v1.json",
+    "logical_sha256": "519df77d7befa04b3c0c08f08b4c1e5fca9bb71b2ab6f4ce71eec31c51c57baf"
+  },
+  "knowledge_data": [
+    {
+      "identity": "parashara-aspects",
+      "version": "1",
+      "content_sha256": "e93d8bb7cc2d0f3cd007d09c2e1fff02056605da47bd8f937c6d22b465b14ed7",
+      "compatibility_contract": "whole-sign-aspects@1.0.0",
+      "artifacts": [
+        {"path": "rules/parashara/aspects.yaml", "content_sha256": "fcc896cb5eb8d9d16305b01629a0f6dbe9af0effb691c6929c15fef0154af601"}
+      ]
+    },
+    {
+      "identity": "functional-roles-compatibility",
+      "version": "1",
+      "content_sha256": "d7db6acc7f649ed1cf822ae5582e73d7e52484c727f82b95f51b18d2fcb8ed69",
+      "compatibility_contract": "functional-roles@1.0.0",
+      "artifacts": [
+        {"path": "systems/Parasara/enrichment_tables/functional_roles/Aquarius.yaml", "content_sha256": "35965fa28873dc6be0fee4bf64ba68c8225747109df38287807880afd275c984"},
+        {"path": "systems/Parasara/enrichment_tables/functional_roles/Aries.yaml", "content_sha256": "4d8cd0b9a2e453160a0fe0b7444dac8c026d70f9b01da2050ae751aa36199fe5"},
+        {"path": "systems/Parasara/enrichment_tables/functional_roles/Cancer.yaml", "content_sha256": "6a2dfd3eed32453e2c075f9e60395dc137d72323de64f3331e709061f60a2d83"},
+        {"path": "systems/Parasara/enrichment_tables/functional_roles/Capricorn.yaml", "content_sha256": "c42258280246dab85107ae7d7d9adddc34d1487847fbb0b80192f0d9610be644"},
+        {"path": "systems/Parasara/enrichment_tables/functional_roles/Gemini.yaml", "content_sha256": "f3782def036507cc16228ec385f8ea7aa24ab51f468a190b88b82fedc547588a"},
+        {"path": "systems/Parasara/enrichment_tables/functional_roles/Leo.yaml", "content_sha256": "422c61679e845b96959626601ec0a8b84daaa101dbf9dab331c9452809668206"},
+        {"path": "systems/Parasara/enrichment_tables/functional_roles/Libra.yaml", "content_sha256": "37a7d290c2b30d18d857d462197a5c6ff9dbbb9f9b8642bdf0b4bda94aaaedf0"},
+        {"path": "systems/Parasara/enrichment_tables/functional_roles/Pisces.yaml", "content_sha256": "1f3fe3f43a4d6ba16d34d9a3efe2516db5f1ade4b04172e717bbc47083ad9c6a"},
+        {"path": "systems/Parasara/enrichment_tables/functional_roles/Sagittarius.yaml", "content_sha256": "3bcbd680d1dcf48455623990ccb0cdcbbde95d73d650da854c4b3d3a8f1f2ff1"},
+        {"path": "systems/Parasara/enrichment_tables/functional_roles/Scorpio.yaml", "content_sha256": "fe7931b2c7bab4c253c1e9d5b67634263ecfa3cd9d3ed6ce6bbd416f80dfe705"},
+        {"path": "systems/Parasara/enrichment_tables/functional_roles/Taurus.yaml", "content_sha256": "2905c5cdaa079ada88fd52f16f875fc1427671701e0d388151769332498017aa"},
+        {"path": "systems/Parasara/enrichment_tables/functional_roles/Virgo.yaml", "content_sha256": "6f5c4e8f74625c2be0ecac31269b72b6b2b6c1b49d566ca58d69e68470fa55ab"}
+      ]
+    },
+    {
+      "identity": "parashara-strength-tables",
+      "version": "1",
+      "content_sha256": "c5b2d0f95c6b763017d3ed9f19fbb378bc44c722bfa03184c8c6964c4a7b4940",
+      "compatibility_contract": "strength-tables@1.0.0",
+      "artifacts": [
+        {"path": "rules/parashara/strength_tables/debilitation.yaml", "content_sha256": "7a676dec56d4e5fcc1d848d28d35c886b1deaeded9358ff8cd5c706254fbdaa4"},
+        {"path": "rules/parashara/strength_tables/dig_bala.yaml", "content_sha256": "196be4fb138b6aae215f159b7cd34eeddea4cf82b58d83a894002a37d2e1af90"},
+        {"path": "rules/parashara/strength_tables/exaltation.yaml", "content_sha256": "ed94a79c26f6f379a3faacf72fffa26a41b0f5309b9a83e345d4c127dffdb239"},
+        {"path": "rules/parashara/strength_tables/moolatrikona.yaml", "content_sha256": "abbc90c454747dd117368fc9be947ec37cbaa988457f7b82d2095c66921c2f64"},
+        {"path": "rules/parashara/strength_tables/naisargika_bala.yaml", "content_sha256": "d0bd8f6adb79e57220cd83bf5b3fd20137d969bfeef2ed9b79270a1f6e69d681"},
+        {"path": "rules/parashara/strength_tables/ownership.yaml", "content_sha256": "2a55066851397524c8826b88ec334ab8680c1673dec3b3350a9ecd3087ebe752"},
+        {"path": "rules/parashara/strength_tables/shadbala_config.yaml", "content_sha256": "a07d4424c43e850159b4a82539ef0a67fe8fac9390aa334afbdea552a4b0ed73"}
+      ]
+    }
+  ],
+  "output": {
+    "schema_version": "1.0.0",
+    "compatibility_profile": "parasara_snapshot_v1"
+  },
+  "future_components": {
+    "dsl": null,
+    "dependency_graph": null
+  },
+  "manifest_fingerprint_sha256": "3e942f97cec7c24079faabc3db358b84177b752a8eb35a7b0d909f84a92d1220"
+}

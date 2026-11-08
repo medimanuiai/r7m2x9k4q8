@@ -183,7 +183,7 @@ Prompt-01 logical predicate/condition, Prompt-02 RuleMatch, Prompt-03
 InferenceResult, Prompt-04 snapshot/query, and Prompt-05 domain/Yoga/timing/
 assembly, Career, tooling, serialization,
 loader-order, registry, and cache scenarios are deterministic across the
-supported Python lanes, hash seeds, safe working directories, and repetitions.
+the selected Python 3.11.9 runtime, hash seeds, safe working directories, and repetitions.
 Remaining non-Prompt risks include Vimshottari wall-clock fallback, mutable
 construction/enrichment stages, some working-directory-dependent legacy table
 discovery, and mutable compatibility rule registries.

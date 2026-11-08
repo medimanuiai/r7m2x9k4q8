@@ -1,10 +1,11 @@
-import os
+from pathlib import Path
 import yaml
 from typing import Dict, Any, List
 from systems.Parasara.engine.rules.loader import register_rule
 
 
 REQUIRED_FIELDS = ['id', 'name', 'version', 'category', 'conditions', 'weights', 'evidence_required', 'provenance', 'sme_approved', 'tests']
+DEFAULT_LEGACY_YOGA_RULES = Path(__file__).resolve().parents[2] / 'rules' / 'parashara' / 'v1'
 
 
 def _load_yaml(path: str) -> List[Dict[str, Any]]:
@@ -29,9 +30,11 @@ def load_yoga_rules(rules_path: str = None) -> List[Dict[str, Any]]:
 
     Returns list of validated rules.
     """
-    base = rules_path or os.path.join('systems', 'Parasara', 'rules', 'parashara', 'v1')
-    path = os.path.join(base, 'yogas.yaml')
-    rules = _load_yaml(path)
+    # Literal compatibility inspection path; production selection belongs only
+    # to RuleVersionResolver and never depends on the process working directory.
+    base = Path(rules_path) if rules_path is not None else DEFAULT_LEGACY_YOGA_RULES
+    path = base / 'yogas.yaml'
+    rules = _load_yaml(str(path))
     validated: List[Dict[str, Any]] = []
     for r in rules:
         try:

@@ -8,11 +8,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from pathlib import Path as _P
-from typing import Any
+from typing import Any, Literal
 
 _ROOT = _P(__file__).resolve().parents[3]
 _SURYA = _ROOT / "systems" / "SuryaSiddhanta"
@@ -87,8 +88,12 @@ def build_planet_record(
     ascendant_longitude: float,
     *,
     retrograde: bool | None,
+    precision: Literal["legacy_v1", "strict_factual"] = "legacy_v1",
 ) -> dict[str, Any]:
+    _validate_precision(precision, sidereal_longitude, ascendant_longitude)
     longitude = normalize_longitude(sidereal_longitude)
+    if precision == "strict_factual" and not 0.0 <= longitude < 360.0:
+        raise ValueError("invalid_source_longitude")
     record = {
         "name": name,
         "sign": longitude_to_rashi(longitude),
@@ -102,17 +107,44 @@ def build_planet_record(
     record["motion"] = (
         {"retrograde": retrograde} if retrograde is not None else {}
     )
+    if precision == "strict_factual":
+        record["sidereal_longitude"] = longitude
+        record["degree"] = longitude - 30.0 * int(longitude // 30.0)
     return record
 
 
-def build_lagna_record(sidereal_longitude: float) -> dict[str, Any]:
+def build_lagna_record(
+    sidereal_longitude: float,
+    *,
+    precision: Literal["legacy_v1", "strict_factual"] = "legacy_v1",
+) -> dict[str, Any]:
+    _validate_precision(precision, sidereal_longitude)
     longitude = normalize_longitude(sidereal_longitude)
-    return {
+    if precision == "strict_factual" and not 0.0 <= longitude < 360.0:
+        raise ValueError("invalid_source_longitude")
+    record = {
         "sign": longitude_to_rashi(longitude),
         "degree": round(longitude % 30.0, 4),
         "house": 1,
         "nakshatra": _nakshatra_record(longitude),
     }
+    if precision == "strict_factual":
+        record["sidereal_longitude"] = longitude
+        record["degree"] = longitude - 30.0 * int(longitude // 30.0)
+    return record
+
+
+def _validate_precision(precision: str, *longitudes: float) -> None:
+    if precision not in ("legacy_v1", "strict_factual"):
+        raise ValueError("unsupported_precision")
+    if precision == "strict_factual":
+        try:
+            invalid = any(type(value) not in (int, float) or not math.isfinite(value)
+                          for value in longitudes)
+        except OverflowError:
+            invalid = True
+        if invalid:
+            raise ValueError("invalid_source_longitude")
 
 
 def generate_chart(
@@ -123,8 +155,11 @@ def generate_chart(
     *,
     timezone_name: str = "UTC",
     place_label: str = "",
+    precision: Literal["legacy_v1", "strict_factual"] = "legacy_v1",
 ) -> dict[str, Any]:
     """Generate a deterministic Lahiri-sidereal chart from a UTC instant."""
+
+    _validate_precision(precision)
 
     if dt.tzinfo is None:
         dt_utc = dt.replace(tzinfo=timezone.utc)
@@ -158,10 +193,11 @@ def generate_chart(
                 sidereal_longitude,
                 sidereal_ascendant,
                 retrograde=retrograde,
+                precision=precision,
             )
         )
 
-    lagna = build_lagna_record(sidereal_ascendant)
+    lagna = build_lagna_record(sidereal_ascendant, precision=precision)
 
     return {
         "metadata": {

@@ -31,6 +31,7 @@ from systems.Parasara.engine.rules.registry import (
     PredicateDefinition,
     PredicateRegistryError,
     get_production_registry,
+    predicate_registry_fingerprint_sha256,
 )
 
 
@@ -49,6 +50,26 @@ _SEMVER = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
 
 def _sha256(payload: bytes) -> str:
     return hashlib.sha256(payload).hexdigest()
+
+
+def _default_predicate_component_fingerprint() -> str:
+    """Compatibility component identity without selecting a rule-set version."""
+
+    return _sha256(canonical_json_bytes({
+        "engine_evaluation_contract": "1.0.0",
+        "predicate_library": {
+            "identity": "parashara-predicate-library",
+            "version": "1.0.0",
+            "compatibility_contract": "predicate-result@1.0.0",
+            "content_sha256": predicate_registry_fingerprint_sha256(),
+        },
+        "condition_evaluator": {
+            "identity": "parashara-condition-evaluator",
+            "version": "1.0.0",
+            "compatibility_contract": "condition-result@1.0.0",
+            "content_sha256": "23392015e5a5d75be8f15ef9fd6aeb79073ab1a60b2c3bca4f5cd3fcc25b4068",
+        },
+    }))
 
 
 def predicate_definition_fingerprint_bytes(definition: PredicateDefinition) -> bytes:
@@ -96,6 +117,7 @@ class PredicateCacheKey:
     prepared_state_sha256: str
     context_relevance: str
     relevant_context_sha256: str
+    predicate_component_fingerprint_sha256: str
 
     def __post_init__(self) -> None:
         if not isinstance(self.system_scope, str) or not self.system_scope:
@@ -111,6 +133,7 @@ class PredicateCacheKey:
             "parameters_sha256",
             "prepared_state_sha256",
             "relevant_context_sha256",
+            "predicate_component_fingerprint_sha256",
         ):
             if not _SHA256.fullmatch(getattr(self, name)):
                 raise ValueError(f"{name} must be lowercase SHA-256")
@@ -119,18 +142,27 @@ class PredicateCacheKey:
 def predicate_cache_key_to_data(key: PredicateCacheKey) -> FrozenMapping:
     if not isinstance(key, PredicateCacheKey):
         raise TypeError("key must be a PredicateCacheKey")
-    return FrozenMapping(
-        {
-            "context_relevance": key.context_relevance,
-            "definition_sha256": key.definition_sha256,
-            "parameters_sha256": key.parameters_sha256,
-            "predicate_id": key.predicate_id,
-            "predicate_version": key.predicate_version,
-            "prepared_state_sha256": key.prepared_state_sha256,
-            "relevant_context_sha256": key.relevant_context_sha256,
-            "system_scope": key.system_scope,
-        }
-    )
+    data = {
+        "context_relevance": key.context_relevance,
+        "definition_sha256": key.definition_sha256,
+        "parameters_sha256": key.parameters_sha256,
+        "predicate_id": key.predicate_id,
+        "predicate_version": key.predicate_version,
+        "prepared_state_sha256": key.prepared_state_sha256,
+        "relevant_context_sha256": key.relevant_context_sha256,
+        "system_scope": key.system_scope,
+    }
+    # The predecessor's implicit default fingerprint remains its locked legacy
+    # projection. Every explicitly incompatible component identity is exported,
+    # so it necessarily changes both the logical key and its digest.
+    if (
+        key.predicate_component_fingerprint_sha256
+        != _default_predicate_component_fingerprint()
+    ):
+        data["predicate_component_fingerprint_sha256"] = (
+            key.predicate_component_fingerprint_sha256
+        )
+    return FrozenMapping(data)
 
 
 def predicate_cache_key_json_bytes(key: PredicateCacheKey) -> bytes:
@@ -148,6 +180,7 @@ def build_predicate_cache_key(
     *,
     relevant_context: Mapping[str, Any],
     context_relevance: str = "none",
+    predicate_component_fingerprint_sha256: str | None = None,
 ) -> PredicateCacheKey:
     """Build a canonical key after parameter validation and context selection."""
 
@@ -164,6 +197,10 @@ def build_predicate_cache_key(
     if not isinstance(context_relevance, str) or not context_relevance:
         raise ValueError("context_relevance must be non-empty")
 
+    if predicate_component_fingerprint_sha256 is None:
+        predicate_component_fingerprint_sha256 = _default_predicate_component_fingerprint()
+    if not _SHA256.fullmatch(predicate_component_fingerprint_sha256):
+        raise ValueError("predicate_component_fingerprint_sha256 must be lowercase SHA-256")
     parameters = freeze_canonical(normalized_parameters, path="$.normalized_parameters")
     selected_context = freeze_canonical(relevant_context, path="$.relevant_context")
     return PredicateCacheKey(
@@ -175,6 +212,7 @@ def build_predicate_cache_key(
         prepared_state_sha256=prepared_state_sha256(state),
         context_relevance=context_relevance,
         relevant_context_sha256=_sha256(canonical_json_bytes(selected_context)),
+        predicate_component_fingerprint_sha256=predicate_component_fingerprint_sha256,
     )
 
 
@@ -318,10 +356,43 @@ def _error_result(
 class PredicateEvaluator:
     """Explicit canonical evaluator with an isolated cache instance."""
 
-    __slots__ = ("_cache",)
+    __slots__ = ("_cache", "_predicate_component_fingerprint_sha256", "_resolved_versions")
 
-    def __init__(self, *, capacity: int = DEFAULT_CACHE_CAPACITY) -> None:
+    def __init__(
+        self,
+        *,
+        capacity: int = DEFAULT_CACHE_CAPACITY,
+        resolved_versions: Any | None = None,
+        predicate_component_fingerprint_sha256: str | None = None,
+    ) -> None:
+        if resolved_versions is not None:
+            from systems.Parasara.engine.versioning import ResolvedEvaluationVersions
+
+            if not isinstance(resolved_versions, ResolvedEvaluationVersions):
+                raise TypeError("resolved_versions must be ResolvedEvaluationVersions or None")
+            selected_fingerprint = resolved_versions.predicate_component_fingerprint_sha256
+            if (
+                predicate_component_fingerprint_sha256 is not None
+                and predicate_component_fingerprint_sha256 != selected_fingerprint
+            ):
+                raise ValueError("predicate component fingerprint disagrees with authority")
+            predicate_component_fingerprint_sha256 = selected_fingerprint
+        if predicate_component_fingerprint_sha256 is None:
+            predicate_component_fingerprint_sha256 = _default_predicate_component_fingerprint()
+        if not _SHA256.fullmatch(predicate_component_fingerprint_sha256):
+            raise ValueError("predicate_component_fingerprint_sha256 must be lowercase SHA-256")
         self._cache = PredicateResultCache(capacity=capacity)
+        self._predicate_component_fingerprint_sha256 = predicate_component_fingerprint_sha256
+        self._resolved_versions = resolved_versions
+
+    @property
+    def predicate_component_fingerprint_sha256(self) -> str:
+        return self._predicate_component_fingerprint_sha256
+
+    def require_authority(self, resolved_versions: Any) -> None:
+        if self._resolved_versions is None:
+            raise ValueError("legacy unbound PredicateEvaluator has no evaluation authority")
+        self._resolved_versions.require_same(resolved_versions)
 
     @property
     def cache(self) -> PredicateResultCache:
@@ -426,6 +497,7 @@ class PredicateEvaluator:
             state,
             relevant_context=relevant_context,
             context_relevance=context_relevance,
+            predicate_component_fingerprint_sha256=self._predicate_component_fingerprint_sha256,
         )
         if use_cache:
             stored = self._cache.get(key)

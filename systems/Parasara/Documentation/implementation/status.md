@@ -1,5 +1,14 @@
 # Parāśara Engine Implementation Status
 
+> **Current Python policy - 2026-11-06:** [Root policy](../../../../AGENTS.md) selects Python 3.11.9 only
+> for development, tests, and CI and explicitly supersedes every dual-version
+> requirement below. Retained Python 3.14 results/commands are historical, not
+> current instructions. Run appropriate checks once on the selected runtime;
+> keep correctness, regression, end-to-end, and same-runtime determinism checks.
+> Missing second-version evidence is never a defect or blocker. Future specs,
+> prompts, and handoffs must carry this policy; only an explicit user request
+> can reinstate multiple Python versions.
+
 Status: CURRENT-STATE  
 Owner: Parāśara engine maintainers  
 Last verified: 2026-08-29
@@ -47,9 +56,9 @@ operational readiness.
 | OutputAssembler | IMPLEMENTED | `engine/output_assembler.py`, typed assembly input, purity/architecture/exact snapshot tests | Current outward profile intentionally preserves the unversioned legacy public shape |
 | Rule-set selection | PARTIAL | Hardcoded `v1` paths in runtime/loaders and output metadata | No explicit EngineConfig, strict selection, or cache-safe version propagation |
 | Rule governance | MISSING | Metadata fragments and proposed policy only | No promotion, rollback, approval enforcement, or audit service |
-| Prompt-01 validation/CI | IMPLEMENTED | `tools/validate_prompt01.py`, `tests/wp19`, Windows dual-Python CI workflow, WP19 | Linux portability, external required-check setting, and release/compliance gates are separate |
-| Prompt-04 validation/CI | IMPLEMENTED | `tools/validate_prompt04.py`, deterministic snapshot/query manifest, dual-Python Windows workflow | External required-check setting and release/compliance gates remain separate |
-| Prompt-05 validation/CI | IMPLEMENTED | `tools/validate_prompt05.py`, typed-domain manifest, composed predecessor gates, dual-Python Windows workflow | External required-check setting and release/compliance gates remain separate |
+| Prompt-01 validation/CI | IMPLEMENTED | `tools/validate_prompt01.py`, `tests/wp19`, Windows Python 3.11.9 CI workflow, WP19 | Linux portability, external required-check setting, and release/compliance gates are separate |
+| Prompt-04 validation/CI | IMPLEMENTED | `tools/validate_prompt04.py`, deterministic snapshot/query manifest, Python 3.11.9 Windows workflow | External required-check setting and release/compliance gates remain separate |
+| Prompt-05 validation/CI | IMPLEMENTED | `tools/validate_prompt05.py`, typed-domain manifest, composed predecessor gates, Python 3.11.9 Windows workflow | External required-check setting and release/compliance gates remain separate |
 | Snapshot/testing harness | PARTIAL | Prompt-01 gate, snapshots, testing framework | Prompt-01 compatibility validated; scientific/production acceptance remains |
 | Public engine API | MISSING | Tool-level entry points only | Versioned service/facade contract absent |
 | Production operations | MISSING | Documentation checklist only | Monitoring, deployment, retention automation, and operational evidence absent |

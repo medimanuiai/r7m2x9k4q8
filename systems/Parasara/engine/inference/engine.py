@@ -97,6 +97,8 @@ def _evidence_references(rule: RuleMatch) -> tuple[EvidenceReference, ...]:
             order=len(references),
         ))
     for reference in rule.trace_references:
+        if reference.trace_type == "dependency":
+            continue
         if any(item.trace_id == reference.trace_id for item in references):
             continue
         references.append(EvidenceReference(
@@ -385,6 +387,16 @@ def _rule_errors(rules: Sequence[RuleMatch]) -> tuple[InferenceError, ...]:
 class InferenceEngine:
     """Aggregate already-evaluated universal rules without chart access."""
 
+    __slots__ = ("_resolved_versions",)
+
+    def __init__(self, *, resolved_versions: Any | None = None) -> None:
+        if resolved_versions is not None:
+            from systems.Parasara.engine.versioning import ResolvedEvaluationVersions
+
+            if not isinstance(resolved_versions, ResolvedEvaluationVersions):
+                raise TypeError("resolved_versions must be ResolvedEvaluationVersions or None")
+        self._resolved_versions = resolved_versions
+
     def _compatibility_projection(
         self,
         result: InferenceResult,
@@ -437,6 +449,7 @@ class InferenceEngine:
         timing_context: TimingContext | None,
         data_completeness: DataCompleteness,
         config: InferenceConfig,
+        resolved_versions: Any | None = None,
     ) -> InferenceResult:
         if not isinstance(domain, str) or not domain.strip() or domain != domain.strip().lower():
             raise ValueError("domain must be a canonical lowercase identifier")
@@ -452,6 +465,17 @@ class InferenceEngine:
             raise TypeError("rule_matches must be a sequence")
         if any(not isinstance(item, RuleMatch) for item in rule_matches):
             raise TypeError("rule_matches must contain only RuleMatch values")
+        authority = self._resolved_versions if resolved_versions is None else resolved_versions
+        if self._resolved_versions is not None and authority is not self._resolved_versions:
+            self._resolved_versions.require_same(authority)
+        if authority is not None:
+            from systems.Parasara.engine.versioning import ResolvedEvaluationVersions
+
+            if not isinstance(authority, ResolvedEvaluationVersions):
+                raise TypeError("resolved_versions must be ResolvedEvaluationVersions or None")
+            authority.authorize_inference_config(config)
+            for item in rule_matches:
+                authority.authorize_rule(item)
         ordered = tuple(sorted(rule_matches, key=lambda item: _rule_order(config, item)))
         systems = {item.system for item in ordered}
         rule_sets = {item.rule_set_version for item in ordered}
@@ -538,7 +562,13 @@ class InferenceEngine:
             inference_schema_version=config.inference_schema_version,
             inference_version=config.inference_version,
             system=(next(iter(systems)) if systems else config.system),
-            rule_set_version=(next(iter(rule_sets)) if rule_sets else "unresolved"),
+            rule_set_version=(
+                next(iter(rule_sets))
+                if rule_sets
+                else authority.manifest.rule_set_version
+                if authority is not None
+                else "unresolved"
+            ),
             domain=domain,
             status=status,
             raw_score=raw,

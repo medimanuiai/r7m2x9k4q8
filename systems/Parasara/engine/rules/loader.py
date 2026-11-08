@@ -3,13 +3,14 @@ import yaml
 from typing import Dict, Any
 
 RULE_REGISTRY: Dict[str, Dict[str, Any]] = {}
+LEGACY_INSPECTION_ONLY = True
 
 
 def load_rules_from_dir(rules_dir: str) -> Dict[str, Dict[str, Any]]:
     """Load YAML rule files from a directory tree into RULE_REGISTRY.
 
-    This function is lightweight and intended for M1: it loads declarative
-    rule metadata (id, type, base_score, priority, etc.) into memory.
+    This legacy compatibility function is inspection-only. It never selects
+    the executable rule-set used by RuleVersionResolver or a production run.
     """
     RULE_REGISTRY.clear()
     if not os.path.exists(rules_dir):

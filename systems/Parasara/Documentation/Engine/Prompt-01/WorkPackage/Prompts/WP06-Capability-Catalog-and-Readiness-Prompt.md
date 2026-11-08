@@ -1,5 +1,14 @@
 Implement **WP06 — Versioned Capability Catalog, Readiness, and Missing-Data Semantics** for Prompt-01 in the Parasara system.
 
+> **Historical Python-policy notice - 2026-11-06:** [Root policy](../../../../../../../AGENTS.md) selects Python 3.11.9 only
+> for development, tests, and CI and explicitly supersedes every dual-version
+> requirement below. Retained Python 3.14 results/commands are historical, not
+> current instructions. Run appropriate checks once on the selected runtime;
+> keep correctness, regression, end-to-end, and same-runtime determinism checks.
+> Missing second-version evidence is never a defect or blocker. Future specs,
+> prompts, and handoffs must carry this policy; only an explicit user request
+> can reinstate multiple Python versions.
+
 Do not only review this prompt. Implement all permitted work, validate it, and create the required completion report. Do not proceed to WP07.
 
 ## Objective

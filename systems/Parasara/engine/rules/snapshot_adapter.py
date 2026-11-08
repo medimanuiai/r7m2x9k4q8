@@ -41,7 +41,12 @@ def prepare_predicate_snapshot(
     whole = snapshot.inspect_capability("aspects.whole_sign_graph")
     basic = snapshot.inspect_capability("aspects.basic_conjunction_list")
     aspects = _MISSING
-    if whole.readiness in (CapabilityReadiness.READY, CapabilityReadiness.READY_EMPTY):
+    # The protected projection has global (not per-source) readiness. A graph
+    # supporting only classical planets cannot claim node "no aspect" facts.
+    # Withhold that partial graph rather than changing the seven-capability
+    # contract or falsely publishing empty node relations. Legacy paths are exact.
+    partial_whole = whole.source_kind == "strict_classical_whole_sign_graph"
+    if whole.readiness in (CapabilityReadiness.READY, CapabilityReadiness.READY_EMPTY) and not partial_whole:
         result = snapshot.get_aspect_representation("whole_sign_graph")
         aspects = thaw_value(result.value) if result.value_present else []
     elif basic.readiness in (CapabilityReadiness.READY, CapabilityReadiness.READY_EMPTY):
@@ -96,4 +101,54 @@ def prepare_predicate_snapshot(
     )
 
 
-__all__ = ("prepare_predicate_snapshot",)
+def prepare_predicate_snapshot_v2(snapshot, *, resolved_versions):
+    """Project already published strict facts under one selected V2 authority."""
+    from .aspect_contract_v2 import (
+        AspectCapabilityV2, PreparationOutcomeV2, SOURCE_SUPPORT, GRAPH,
+        SOURCE_KIND, FACTUAL_SCOPE, VERSION, make_prepared_v2, require_v2_authority,
+    )
+    from .canonical import freeze_canonical
+    from .prepared_state import PreparationIssue
+    require_v2_authority(resolved_versions)
+    if not isinstance(snapshot, AstroStateSnapshot):
+        return PreparationOutcomeV2(succeeded=False, state=None,
+            issues=(PreparationIssue(code="invalid_snapshot", path="$"),))
+    resolved_versions.authorize_snapshot(snapshot)
+    legacy = prepare_predicate_snapshot(snapshot)
+    if not legacy.succeeded:
+        return PreparationOutcomeV2(succeeded=False, state=None, issues=legacy.issues)
+    cap = next(item for item in snapshot.capabilities if item.capability_id == GRAPH)
+    graph = AspectCapabilityV2(readiness=CapabilityReadiness.MISSING)
+    if cap.capability_version != "1.0.0":
+        graph = AspectCapabilityV2(readiness=CapabilityReadiness.VERSION_MISMATCH,
+            observed_version=cap.capability_version, source_kind=SOURCE_KIND)
+    elif cap.readiness in (CapabilityReadiness.READY, CapabilityReadiness.READY_EMPTY):
+        if cap.source_kind != SOURCE_KIND or cap.factual_scope != FACTUAL_SCOPE:
+            graph = AspectCapabilityV2(readiness=CapabilityReadiness.MALFORMED,
+                source_kind=SOURCE_KIND, observed_version=VERSION, issues=("aspect_coverage_contradictory",))
+        else:
+            try:
+                content = thaw_value(cap.content)
+                if (set(content) != {"edges", "by_planet", "config_version", "source_kind", "factual_scope"}
+                        or content.get("source_kind") != SOURCE_KIND or content.get("factual_scope") != FACTUAL_SCOPE):
+                    raise ValueError("contradictory scoped provenance")
+                graph = AspectCapabilityV2(readiness=cap.readiness, source_kind=SOURCE_KIND,
+                    observed_version=VERSION, content=freeze_canonical({
+                        "edges": content["edges"], "source_support": SOURCE_SUPPORT,
+                        "config_version": content["config_version"],
+                    }))
+            except (TypeError, ValueError, KeyError) as exc:
+                issue = ("aspect_coverage_contradictory" if str(exc) == "aspect_coverage_contradictory"
+                         else "aspect_coverage_malformed")
+                graph = AspectCapabilityV2(readiness=CapabilityReadiness.MALFORMED,
+                    source_kind=SOURCE_KIND, observed_version=VERSION, issues=(issue,))
+    elif cap.readiness is CapabilityReadiness.UNSUPPORTED:
+        graph = AspectCapabilityV2(readiness=cap.readiness)
+    elif cap.readiness is not CapabilityReadiness.MISSING:
+        graph = AspectCapabilityV2(readiness=cap.readiness, source_kind=SOURCE_KIND,
+            observed_version=VERSION, issues=("aspect_coverage_malformed",) if cap.readiness is CapabilityReadiness.MALFORMED else ())
+    return PreparationOutcomeV2(succeeded=True,
+        state=make_prepared_v2(legacy.state, graph, resolved_versions))
+
+
+__all__ = ("prepare_predicate_snapshot", "prepare_predicate_snapshot_v2")

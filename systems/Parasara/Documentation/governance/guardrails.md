@@ -60,8 +60,9 @@ serialization, Yoga/loader order, Career/tooling compatibility, exact
 supported-file rule lint, strict no-update snapshot bytes, and protected
 artifact/worktree preservation.
 
-`.github/workflows/ci.yaml` installs the WP00 lock and runs that command as a
-blocking Python 3.11/3.14 matrix. It has no weak retry, failure suppression,
+`.github/workflows/ci.yaml` installs the WP00 lock and preserves the blocking
+Prompt-03 and Prompt-05 full gates on Python 3.11.9 only, selected through
+`.python-version`. It has no weak retry, failure suppression,
 credentialed mutation, snapshot approval, or report-tree upload. The
 supplemental snapshot workflow uses the same lock and an explicit temporary
 output.

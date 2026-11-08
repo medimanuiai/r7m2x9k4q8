@@ -23,14 +23,14 @@ Dev route
 - The authenticated UI is available at `/account/astro` within the authenticated area of the Next.js app (path: `frontend/app/(auth)/account/astro/page.tsx`).
 
 Python runner
-- The dev Next.js API route calls the Python runner to produce real Parasara snapshots. Ensure the Python executable in your development environment points to the project's virtualenv by setting `PYTHON_EXECUTABLE` (example Windows):
+- The dev Next.js API route calls the Python runner to produce real Parasara snapshots. Use Python 3.11.9, the sole development/test/CI runtime. From the repository root, set `PYTHON_EXECUTABLE` to the prepared environment (Windows):
 
 ```powershell
-$env:PYTHON_EXECUTABLE = 'C:\path\to\jyothishyam_env\Scripts\python.exe'
-npm run dev
+$env:PYTHON_EXECUTABLE = (Resolve-Path './jyothishyam_env/prompt01-py311/Scripts/python.exe').Path
+npm --prefix frontend run dev
 ```
 
-If `PYTHON_EXECUTABLE` is not set, the route will attempt to use the `python` on PATH which may not have required packages (Skyfield, ndastro_engine, etc.).
+Without `PYTHON_EXECUTABLE`, the route first selects the prepared `prompt01-py311` Windows environment when present. Set it explicitly for other layouts so the application uses Python 3.11.9 with the project dependencies.
 
 UX considerations
 - Provide clear privacy notice and a consent checkbox before submission.

@@ -156,3 +156,124 @@ def chart_to_astrostate(chart: Chart) -> AstroState:
         astro.enrichments['house_summaries'] = chart.houses
         astro.diagnostics['lagna_summary'] = {}
     return astro
+
+
+def chart_to_astrostate_strict(chart, *, resolved_versions=None) -> AstroState:
+    """Construct facts only through the explicit FWP01 strict boundary."""
+    from copy import deepcopy
+    from systems.Parasara.engine.adapter.surya_adapter import SuryaAdapter, StrictInputError
+    from systems.Parasara.engine.models import StrictChart, StrictInputIssue
+    from systems.Parasara.engine.identities import CANONICAL_PLANETS, SIGNS, SIGN_LORD
+
+    if not isinstance(chart, StrictChart):
+        raise StrictInputError((StrictInputIssue("$", "strict_chart_required"),))
+    # Revalidate model instances too: model_construct/mutable nested values cannot
+    # turn unvalidated or subsequently corrupted data into a published fact.
+    validated = SuryaAdapter.from_mapping_strict(chart.model_dump(mode="python"))
+    if resolved_versions is not None:
+        from systems.Parasara.engine.versioning import ResolvedEvaluationVersions
+        if not isinstance(resolved_versions, ResolvedEvaluationVersions):
+            raise StrictInputError((StrictInputIssue("$", "resolved_authority_required"),))
+    md = deepcopy(validated.metadata)
+    location = md["birth_location"]
+    lagna = validated.lagna
+    planets = [PlanetState(
+        name=row["name"], sign=row["sign"], degree=row["degree"],
+        house=row["house"], canonical_id=row["name"].lower(),
+        degree_norm=row["sidereal_longitude"],
+    ) for row in validated.planets]
+    start = SIGNS.index(lagna["sign"])
+    houses = []
+    for number in range(1, 13):
+        sign = SIGNS[(start + number - 1) % 12]
+        houses.append(dict(number=number, sign=sign, lord=SIGN_LORD[sign],
+            occupants=[name for name in CANONICAL_PLANETS
+                       if any(p.name == name and p.house == number for p in planets)]))
+    # Existing chart.metadata is the bounded field-level evidence surface; no
+    # snapshot type, query, capability ID or legacy model contract is expanded.
+    md["factual_sources"] = {
+        "producer": "fwp01.strict", "version": "1.0.0",
+        "lagna": deepcopy(lagna),
+        "planets": {row["name"]: {
+            "sidereal_longitude": row["sidereal_longitude"],
+            "nakshatra": deepcopy(row["nakshatra"]),
+            "motion": (
+                {"readiness": "unsupported", "issues": ["node_motion_unavailable"]}
+                if row["name"] in ("Rahu", "Ketu") else
+                {"readiness": "ready", "value": deepcopy(row["motion"]),
+                 "source": "validated_surya_input"}
+            ),
+            "input_flags": deepcopy(row.get("flags", {})),
+            "normalization": {
+                "producer": "fwp01.strict", "version": "1.0.0",
+                "formula": "whole_sign_from_original_sidereal_longitude",
+                "input": row["sidereal_longitude"],
+                "output": {key: row[key] for key in ("name", "sign", "degree", "house")},
+            },
+        } for row in validated.planets},
+    }
+    astro = AstroState(
+        metadata=md,
+        location=Location(place=location.get("place", location.get("place_label")),
+            latitude=location["latitude"], longitude=location["longitude"],
+            timezone_offset_minutes=location["timezone_offset_minutes"]),
+        lagna_sign=lagna["sign"], lagna_degree=lagna["degree"],
+        planets=planets, houses=houses,
+        diagnostics={"planet_count": 9},
+        enrichments={"normalized_degrees": {p.name: p.degree_norm for p in planets}},
+        derived=None,
+    )
+    from systems.Parasara.engine.derived.builder import build_derived_state_strict
+    derived = build_derived_state_strict(astro, resolved_versions=resolved_versions)
+    astro.derived = derived
+    astro.enrichments.update(
+        aspects=derived["aspects"], house_summaries=derived["houses"],
+        unavailable_capabilities=derived["unavailable_capabilities"],
+    )
+    astro.metadata["factual_sources"]["enrichments"] = {
+        key: derived[key] for key in ("conditions", "varga_availability", "role_audit", "unsupported_relations")
+    }
+    exaltations = {
+        name: row["conditions"]["exalted"]["value"]
+        for name, row in derived["conditions"].items()
+        if row["conditions"]["exalted"]["readiness"] == "ready"
+    }
+    if exaltations:
+        astro.metadata["exaltations"] = exaltations
+    return astro
+
+
+def build_strict_snapshot(chart, *, resolved_versions=None):
+    """Publish once; a strict construction failure never retries compatibility."""
+    from systems.Parasara.engine.adapter.surya_adapter import StrictInputError
+    from systems.Parasara.engine.astrostate_api import (
+        AstroStateBuildFailure, AstroStateBuildSuccess, AstroCapabilitySupply,
+        ConstructionIssue, freeze_astrostate, snapshot_logical_bytes,
+    )
+    try:
+        astro = chart_to_astrostate_strict(chart, resolved_versions=resolved_versions)
+    except StrictInputError as exc:
+        issues = tuple(sorted((ConstructionIssue(
+            code=item.code, path=item.path, recoverable=False, fatal=True,
+        ) for item in exc.issues), key=lambda item: (item.path, item.code)))
+        return AstroStateBuildFailure(issues=issues)
+    context = {} if resolved_versions is None else {"instant": resolved_versions.config.evaluation_instant}
+    supplies = tuple(AstroCapabilitySupply(
+        capability_id=capability_id, capability_version="1.0.0",
+        source_kind=source_kind, content=content, factual_scope=scope,
+    ) for capability_id, source_kind, scope, content in (
+        ("aspects.whole_sign_graph", "strict_classical_whole_sign_graph", "seven_classical_planets", astro.enrichments["aspects"]),
+        ("aspects.basic_conjunction_list", "strict_same_sign_conjunction", "factual", astro.derived["relationships"]["aspects"]),
+        ("houses.summaries", "strict_house_conditions", "factual", {str(row["number"]): row for row in astro.derived["houses"]}),
+    ))
+    outcome = freeze_astrostate(astro, capability_supplies=supplies, evaluation_context=context)
+    if isinstance(outcome, AstroStateBuildSuccess):
+        try:
+            snapshot_logical_bytes(outcome.snapshot)
+        except (UnicodeError, ValueError, OverflowError):
+            return AstroStateBuildFailure(issues=(ConstructionIssue(
+                code="unsafe_canonical_content", path="$", recoverable=False, fatal=True,
+            ),))
+        if resolved_versions is not None:
+            resolved_versions.authorize_snapshot(outcome.snapshot)
+    return outcome

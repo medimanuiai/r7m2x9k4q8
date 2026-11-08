@@ -7,6 +7,48 @@ from systems.Parasara.engine.astrostate import AstroState
 SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces']
 
 
+def compute_aspect_graph_strict(astro, *, resolved_versions=None):
+    from systems.Parasara.engine.identities import CANONICAL_PLANETS
+    from systems.Parasara.engine.enrichments.functional_roles import load_pinned_knowledge
+    artifacts, evidence = load_pinned_knowledge("parashara-aspects", resolved_versions=resolved_versions)
+    table = artifacts["rules/parashara/aspects.yaml"]
+    planets = sorted(astro.planets, key=lambda p: CANONICAL_PLANETS.index(p.name))
+    edges = []
+    for planet in planets:
+        if planet.name in ("Rahu", "Ketu"):
+            continue
+        offsets = table["planets"].get(planet.name, table["planets"]["default"])["offsets"]
+        for offset in sorted(offsets):
+            target_index = (SIGNS.index(planet.sign) + offset - 1) % 12
+            target_sign = SIGNS[target_index]
+            target_house = ((target_index - SIGNS.index(astro.lagna_sign)) % 12) + 1
+            targets = [p.name for p in planets if p.sign == target_sign]
+            trace = dict(source_planet=planet.name, source_sign=planet.sign,
+                source_house=planet.house, offset=offset, target_sign=target_sign,
+                target_house=target_house, matched_planets=targets,
+                producer="fwp01.strict_aspects", producer_version="1.0.0", authority=evidence)
+            # Sign facts always exist, including occupied target signs. Planet
+            # edges are derived references needed by the existing query surface.
+            for target in [*targets, None]:
+                edges.append(dict(source=planet.name, target=target, aspect=f"{offset}th",
+                    kind="whole-sign", trace=trace))
+    return dict(edges=edges, by_planet={p.name: [e for e in edges if e["source"] == p.name]
+                for p in planets if p.name not in ("Rahu", "Ketu")},
+                config_version=table["version"],
+                source_kind="strict_classical_whole_sign_graph",
+                factual_scope="seven_classical_planets")
+
+
+def compute_same_sign_conjunctions_strict(astro):
+    from systems.Parasara.engine.identities import CANONICAL_PLANETS
+    planets = sorted(astro.planets, key=lambda p: CANONICAL_PLANETS.index(p.name))
+    return [{"from": source.name, "to": target.name, "type": "conjunction",
+             "evidence": {"producer": "fwp01.strict_conjunction", "version": "1.0.0",
+                          "sign": source.sign, "basis": "same_canonical_sign"}}
+            for source in planets for target in planets
+            if source.name != target.name and source.sign == target.sign]
+
+
 def _load_aspect_table(config_path: str | Path | None = None) -> Dict[str, Any]:
     path = config_path or os.path.join('rules', 'parashara', 'aspects.yaml')
     try:

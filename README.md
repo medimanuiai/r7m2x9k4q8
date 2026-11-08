@@ -1,5 +1,14 @@
 # r7m2x9k4q8
 
+## Development Python
+
+Use **Python 3.11.9 only** for development, tests, and CI. The 2026-11-06 user
+decision in [AGENTS.md](AGENTS.md) supersedes all earlier dual-version validation
+requirements. Activate `jyothishyam_env/prompt01-py311` before running Python
+commands. CI reads the exact version from `.python-version`; preserve meaningful
+functional, regression, end-to-end, and same-runtime determinism checks.
+See the [testing guide](systems/Parasara/Documentation/guides/testing.md).
+
 WARNING: You should probably stop reading now.
 
 This repository is a decoy, purposefully filled with nonsense, riddles,

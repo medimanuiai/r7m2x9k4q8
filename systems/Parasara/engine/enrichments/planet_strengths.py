@@ -10,6 +10,34 @@ SIGN_ELEMENTS = {
     'Cancer': 'Water', 'Scorpio': 'Water', 'Pisces': 'Water',
 }
 
+
+def strict_strength_and_conditions(astro):
+    """Preserve sourced conditions; never calculate a legacy/classical proxy."""
+    from copy import deepcopy
+    import re
+    components = ("Naisargika", "Uchcha", "Dig", "Kala", "Cheshta", "Drik",
+                  "Saptavargaja", "OjhaYugma", "Kendra", "Drekkana", "total")
+    results = {}
+    for planet in astro.planets:
+        source = astro.metadata["factual_sources"]["planets"][planet.name]
+        raw_flags = source["input_flags"]
+        provenance = raw_flags.get("provenance", {})
+        conditions = {"retrograde": deepcopy(source["motion"])}
+        for flag in ("combust", "exalted", "debilitated"):
+            origin = provenance.get(flag) if isinstance(provenance, dict) else None
+            if (flag in raw_flags and isinstance(origin, dict)
+                and isinstance(origin.get("source"), str)
+                and re.fullmatch(r"[a-z][a-z0-9_.-]*", origin["source"])
+                and isinstance(origin.get("version"), str) and origin["version"]):
+                conditions[flag] = dict(readiness="ready", value=raw_flags[flag],
+                    provenance=deepcopy(origin), basis="explicit_sourced_fact")
+            else:
+                conditions[flag] = dict(readiness="missing", issues=["source_provenance_missing"])
+        results[planet.name] = dict(conditions=conditions,
+            classical_strength={name: dict(readiness="unsupported", issues=["astrology_sme_approval_required"])
+                                for name in components})
+    return results
+
 # simplified sign lords for lagna summary
 SIGN_LORD = {
     'Aries': 'Mars', 'Taurus': 'Venus', 'Gemini': 'Mercury', 'Cancer': 'Moon',

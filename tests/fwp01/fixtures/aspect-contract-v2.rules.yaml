@@ -1,0 +1,99 @@
+dsl: parasara-rule-dsl
+dsl_version: 1.0.0
+system: synthetic
+rule_set:
+  family: fwp01_aspect_v2
+  version: synthetic-v2
+macros: []
+rules:
+- id: synthetic.aspect_v2.supported
+  revision: 1.0.0
+  family: synthetic
+  category: aspect
+  domains:
+  - synthetic
+  label: Synthetic source-scoped aspect fixture
+  priority: 10
+  base_weight: 0.25
+  context: natal
+  requires:
+  - id: aspects.whole_sign_graph
+    version: 2.0.0
+  evidence:
+    mode: predicate_trace_references
+  when:
+    predicate:
+      id: ASPECT_EXISTS
+      version: 2.0.0
+      arguments:
+        from_planet: Mars
+        to_planet: Moon
+- id: synthetic.aspect_v2.unsupported
+  revision: 1.0.0
+  family: synthetic
+  category: aspect
+  domains:
+  - synthetic
+  label: Synthetic source-scoped aspect fixture
+  priority: 10
+  base_weight: 0.25
+  context: natal
+  requires:
+  - id: aspects.whole_sign_graph
+    version: 2.0.0
+  evidence:
+    mode: predicate_trace_references
+  when:
+    predicate:
+      id: ASPECT_EXISTS
+      version: 2.0.0
+      arguments:
+        from_planet: Rahu
+- id: synthetic.aspect_v2.negative
+  revision: 1.0.0
+  family: synthetic
+  category: aspect
+  domains:
+  - synthetic
+  label: Synthetic source-scoped aspect fixture
+  priority: 10
+  base_weight: 0.25
+  context: natal
+  requires:
+  - id: aspects.whole_sign_graph
+    version: 2.0.0
+  evidence:
+    mode: predicate_trace_references
+  when:
+    predicate:
+      id: ASPECT_EXISTS
+      version: 2.0.0
+      arguments:
+        from_planet: Sun
+        to_planet: Sun
+- id: synthetic.aspect_v2.house
+  revision: 1.0.0
+  family: synthetic
+  category: aspect
+  domains:
+  - synthetic
+  label: Synthetic source-scoped aspect fixture
+  priority: 10
+  base_weight: 0.25
+  context: natal
+  requires:
+  - id: aspects.whole_sign_graph
+    version: 2.0.0
+  - id: planets.house_placement
+    version: 1.0.0
+  evidence:
+    mode: predicate_trace_references
+  when:
+    predicate:
+      id: ASPECT_EXISTS
+      version: 2.0.0
+      arguments:
+        from_planet: Mars
+        from_house: 1
+        to_planet: Moon
+        to_house: 4

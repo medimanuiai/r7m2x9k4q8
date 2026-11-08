@@ -1,0 +1,100 @@
+dsl: parasara-rule-dsl
+dsl_version: "1.0.0"
+system: synthetic
+rule_set:
+  family: prompt08_fixture
+  version: fixture-v1
+macros: []
+rules:
+  - id: synthetic.a
+    revision: "1.0.0"
+    family: synthetic
+    category: synthetic
+    domains: [synthetic]
+    label: "Synthetic dependency signal"
+    priority: 0
+    base_weight: 0.0
+    context: natal
+    requires:
+      - id: planets.house_placement
+        version: "1.0.0"
+      - id: planets.normalized
+        version: "1.0.0"
+    evidence:
+      mode: predicate_trace_references
+    when:
+      predicate:
+        id: PLANET_IN_HOUSE
+        version: "1.0.0"
+        arguments:
+          planet: Mars
+          house: 1
+  - id: synthetic.b
+    revision: "1.0.0"
+    family: synthetic
+    category: synthetic
+    domains: [synthetic]
+    label: "Synthetic dependency signal"
+    priority: 0
+    base_weight: 0.0
+    context: natal
+    requires:
+      - id: planets.house_placement
+        version: "1.0.0"
+      - id: planets.normalized
+        version: "1.0.0"
+    evidence:
+      mode: predicate_trace_references
+    when:
+      predicate:
+        id: PLANET_IN_HOUSE
+        version: "1.0.0"
+        arguments:
+          planet: Mars
+          house: 2
+  - id: synthetic.c
+    revision: "1.0.0"
+    family: synthetic
+    category: synthetic
+    domains: [synthetic]
+    label: "Synthetic dependency signal"
+    priority: 0
+    base_weight: 0.0
+    context: natal
+    requires:
+      - id: planets.house_placement
+        version: "1.0.0"
+      - id: planets.normalized
+        version: "1.0.0"
+    evidence:
+      mode: predicate_trace_references
+    when:
+      predicate:
+        id: PLANET_IN_HOUSE
+        version: "1.0.0"
+        arguments:
+          planet: Mars
+          house: 3
+  - id: synthetic.d
+    revision: "1.0.0"
+    family: synthetic
+    category: synthetic
+    domains: [synthetic]
+    label: "Synthetic dependency signal"
+    priority: 0
+    base_weight: 0.0
+    context: natal
+    requires:
+      - id: planets.house_placement
+        version: "1.0.0"
+      - id: planets.normalized
+        version: "1.0.0"
+    evidence:
+      mode: predicate_trace_references
+    when:
+      predicate:
+        id: PLANET_IN_HOUSE
+        version: "1.0.0"
+        arguments:
+          planet: Mars
+          house: 4

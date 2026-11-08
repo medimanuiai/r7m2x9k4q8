@@ -44,6 +44,11 @@ from systems.Parasara.engine.inference import (
     inference_config_logical_sha256,
     load_inference_config,
 )
+
+# Backward-compatible module-level literal for legacy callers. New code should
+# prefer passing `resolved_versions` and loading the inference config from the
+# manifest authority to avoid import-time selection during testing.
+_CAREER_INFERENCE_CONFIG = load_inference_config()
 from systems.Parasara.engine.interpreters.career_models import (
     CAREER_EVALUATOR_VERSION,
     CAREER_FACT_VERSION,
@@ -83,6 +88,13 @@ from systems.Parasara.engine.rules.rule_match import (
     RuleMatchStatus,
     RuleTraceReference,
     rule_match_logical_sha256,
+)
+from systems.Parasara.engine.versioning import (
+    EngineConfig,
+    ResolvedEvaluationVersions,
+    RuleVersionResolver,
+    compatibility_v1_config,
+    evaluation_instant_from_snapshot,
 )
 
 
@@ -413,8 +425,32 @@ class _ObservedValue:
     source: str
 
 
-_RULE_ENGINE = RuleEngine()
-_CAREER_INFERENCE_CONFIG = load_inference_config()
+def _legacy_inference_config() -> InferenceConfig:
+    """Return the cached literal compatibility policy without disk I/O."""
+
+    return _CAREER_INFERENCE_CONFIG
+
+
+def _resolve_career_versions(
+    *,
+    snapshot: AstroStateSnapshot | None = None,
+    engine_config: EngineConfig | None = None,
+    resolved_versions: ResolvedEvaluationVersions | None = None,
+) -> ResolvedEvaluationVersions:
+    if engine_config is not None and resolved_versions is not None:
+        raise ValueError("provide EngineConfig or resolved_versions, not both")
+    if resolved_versions is not None:
+        if not isinstance(resolved_versions, ResolvedEvaluationVersions):
+            raise TypeError("resolved_versions must be ResolvedEvaluationVersions")
+        if snapshot is not None:
+            resolved_versions.authorize_snapshot(snapshot)
+        return resolved_versions
+    config = engine_config or compatibility_v1_config(
+        evaluation_instant_from_snapshot(snapshot)
+        if snapshot is not None
+        else compatibility_v1_config().evaluation_instant
+    )
+    return RuleVersionResolver().resolve(config, snapshot=snapshot)
 
 
 @dataclass(frozen=True, slots=True)
@@ -424,6 +460,7 @@ class _CareerRuleMatchLedger:
     rule_matches: tuple[RuleMatch, ...]
     rule_match_digests: tuple[str, ...]
     contribution_lineage: tuple[tuple[str, str, str, str], ...]
+    resolved_versions: ResolvedEvaluationVersions
 
     def resolve(self, rule_match: RuleMatch) -> RuleMatch:
         identity = (rule_match.rule_id, rule_match.rule_version, rule_match.trace_id)
@@ -454,6 +491,7 @@ class _CareerInferenceEvaluation:
     components: tuple[DomainComponent, ...]
     indicators: tuple[DomainIndicator, ...]
     career_compatibility: CareerCompatibilityProjection
+    resolved_versions: ResolvedEvaluationVersions
 
 
 def _career_rule_status(status: PredicateStatus) -> RuleMatchStatus:
@@ -531,6 +569,7 @@ def _candidate_evaluation(
     compatibility_evidence: Mapping[str, Any],
     evaluation_snapshot_digest: str,
     evaluation_context: PredicateEvaluationContext,
+    rule_engine: RuleEngine,
 ) -> CareerCandidateEvaluation:
     trace_lineage = tuple(step.step_id for step in fact.trace_steps)
     rule_errors = tuple(
@@ -555,7 +594,7 @@ def _candidate_evaluation(
         for index, step_id in enumerate(trace_lineage)
     )
     resolved_rule = _resolved_career_rule(definition)
-    rule_match = _RULE_ENGINE.build_match(
+    rule_match = rule_engine.build_match(
         resolved_rule,
         fact.backing_result,
         evaluation_snapshot_digest=evaluation_snapshot_digest,
@@ -622,6 +661,7 @@ def _strong_evaluation(
     evaluator: PredicateEvaluator,
     context: PredicateEvaluationContext,
     evaluation_snapshot_digest: str,
+    rule_engine: RuleEngine,
 ) -> CareerCandidateEvaluation:
     planet_id = definition.normalized_parameters["planet"]
     backing = evaluator.evaluate(
@@ -727,6 +767,7 @@ def _strong_evaluation(
         compatibility_evidence=compatibility_evidence,
         evaluation_snapshot_digest=evaluation_snapshot_digest,
         evaluation_context=context,
+        rule_engine=rule_engine,
     )
 
 
@@ -735,6 +776,7 @@ def _lord_evaluation(
     facts: CareerPreparedFacts,
     context: PredicateEvaluationContext,
     evaluation_snapshot_digest: str,
+    rule_engine: RuleEngine,
 ) -> CareerCandidateEvaluation:
     lord = definition.normalized_parameters["lord"]
     fact_id = f"career.fact.{definition.candidate_id}"
@@ -800,6 +842,7 @@ def _lord_evaluation(
         compatibility_evidence=legacy_evidence,
         evaluation_snapshot_digest=evaluation_snapshot_digest,
         evaluation_context=context,
+        rule_engine=rule_engine,
     )
 
 
@@ -808,6 +851,7 @@ def _rajayoga_evaluation(
     facts: CareerPreparedFacts,
     context: PredicateEvaluationContext,
     evaluation_snapshot_digest: str,
+    rule_engine: RuleEngine,
 ) -> CareerCandidateEvaluation:
     occ1 = [item.planet_id for item in facts.planets if item.house == 1 and item.planet_id in _BENEFICS]
     occ10 = [item.planet_id for item in facts.planets if item.house == 10 and item.planet_id in _BENEFICS]
@@ -837,6 +881,7 @@ def _rajayoga_evaluation(
         compatibility_evidence=evidence,
         evaluation_snapshot_digest=evaluation_snapshot_digest,
         evaluation_context=context,
+        rule_engine=rule_engine,
     )
 
 
@@ -844,6 +889,7 @@ def _failed_candidate_evaluation(
     definition: CareerCandidateDefinition,
     context: PredicateEvaluationContext,
     evaluation_snapshot_digest: str,
+    rule_engine: RuleEngine,
 ) -> CareerCandidateEvaluation:
     fact_id = f"career.fact.{definition.candidate_id}"
     error = _safe_error(
@@ -885,6 +931,7 @@ def _failed_candidate_evaluation(
         compatibility_evidence={},
         evaluation_snapshot_digest=evaluation_snapshot_digest,
         evaluation_context=context,
+        rule_engine=rule_engine,
     )
 
 
@@ -1020,6 +1067,7 @@ def evaluate_career_batch(
     prepared_facts: CareerPreparedFacts,
     *,
     evaluator: PredicateEvaluator | None = None,
+    resolved_versions: ResolvedEvaluationVersions | None = None,
 ) -> CareerEvaluationBatch:
     """Evaluate every fixed Career candidate into one immutable typed batch."""
 
@@ -1036,18 +1084,27 @@ def evaluate_career_batch(
             batch_errors=prepared_facts.preparation_errors, evaluation_time_ms=None,
         )
 
-    active_evaluator = PredicateEvaluator() if evaluator is None else evaluator
+    active_evaluator = (
+        PredicateEvaluator(resolved_versions=resolved_versions)
+        if evaluator is None
+        else evaluator
+    )
     if not isinstance(active_evaluator, PredicateEvaluator):
         raise TypeError("evaluator must be PredicateEvaluator or None")
+    if resolved_versions is not None:
+        active_evaluator.require_authority(resolved_versions)
+    rule_engine = RuleEngine(resolved_versions=resolved_versions)
     context = PredicateEvaluationContext()
     evaluations = []
     for definition in _candidate_catalog(prepared_facts):
         if definition.rule_type == "strong_in_10":
-            result = _strong_evaluation(definition, prepared_facts, active_evaluator, context, digest)
+            result = _strong_evaluation(
+                definition, prepared_facts, active_evaluator, context, digest, rule_engine
+            )
         elif definition.rule_type == "lord_status":
-            result = _lord_evaluation(definition, prepared_facts, context, digest)
+            result = _lord_evaluation(definition, prepared_facts, context, digest, rule_engine)
         else:
-            result = _rajayoga_evaluation(definition, prepared_facts, context, digest)
+            result = _rajayoga_evaluation(definition, prepared_facts, context, digest, rule_engine)
         evaluations.append(result)
     base_evaluation = _base_and_component_facts(prepared_facts)
     return CareerEvaluationBatch(
@@ -1094,7 +1151,11 @@ def _public_components(batch: CareerEvaluationBatch) -> list[dict[str, Any]]:
     return output
 
 
-def _baseline_rule_match(batch: CareerEvaluationBatch, config: InferenceConfig) -> Any:
+def _baseline_rule_match(
+    batch: CareerEvaluationBatch,
+    config: InferenceConfig,
+    rule_engine: RuleEngine,
+) -> Any:
     """Represent the legacy per-chart base as explicit universal rule meaning."""
 
     if not batch.base_facts:
@@ -1143,7 +1204,7 @@ def _baseline_rule_match(batch: CareerEvaluationBatch, config: InferenceConfig) 
         relation="compatibility_baseline",
         order=index,
     ) for index, step_id in enumerate(trace_lineage))
-    return _RULE_ENGINE.build_match(
+    return rule_engine.build_match(
         resolved,
         fact.backing_result,
         evaluation_snapshot_digest=batch.prepared_facts_sha256,
@@ -1167,11 +1228,20 @@ def _baseline_rule_match(batch: CareerEvaluationBatch, config: InferenceConfig) 
 def career_inference_rule_matches(
     batch: CareerEvaluationBatch,
     config: InferenceConfig | None = None,
+    *,
+    resolved_versions: ResolvedEvaluationVersions | None = None,
 ) -> tuple[Any, ...]:
     if not isinstance(batch, CareerEvaluationBatch):
         raise TypeError("batch must be CareerEvaluationBatch")
-    active_config = _CAREER_INFERENCE_CONFIG if config is None else config
-    baseline = _baseline_rule_match(batch, active_config)
+    active_config = (
+        load_inference_config(resolved_versions=resolved_versions)
+        if config is None and resolved_versions is not None
+        else _legacy_inference_config() if config is None else config
+    )
+    if resolved_versions is not None:
+        resolved_versions.authorize_inference_config(active_config)
+    rule_engine = RuleEngine(resolved_versions=resolved_versions)
+    baseline = _baseline_rule_match(batch, active_config, rule_engine)
     values = (*batch.rule_matches, *((baseline,) if baseline is not None else ()))
     return RuleEngine.order_matches(values)
 
@@ -1182,7 +1252,7 @@ def career_data_completeness(
 ) -> DataCompleteness:
     if not isinstance(batch, CareerEvaluationBatch):
         raise TypeError("batch must be CareerEvaluationBatch")
-    active_config = _CAREER_INFERENCE_CONFIG if config is None else config
+    active_config = _legacy_inference_config() if config is None else config
     policy = active_config.completeness["career"]
     checks = tuple(bool(batch.completeness[name]) for name in policy["legacy_checks"])
     score = sum(checks) * float(policy["legacy_check_weight"])
@@ -1229,9 +1299,12 @@ def _aggregate_career(
     engine: InferenceEngine,
     *,
     rule_matches: tuple[RuleMatch, ...] | None = None,
+    resolved_versions: ResolvedEvaluationVersions | None = None,
 ) -> InferenceResult:
     matches = (
-        career_inference_rule_matches(batch, config)
+        career_inference_rule_matches(
+            batch, config, resolved_versions=resolved_versions
+        )
         if rule_matches is None
         else rule_matches
     )
@@ -1241,6 +1314,7 @@ def _aggregate_career(
         timing_context=None,
         data_completeness=career_data_completeness(batch, config),
         config=config,
+        resolved_versions=resolved_versions,
     )
 
 
@@ -1249,21 +1323,36 @@ def infer_career(
     *,
     config: InferenceConfig | None = None,
     engine: InferenceEngine | None = None,
+    resolved_versions: ResolvedEvaluationVersions | None = None,
 ) -> InferenceResult:
     if not isinstance(batch, CareerEvaluationBatch):
         raise TypeError("batch must be CareerEvaluationBatch")
-    active_config = _CAREER_INFERENCE_CONFIG if config is None else config
-    active_engine = InferenceEngine() if engine is None else engine
-    return _aggregate_career(batch, active_config, active_engine)
+    active_config = (
+        load_inference_config(resolved_versions=resolved_versions)
+        if config is None and resolved_versions is not None
+        else _legacy_inference_config() if config is None else config
+    )
+    active_engine = (
+        InferenceEngine(resolved_versions=resolved_versions)
+        if engine is None
+        else engine
+    )
+    return _aggregate_career(
+        batch,
+        active_config,
+        active_engine,
+        resolved_versions=resolved_versions,
+    )
 
 
 def _career_domain_components(
     batch: CareerEvaluationBatch,
     result: InferenceResult,
+    config: InferenceConfig,
 ) -> tuple[DomainComponent, ...]:
     """Map locked Career component rows without creating component scores."""
 
-    compatibility = _CAREER_INFERENCE_CONFIG.career_compatibility
+    compatibility = config.career_compatibility
     baseline_rule_id = compatibility["baseline_rule_id"]
     source = next(
         (item for item in result.components if baseline_rule_id in item.rule_ids),
@@ -1302,8 +1391,9 @@ def _career_domain_indicators(
     batch: CareerEvaluationBatch,
     result: InferenceResult,
     ledger: _CareerRuleMatchLedger,
+    config: InferenceConfig,
 ) -> tuple[DomainIndicator, ...]:
-    compatibility = _CAREER_INFERENCE_CONFIG.career_compatibility
+    compatibility = config.career_compatibility
     baseline_rule_id = compatibility["baseline_rule_id"]
     contribution_by_rule = {
         item.rule_id: item
@@ -1419,19 +1509,26 @@ def _career_compatibility_projection(
 
 def _evaluate_career_inference(
     batch: CareerEvaluationBatch,
+    *,
+    resolved_versions: ResolvedEvaluationVersions | None = None,
 ) -> _CareerInferenceEvaluation:
     """Aggregate once and bind every Career authority value in the same run."""
 
     if not isinstance(batch, CareerEvaluationBatch):
         raise TypeError("batch must be CareerEvaluationBatch")
-    config = _CAREER_INFERENCE_CONFIG
-    rule_matches = career_inference_rule_matches(batch, config)
-    engine = InferenceEngine()
+    # Resolve the run authority and load the matching inference config so that
+    # all subsequent components operate under the same sealed evaluation
+    # versions. Legacy callers will continue to work via the default resolver.
+    resolved_versions = _resolve_career_versions(resolved_versions=resolved_versions)
+    config = load_inference_config(resolved_versions=resolved_versions)
+    rule_matches = career_inference_rule_matches(batch, config, resolved_versions=resolved_versions)
+    engine = InferenceEngine(resolved_versions=resolved_versions)
     result = _aggregate_career(
         batch,
         config,
         engine,
         rule_matches=rule_matches,
+        resolved_versions=resolved_versions,
     )
     contribution_lineage = tuple(
         (
@@ -1448,6 +1545,7 @@ def _evaluate_career_inference(
             rule_match_logical_sha256(item) for item in rule_matches
         ),
         contribution_lineage=contribution_lineage,
+        resolved_versions=resolved_versions,
     )
     for contribution in result.contributions:
         matching = next(
@@ -1464,8 +1562,8 @@ def _evaluate_career_inference(
             raise ValueError("Career contribution is detached from the evaluator ledger")
         ledger.resolve(matching)
     compatibility_projection = engine._compatibility_projection(result, config)
-    components = _career_domain_components(batch, result)
-    indicators = _career_domain_indicators(batch, result, ledger)
+    components = _career_domain_components(batch, result, config)
+    indicators = _career_domain_indicators(batch, result, ledger, config)
     career_compatibility = _career_compatibility_projection(
         batch,
         compatibility_projection,
@@ -1482,6 +1580,7 @@ def _evaluate_career_inference(
         components=components,
         indicators=indicators,
         career_compatibility=career_compatibility,
+        resolved_versions=resolved_versions,
     )
 
 
@@ -1536,7 +1635,7 @@ def _build_career_prediction(
                 if result.status.value == "failed" or not result.contributions
                 else _career_domain_narrative(result, indicators, summary)
             ),
-            engine_version="0.1.0",
+            engine_version=evaluation.resolved_versions.manifest.engine.version,
             interpreter_version=CAREER_EVALUATOR_VERSION,
             narrative_version=CAREER_EVALUATOR_VERSION,
         )
@@ -1565,22 +1664,43 @@ def build_career_prediction(
     )
 
 
-def interpret_career_domain(astro: AstroState) -> DomainBuildOutcome:
+def interpret_career_domain(
+    astro: AstroState,
+    *,
+    engine_config: EngineConfig | None = None,
+    resolved_versions: ResolvedEvaluationVersions | None = None,
+) -> DomainBuildOutcome:
     """Strict mutable-input wrapper returning the typed Career outcome."""
 
+    authority = _resolve_career_versions(
+        engine_config=engine_config,
+        resolved_versions=resolved_versions,
+    )
     prepared = prepare_career_facts(astro)
-    batch = evaluate_career_batch(prepared)
-    return _build_career_prediction(_evaluate_career_inference(batch))
+    batch = evaluate_career_batch(prepared, resolved_versions=authority)
+    return _build_career_prediction(
+        _evaluate_career_inference(batch, resolved_versions=authority)
+    )
 
 
 def interpret_career_domain_snapshot(
     snapshot: AstroStateSnapshot,
+    *,
+    engine_config: EngineConfig | None = None,
+    resolved_versions: ResolvedEvaluationVersions | None = None,
 ) -> DomainBuildOutcome:
     """Canonical typed Career interpretation from one immutable snapshot."""
 
+    authority = _resolve_career_versions(
+        snapshot=snapshot,
+        engine_config=engine_config,
+        resolved_versions=resolved_versions,
+    )
     prepared = prepare_career_snapshot(snapshot)
-    batch = evaluate_career_batch(prepared)
-    return _build_career_prediction(_evaluate_career_inference(batch))
+    batch = evaluate_career_batch(prepared, resolved_versions=authority)
+    return _build_career_prediction(
+        _evaluate_career_inference(batch, resolved_versions=authority)
+    )
 
 
 def project_career_compatibility(
@@ -1662,19 +1782,37 @@ def project_career_compatibility(
     }
 
 
-def interpret_career(astro: AstroState) -> dict[str, Any]:
+def interpret_career(
+    astro: AstroState,
+    *,
+    engine_config: EngineConfig | None = None,
+    resolved_versions: ResolvedEvaluationVersions | None = None,
+) -> dict[str, Any]:
     """Existing public wrapper over the Prompt-05 typed Career boundary."""
 
-    outcome = interpret_career_domain(astro)
+    outcome = interpret_career_domain(
+        astro,
+        engine_config=engine_config,
+        resolved_versions=resolved_versions,
+    )
     if isinstance(outcome, DomainBuildRejected):
         raise ValueError("Career DomainPrediction construction was rejected")
     return project_career_prediction_compatibility(outcome.prediction)
 
 
-def interpret_career_snapshot(snapshot: AstroStateSnapshot) -> dict[str, Any]:
+def interpret_career_snapshot(
+    snapshot: AstroStateSnapshot,
+    *,
+    engine_config: EngineConfig | None = None,
+    resolved_versions: ResolvedEvaluationVersions | None = None,
+) -> dict[str, Any]:
     """Public compatibility wrapper over canonical typed Career evaluation."""
 
-    outcome = interpret_career_domain_snapshot(snapshot)
+    outcome = interpret_career_domain_snapshot(
+        snapshot,
+        engine_config=engine_config,
+        resolved_versions=resolved_versions,
+    )
     if isinstance(outcome, DomainBuildRejected):
         raise ValueError("Career DomainPrediction construction was rejected")
     return project_career_prediction_compatibility(outcome.prediction)

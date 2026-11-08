@@ -21,7 +21,7 @@ owner review. This delivery:
 - keeps internal `Kethu` compatibility while presenting the conventional `Ketu` label in the UI.
 
 Validation for publication covers the focused synthetic chart boundary, existing Career and
-snapshot regressions, the full protected-artifact validator under Python 3.11 and 3.14, the
+snapshot regressions, the full protected-artifact validator under Python 3.11.9, the
 production frontend build, and desktop/mobile visual review. Approved snapshots and protected
 contracts remain unchanged.
 
@@ -109,7 +109,7 @@ What a user can actually see today:
 | Privacy/terms/forgot/change-password links | Missing routes | Remove/defer dead links from MVP or add honest minimal pages later |
 | Frontend automated tests/build CI | Missing from current required gates | Add proportional component/API/E2E smoke coverage in MVP milestones |
 | Responsive/accessibility verification | Unverified | Verify visually in desktop/mobile states before MVP acceptance |
-| Windows backend validation | Working in PR #1 for Python 3.11 and 3.14 | Preserve as a blocking regression gate |
+| Windows backend validation | Working in PR #1 for Python 3.11.9 | Preserve as a blocking regression gate |
 
 ## 4. Five critical blockers, ordered by user impact
 
@@ -144,13 +144,13 @@ What a user can actually see today:
 ## 6. Proposed MVP acceptance criteria
 
 1. On Windows, a user can open the main product URL, enter or load an explicitly synthetic birth record, confirm place/time zone, and submit without an account.
-2. The same normalized input produces the same chart facts and Parasara factual/scoring output on repeated runs under Python 3.11 and 3.14.
+2. The same normalized input produces the same chart facts and Parasara factual/scoring output on repeated runs under Python 3.11.9.
 3. The chart is genuinely Lahiri-sidereal, not merely labelled that way, and a small approved/synthetic reference set confirms sign/degree/time-zone handling within the existing tolerance policy.
 4. The success page visibly shows Lagna, planet placements, Career summary/score/confidence, and selected human-readable evidence without exposing raw internal traces.
 5. Empty, loading, invalid-input, success, and safe-error states are visible and usable at desktop and mobile widths.
 6. A client never receives a stack trace, local path, raw child-process output, token, provider error, or raw private birth record.
 7. Placeholder domains are omitted or explicitly marked unavailable; they are never presented as astrology conclusions.
-8. Existing Career/Yoga fixtures, approved snapshot, protected artifacts, Prompt-01 contracts, and Windows dual-Python gates do not drift.
+8. Existing Career/Yoga fixtures, approved snapshot, protected artifacts, Prompt-01 contracts, and Windows Python 3.11.9 gates do not drift.
 9. Frontend build and focused UI/API tests pass on Windows, including one synthetic end-to-end smoke flow.
 10. Software correctness and astrology-doctrine correctness are reported separately.
 
@@ -162,7 +162,7 @@ What a user can actually see today:
 | 2. Understandable result page | Lagna/placements, Career score/confidence, and concise evidence cards replace the raw-JSON-first experience | Preserve current factual/scoring contracts; JSON remains advanced/download-only |
 | 3. Honest Parasara scope | Placeholder domains disappear or show explicit unavailability; optionally expose existing Yoga results only if rule eligibility/wording is confirmed | No new Wealth/Marriage/etc. interpreter and no silent doctrine change |
 | 4. Visual and interaction finish | Desktop/mobile screenshots cover empty, validation, loading, success, and error states; accessibility basics pass | UI-only changes must not alter engine values |
-| 5. Stability and handoff | Windows 3.11/3.14, snapshots/protected artifacts, frontend build/tests, API/UI agreement, runbook, and MVP checklist pass | No public-release or iPhone approval implied |
+| 5. Stability and handoff | Windows Python 3.11.9, snapshots/protected artifacts, frontend build/tests, API/UI agreement, runbook, and MVP checklist pass | No public-release or iPhone approval implied |
 
 ## 8. Files and surfaces likely affected
 
@@ -202,7 +202,7 @@ No expert decision is needed yet for Wealth, Marriage, Children, Health, Safety,
 
 - Use the PR head as the implementation base until PR #1 is merged; then continue from updated `main`.
 - Make the first MVP account-free and ephemeral because the current account system is scaffold-only.
-- Preserve all Prompt-01 typed contracts and Windows Python 3.11/3.14 gates.
+- Preserve all Prompt-01 typed contracts and Windows Python 3.11.9 gates.
 - Use existing Lahiri intent and the repository's ayanamsa implementation; do not invent a new ayanamsa choice.
 - Normalize local birth time to UTC explicitly and preserve the confirmed IANA time zone in the request/result context.
 - Validate bounded date/time/coordinate/time-zone inputs at both web and Python boundaries.

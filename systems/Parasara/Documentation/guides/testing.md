@@ -30,7 +30,8 @@ Web and future iPhone clients remain platform-independent API consumers.
 
 ## Authoritative Stage-01 command
 
-From repository root on Windows in either supported Python environment:
+From repository root on Windows, activate `jyothishyam_env/prompt01-py311`
+and use Python 3.11.9 for every command:
 
 ```text
 python tools/validate_prompt01.py full
@@ -48,10 +49,12 @@ architecture/safety enforcement, complete pytest, the explicit WP17 manifest
 lint, strict no-update snapshot bytes, and protected artifact/worktree checks.
 WP18 performance remains dated descriptive evidence, not a blocking threshold.
 
-Python 3.11 is the baseline lane and Python 3.14 is the forward lane. Both must
-pass with identical collection and contractual hashes. Hosted CI pins the
-minor versions and prints the resolved patch version; it does not claim local
-patch identity.
+Python 3.11.9 is the only development, test, and CI runtime. Both workflows
+read `.python-version` and print or resolve that exact version. Do not run a
+second interpreter or compare outputs across Python versions. Preserve pinned
+contractual hashes and same-runtime determinism checks. The 2026-11-06 user
+decision supersedes the earlier dual-version policy; missing second-version
+results are never a validation defect or blocker.
 
 ## Focused developer commands
 
@@ -101,10 +104,10 @@ Snapshot changes require deliberate review; never auto-approve broad drift after
 ## Current CI behavior
 
 `.github/workflows/ci.yaml` installs the WP00 Stage-01 lock plus editable
-SuryaSiddhanta without dependencies and runs the authoritative full command in
-Python 3.11 and 3.14 on `windows-latest`. It has no fallback, snapshot update,
+SuryaSiddhanta without dependencies and runs the preserved Prompt-03 full gate
+and authoritative Prompt-05 full gate on Python 3.11.9 on `windows-latest`. It has no fallback, snapshot update,
 credentialed mutation, report-tree upload, or failure suppression. The
-aggregate check is `Prompt-01 Stage-01 / Prompt-01 required gate`.
+aggregate check is `Prompt-05 Typed Domain Models / Prompt-05 required aggregate`.
 
 `.github/workflows/parasara-snapshot-compare.yml` is supplemental. It uses the
 same Windows runner contract, lock, and an explicit runner-temporary `--out`;

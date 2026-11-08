@@ -4,7 +4,7 @@
 **Last Updated:** 2026-05-31
 **Status:** 🟡 In Review
 **Module:** `backend/routes/auth.py`, `backend/auth/`
-**Language:** Python 3.11+
+**Language:** Python 3.11.9 (sole development, test, and CI runtime; see root AGENTS.md)
 
 ---
 

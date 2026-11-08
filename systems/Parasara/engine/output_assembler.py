@@ -60,6 +60,7 @@ class EngineMetadata:
     rule_set_version: str
     public_meta_engine_version: str
     generated_at: str | None = None
+    resolved_versions: Any | None = field(default=None, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         for name in (
@@ -69,6 +70,11 @@ class EngineMetadata:
             _text(name, getattr(self, name))
         if self.generated_at is not None:
             _text("generated_at", self.generated_at)
+        if self.resolved_versions is not None:
+            from systems.Parasara.engine.versioning import ResolvedEvaluationVersions
+
+            if not isinstance(self.resolved_versions, ResolvedEvaluationVersions):
+                raise TypeError("resolved_versions must be ResolvedEvaluationVersions or None")
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -366,9 +372,24 @@ def project_yoga_diagnostics_compatibility(
 class OutputAssembler:
     """The sole active typed public-output assembly service."""
 
-    def assemble(self, value: OutputAssemblyInput) -> dict[str, Any]:
+    def assemble(
+        self,
+        value: OutputAssemblyInput,
+        *,
+        resolved_versions: Any | None = None,
+    ) -> dict[str, Any]:
         if not isinstance(value, OutputAssemblyInput):
             raise TypeError("value must be OutputAssemblyInput")
+        if resolved_versions is not None:
+            from systems.Parasara.engine.versioning import ResolvedEvaluationVersions
+
+            if not isinstance(resolved_versions, ResolvedEvaluationVersions):
+                raise TypeError("resolved_versions must be ResolvedEvaluationVersions or None")
+            resolved_versions.authorize_engine_metadata(value.engine_metadata)
+            for item in value.domains:
+                resolved_versions.authorize_domain_prediction(item)
+            for item in value.yogas:
+                resolved_versions.authorize_yoga_diagnostic(item)
         career = next(
             (item for item in value.domains if item.domain is DomainId.CAREER),
             None,
@@ -427,9 +448,14 @@ class OutputAssembler:
             },
         }
 
-    def canonical_json_bytes(self, value: OutputAssemblyInput) -> bytes:
+    def canonical_json_bytes(
+        self,
+        value: OutputAssemblyInput,
+        *,
+        resolved_versions: Any | None = None,
+    ) -> bytes:
         payload = json.dumps(
-            self.assemble(value),
+            self.assemble(value, resolved_versions=resolved_versions),
             ensure_ascii=False,
             allow_nan=False,
             sort_keys=True,
@@ -437,11 +463,16 @@ class OutputAssembler:
         ).encode("utf-8")
         return payload
 
-    def snapshot_json_bytes(self, value: OutputAssemblyInput) -> bytes:
+    def snapshot_json_bytes(
+        self,
+        value: OutputAssemblyInput,
+        *,
+        resolved_versions: Any | None = None,
+    ) -> bytes:
         """Serialize the locked pretty-printed snapshot at the sole boundary."""
 
         payload = json.dumps(
-            self.assemble(value),
+            self.assemble(value, resolved_versions=resolved_versions),
             ensure_ascii=False,
             allow_nan=False,
             indent=2,
@@ -449,8 +480,15 @@ class OutputAssembler:
         ).encode("utf-8")
         return payload.replace(b"\n", b"\r\n")
 
-    def logical_digest(self, value: OutputAssemblyInput) -> str:
-        return hashlib.sha256(self.canonical_json_bytes(value)).hexdigest()
+    def logical_digest(
+        self,
+        value: OutputAssemblyInput,
+        *,
+        resolved_versions: Any | None = None,
+    ) -> str:
+        return hashlib.sha256(
+            self.canonical_json_bytes(value, resolved_versions=resolved_versions)
+        ).hexdigest()
 
 
 __all__ = (

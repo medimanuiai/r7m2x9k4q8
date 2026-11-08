@@ -1,0 +1,46 @@
+{
+  "graph_schema_version": "1.0.0",
+  "system": "synthetic",
+  "rule_set_family": "prompt08_fixture",
+  "rule_set_version": "fixture-v1",
+  "rules": [
+    {
+      "rule_id": "synthetic.a",
+      "revision": "1.0.0",
+      "requires_matches": [
+        {
+          "rule_id": "synthetic.c",
+          "revision": "1.0.0"
+        }
+      ],
+      "requires_absence": [],
+      "optional_supports": []
+    },
+    {
+      "rule_id": "synthetic.b",
+      "revision": "1.0.0",
+      "requires_matches": [],
+      "requires_absence": [],
+      "optional_supports": []
+    },
+    {
+      "rule_id": "synthetic.c",
+      "revision": "1.0.0",
+      "requires_matches": [],
+      "requires_absence": [],
+      "optional_supports": []
+    },
+    {
+      "rule_id": "synthetic.d",
+      "revision": "1.0.0",
+      "requires_matches": [],
+      "requires_absence": [],
+      "optional_supports": [
+        {
+          "rule_id": "synthetic.b",
+          "revision": "1.0.0"
+        }
+      ]
+    }
+  ]
+}

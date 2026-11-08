@@ -4,7 +4,7 @@
 **Last Updated:** 2026-05-31
 **Status:** 🟡 In Review
 **Module:** `backend/astrology_engine.py` + `backend/chart_calculator.py`
-**Language:** Python 3.11+
+**Language:** Python 3.11.9 (sole development, test, and CI runtime; see root AGENTS.md)
 **Core Library:** pyswisseph (Swiss Ephemeris Python bindings)
 
 ---

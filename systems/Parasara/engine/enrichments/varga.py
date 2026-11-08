@@ -4,6 +4,12 @@ from systems.Parasara.engine.astrostate import AstroState, PlanetState
 SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces']
 
 
+def strict_varga_availability():
+    """No unapproved generic mapping can become a strict varga fact."""
+    return {name: {"readiness": "unsupported", "issues": ["astrology_sme_approval_required"]}
+            for name in ("D3", "D7", "D9", "D30")}
+
+
 def _sign_index_from_longitude(lon: float) -> Tuple[int, str, float]:
     """Return (sign_index, sign_name, degree_within_sign) for a longitude in degrees."""
     lon = float(lon) % 360.0

@@ -57,21 +57,21 @@ Web and future iPhone clients remain platform-independent API consumers.
 
 ## Authoritative validation
 
-From repository root on Windows, using either supported Python environment:
+From repository root on Windows, using the selected Python 3.11.9 environment:
 
 ```text
 python tools/validate_prompt01.py full
 ```
 
-Python 3.11 is the baseline lane and Python 3.14 is the forward lane. The
+Python 3.11.9 is the only development, test, and CI runtime. The
 command uses the current interpreter, unique OS-temporary outputs, no snapshot
 update mode, strict failure propagation, WP17 enforcement, full pytest,
 deterministic manifest comparison, exact rule-lint coverage, strict approved
 snapshot bytes, and protected-artifact/worktree checks.
 
-Windows CI runs this command in both lanes from the WP00 lock. The recommended
-branch-protection check is
-`Prompt-01 Stage-01 / Prompt-01 required gate`; repository-setting enforcement
+Windows CI retains the Prompt-03 and Prompt-05 full gates on Python 3.11.9
+from the WP00 lock, with the version read from `.python-version`. The aggregate
+check is `Prompt-05 Typed Domain Models / Prompt-05 required aggregate`; repository-setting enforcement
 was not verifiable locally.
 
 ## Final disposition

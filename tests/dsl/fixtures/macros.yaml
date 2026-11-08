@@ -1,0 +1,47 @@
+dsl: parasara-rule-dsl
+dsl_version: "1.0.0"
+system: synthetic
+rule_set:
+  family: prompt07_macros
+  version: fixture-v1
+macros:
+  - id: planet_in_house
+    revision: "1.0.0"
+    label: "Synthetic typed placement macro"
+    description: "Expands one typed predicate invocation."
+    parameters:
+      - name: planet
+        type: planet
+      - name: house
+        type: house
+    body:
+      predicate:
+        id: PLANET_IN_HOUSE
+        version: "1.0.0"
+        arguments:
+          planet: {parameter: planet}
+          house: {parameter: house}
+rules:
+  - id: synthetic.macro_placement
+    revision: "1.0.0"
+    family: synthetic
+    category: placement
+    domains: [synthetic]
+    label: "Synthetic macro fixture"
+    priority: 5
+    base_weight: 0.10
+    context: natal
+    requires:
+      - id: planets.house_placement
+        version: "1.0.0"
+      - id: planets.normalized
+        version: "1.0.0"
+    evidence:
+      mode: predicate_trace_references
+    when:
+      macro:
+        id: planet_in_house
+        revision: "1.0.0"
+        arguments:
+          planet: Mars
+          house: 10
